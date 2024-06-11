@@ -83,6 +83,8 @@ int main(int argc, char* argv[]){
     first_micros_at_top = to_micros(&first_time_at_top);
     printf("first_micros_at_top is %ld\n", first_micros_at_top);
 
+    initialize(WIDTH, HEIGHT, micros_per_frame);
+
     long target_time = first_micros_at_top;
 
     process_frame_and_blit(0, first_micros_at_top, pixels, WIDTH, HEIGHT);
@@ -132,6 +134,8 @@ int main(int argc, char* argv[]){
     // 'SDL_CreateWindow' function. Remember, this is
     // a 'C-style' API, we don't have destructors.
     SDL_DestroyWindow(window);
+
+    cleanup();
     
     // our program.
     SDL_Quit();
