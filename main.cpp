@@ -96,11 +96,11 @@ int main(int argc, char* argv[]){
     while(!should_stop()){
         clock_gettime(CLOCK_REALTIME, &time_at_top);
         time_at_top_micros = to_micros(&time_at_top);
-        printf("Current time %ld.%ld\n", time_at_top.tv_sec, time_at_top.tv_nsec);
-        printf("time_at_top_micros is %ld\n", time_at_top_micros);
+        // printf("Current time %ld.%ld\n", time_at_top.tv_sec, time_at_top.tv_nsec);
+        // printf("time_at_top_micros is %ld\n", time_at_top_micros);
 
         long target_miss = time_at_top_micros - target_time;
-        printf("miss by %ld\n", target_miss);
+        // printf("miss by %ld\n", target_miss);
 
         if (total_frame_count % 60 == 0) {
             printf("Frame %ld at %ld\n", total_frame_count, time_at_top_micros);
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]){
         time_at_bottom_micros = to_micros(&time_at_bottom);
         target_time = (total_frame_count * micros_per_frame) + first_micros_at_top;
         long micros_to_sleep = target_time - time_at_bottom_micros - SLEEP_BUFFER_MICROS;
-        printf("time elapsed in micros is %ld time to sleep in micros is %ld\n", (time_at_bottom_micros - time_at_top_micros), micros_to_sleep);
+        // printf("time elapsed in micros is %ld time to sleep in micros is %ld\n", (time_at_bottom_micros - time_at_top_micros), micros_to_sleep);
         if (micros_to_sleep > 0) {
            usleep(micros_to_sleep);
         }
