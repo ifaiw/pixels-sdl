@@ -9,9 +9,6 @@
 
 #include <SDL2/SDL.h>
 
-// From a separate library
-#include <SDL_image.h>
-
 
 // Our stuff
 #include "graphics_constants.h"
@@ -33,21 +30,24 @@ static inline long to_micros(struct timespec *t1) {
 
 int main(int argc, char* argv[]){
     // Create a window data type
-    // This pointer will point to the 
+    // This pointer will point to the
     // window that is allocated from SDL_CreateWindow
-    SDL_Window* window=nullptr;
+    SDL_Window* window;
 
-    // Grab the window surface.
-    SDL_Surface* screen;
+    // software render TODO STILL USED?
+    // SDL_Surface* screen;
+
+    // For hardware rendering TODO STILL USED?
+    SDL_Texture* screen_texture;
+    SDL_Renderer* sdl_renderer;
 
     // Initialize the video subsystem.
     // If it returns less than 1, then an
     // error code will be received.
-    if(SDL_Init(SDL_INIT_VIDEO) < 0){
-        std::cout << "SDL could not be initialized: " <<
-                  SDL_GetError();
-    }else{
-        std::cout << "SDL video system is ready to go\n";
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        printf("SDL could not be initialized: %s\n", SDL_GetError());
+    } else {
+        printf("SDL video system is ready to go\n");
     }
     // Request a window to be created for our platform
     // The parameters are for the title, x and y position,
@@ -58,23 +58,41 @@ int main(int argc, char* argv[]){
             WIDTH,
             HEIGHT,
             SDL_WINDOW_SHOWN);
+    if (window == NULL) {
+        printf("Error creating window!\n");
+        exit(-1);
+    }
 
-    screen = SDL_GetWindowSurface(window);
+    // hardware render
+    sdl_renderer = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED);
+    screen_texture = SDL_CreateTexture(
+        sdl_renderer,
+        SDL_PIXELFORMAT_RGBA32,
+        SDL_TEXTUREACCESS_STREAMING,
+        WIDTH,
+        HEIGHT
+    );
+    if (screen_texture == NULL) {
+        printf("Error creating screen texture!\n");
+        SDL_DestroyWindow(window);
+        exit(-1);
+    }
+
+    // software render TODO STILL USED?
+    // screen = SDL_GetWindowSurface(window);
 
     uint32_t pixels[HEIGHT * WIDTH];
-    int x_offset = 0;
-    int x_speed = 0;
 
     // Main application loop
     struct timespec time_at_top;
     struct timespec time_at_bottom;
     struct timespec first_time_at_top;
+    struct timespec time_start_render;
+    struct timespec time_end_render;
     long time_at_top_micros;
     long time_at_bottom_micros;
     long first_micros_at_top;
 
-    // Not used anymore? long nanos_per_frame = (long)1000000000 / (long)FRAMES_PER_SECOND;
-    // printf("nanos_per_frame is %ld\n", nanos_per_frame);
     long micros_per_frame = (long)1000000 / (long)FRAMES_PER_SECOND;
     printf("micros_per_frame is %ld", micros_per_frame);
     long total_frame_count = 0;
@@ -87,11 +105,12 @@ int main(int argc, char* argv[]){
 
     long target_time = first_micros_at_top;
 
-    process_frame_and_blit(0, first_micros_at_top, pixels, WIDTH, HEIGHT);
-    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void*)pixels, WIDTH, HEIGHT, 32, WIDTH * 32 / 8, RED, GREEN, BLUE, ALPHA);
-    SDL_BlitSurface(surface,NULL,screen,NULL);
-    SDL_FreeSurface(surface);
-    SDL_UpdateWindowSurface(window);
+    // software render
+    // process_frame_and_blit(0, first_micros_at_top, pixels, WIDTH, HEIGHT);
+    // SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void*)pixels, WIDTH, HEIGHT, 32, WIDTH * 32 / 8, RED, GREEN, BLUE, ALPHA);
+    // SDL_BlitSurface(surface,NULL,screen,NULL);
+    // SDL_FreeSurface(surface);
+    // SDL_UpdateWindowSurface(window);
 
     while(!should_stop()){
         clock_gettime(CLOCK_REALTIME, &time_at_top);
@@ -100,7 +119,9 @@ int main(int argc, char* argv[]){
         // printf("time_at_top_micros is %ld\n", time_at_top_micros);
 
         long target_miss = time_at_top_micros - target_time;
-        // printf("miss by %ld\n", target_miss);
+        // if (target_miss > 50) {
+        //     printf("miss by %ld\n", target_miss);
+        // }
 
         if (total_frame_count % 60 == 0) {
             printf("Frame %ld at %ld\n", total_frame_count, time_at_top_micros);
@@ -111,12 +132,22 @@ int main(int argc, char* argv[]){
             process_event(event);
         }
 
-        process_frame_and_blit(0, first_micros_at_top, pixels, WIDTH, HEIGHT);
-        SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void*)pixels, WIDTH, HEIGHT, 32, WIDTH * 32 / 8, RED, GREEN, BLUE, ALPHA);
-        SDL_BlitSurface(surface,NULL,screen,NULL);
-        SDL_FreeSurface(surface);
-        SDL_UpdateWindowSurface(window);
- 
+        process_frame_and_blit(total_frame_count, first_micros_at_top, pixels, WIDTH, HEIGHT);
+        clock_gettime(CLOCK_REALTIME, &time_start_render);
+
+        // software render
+        // SDL_Surface *surface = SDL_CreateRGBSurfaceFrom((void*)pixels, WIDTH, HEIGHT, 32, WIDTH * 32 / 8, RED, GREEN, BLUE, ALPHA);
+        // SDL_BlitSurface(surface,NULL,screen,NULL);
+        // SDL_FreeSurface(surface);
+        // SDL_UpdateWindowSurface(window);
+
+        // hardware render
+        SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * 32 / 8);
+        SDL_RenderCopy(sdl_renderer, screen_texture, NULL, NULL);
+        SDL_RenderPresent(sdl_renderer);
+
+        clock_gettime(CLOCK_REALTIME, &time_end_render);
+        printf("Render time: %ld\n", to_micros(&time_end_render) - to_micros(&time_start_render));
         total_frame_count++;
 
         clock_gettime(CLOCK_REALTIME, &time_at_bottom);
@@ -126,17 +157,19 @@ int main(int argc, char* argv[]){
         // printf("time elapsed in micros is %ld time to sleep in micros is %ld\n", (time_at_bottom_micros - time_at_top_micros), micros_to_sleep);
         if (micros_to_sleep > 0) {
            usleep(micros_to_sleep);
+        } else {
+            printf("Frame %ld No time to sleep, already over by %ld!\n", total_frame_count, -micros_to_sleep);
         }
     }
 
     // We destroy our window. We are passing in the pointer
-    // that points to the memory allocated by the 
+    // that points to the memory allocated by the
     // 'SDL_CreateWindow' function. Remember, this is
     // a 'C-style' API, we don't have destructors.
     SDL_DestroyWindow(window);
 
     cleanup();
-    
+
     // our program.
     SDL_Quit();
     return 0;
