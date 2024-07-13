@@ -5,3 +5,6 @@ clang++ main.cpp -F/Library/Frameworks -framework SDL2 -I/Users/matthew.enss/SDL
 clang++ main.cpp -F/Library/Frameworks -framework SDL2 -framework SDL2_image -I/Users/matthew.enss/SDL2.framework/Versions/A -I/Users/matthew.enss/libs/SDL2_image.framework/Versions/A/Headers  -Wl,-rpath /Library/Frameworks
 
 clang++ main.cpp -F/Library/Frameworks -framework SDL2 -framework SDL2_image -I/Library/Frameworks/SDL2.framework/Versions/A -I/Library/Frameworks/SDL2_image.framework/Versions/A/Headers -Wl,-rpath /Library/Frameworks
+
+clang++ main.cpp stuff_happens_ball.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
+
