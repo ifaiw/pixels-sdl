@@ -1,21 +1,40 @@
 #ifndef _UTILS__C
 #define _UTILS__C
 
+#include <assert.h>
 #include <inttypes.h>
+#include <stdio.h>
 #include <time.h>
 
 static void to_byte_str(uint8_t b, int buffer_index, char* o_buffer) {
-    for (int i = 15; i >= 0; --i) {
-        uint8_t next_byte = b & 0xf;
-        assert(next_byte < 16);
-        if (next_byte < 9) {
-            o_buffer[buffer_index + i] = '0' + next_byte;
-        } else {
-            o_buffer[buffer_index + i] = 'A' - 10 + next_byte;
-        }
-        // printf("next_byte is %" PRIu8 "\n", next_byte);
-        b = b >> 4;
+    printf("b is %d\n", b);
+    uint8_t lower_hex_val = b & 0x0F;
+    uint8_t upper_hex_val = (b & 0xF0) >> 4;
+    // printf("low=%d hi=%d\n", lower_hex_val, upper_hex_val);
+    assert(lower_hex_val < 16);
+    assert(upper_hex_val < 16);
+    if (lower_hex_val <= 9) {
+        o_buffer[buffer_index + 1] = '0' + lower_hex_val;
+    } else {
+        o_buffer[buffer_index + 1] = 'A' - 10 + lower_hex_val;
     }
+    if (upper_hex_val <= 9) {
+        o_buffer[buffer_index] = '0' + upper_hex_val;
+    } else {
+        o_buffer[buffer_index] = 'A' - 10 + upper_hex_val;
+    }
+
+    // for (int i = 15; i >= 0; --i) {
+    //     uint8_t next_byte = b & 0xf;
+    //     assert(next_byte < 16);
+    //     if (next_byte < 9) {
+    //         o_buffer[buffer_index + i] = '0' + next_byte;
+    //     } else {
+    //         o_buffer[buffer_index + i] = 'A' - 10 + next_byte;
+    //     }
+    //     // printf("next_byte is %" PRIu8 "\n", next_byte);
+    //     b = b >> 4;
+    // }
 }
 
 static void to_byte_str32(uint32_t b, int buffer_index, char* o_buffer) {
