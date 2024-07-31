@@ -8,3 +8,8 @@ clang++ main.cpp -F/Library/Frameworks -framework SDL2 -framework SDL2_image -I/
 
 clang++ main.cpp stuff_happens_ball.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
 
+clang++ main_test_png.cpp image_png_loader.c stuff_happens_ball.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
+
+# Added -lz to link zlib library
+clang++ main_test_png.cpp image_png_loader.c stuff_happens_ball.c utils.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -lz -Wl,-rpath /Library/Frameworks
+
