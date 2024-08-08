@@ -12,6 +12,7 @@
 
 // Our stuff
 #include "graphics_constants.h"
+#include "image_bmp_loader.h"
 #include "stuff_happens.h"
 
 
@@ -28,7 +29,54 @@ static inline long to_micros(struct timespec *t1) {
 }
 
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
+    struct Image_info image = {-1, -1, NULL};
+    // char const *path = "/Users/matthew.enss/personal/c/assets/tilesets/FreeCuteTileset/Decors.png";
+    // char const *path = "/Users/matthew.enss/personal/c/assets/tilesets/FreeCuteTileset/Decors-three-pixels-top-left.png";
+    // char const *path = "/Users/matthew.enss/personal/c/assets/test-3x3b.bmp";
+    // char const *path = "/Users/matthew.enss/personal/c/assets/tilesets/FreeCuteTileset/Decors.bmp";
+    char const *path = "/Users/matthew.enss/personal/c/assets/tilesets/FreeCuteTileset/Tileset.bmp";
+    // __FREE_REQUIRED
+    int result = load_bmp_image(path, &image);
+    printf("bmp result is %d\n", result);
+
+    // uint8_t* pixel_bytes = (uint8_t*)image.pixels;
+
+    // printf("all the bytes\n");
+    // for (int i = 0; i < 30; ++i) {
+    //     printf("%02x", pixel_bytes[i]);
+    // }
+    // printf("\n");
+    // printf("that's all the bytes\n");
+    // exit(0);
+    // printf("First 5 pixels as ints\n");
+    // for (int i = 0; i < 5; ++i) {
+    //     printf("%d\n", image.pixels[i]);
+    // }
+    // printf("First 20 pixels\n");
+    // int y = 0;
+    // for (int i = 0; i < 20; ++i) {
+    //     printf("%x ", image.pixels[(y * image.width) + i]);
+    // }
+    // printf("\n");
+    // printf("Pixels 20 to 40 on a few lines\n");
+    // y = 0;
+    // for (int i = 20; i < 40; ++i) {
+    //     printf("%x ", image.pixels[(y * image.width) + i]);
+    // }
+    // printf("\n");
+    // y = 20;
+    // for (int i = 20; i < 40; ++i) {
+    //     printf("%x ", image.pixels[(y * image.width) + i]);
+    // }
+    // printf("\n");
+    // y = 30;
+    // for (int i = 20; i < 40; ++i) {
+    //     printf("%x ", image.pixels[(y * image.width) + i]);
+    // }
+    // printf("\n");
+
+
     // Create a window data type
     // This pointer will point to the
     // window that is allocated from SDL_CreateWindow
@@ -67,6 +115,7 @@ int main(int argc, char* argv[]){
     sdl_renderer = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED);
     screen_texture = SDL_CreateTexture(
         sdl_renderer,
+        // original format SDL_PIXELFORMAT_RGBA32,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING,
         WIDTH,
@@ -78,10 +127,19 @@ int main(int argc, char* argv[]){
         exit(-1);
     }
 
+    // TODO just for testing
+    // SDL_UpdateTexture(screen_texture, NULL, image.pixels, image.width * 4);
+    // SDL_RenderCopy(sdl_renderer, screen_texture, NULL, NULL);
+    // SDL_RenderPresent(sdl_renderer);
+    // usleep(10000000);
+    // exit(0);
+
+
     // software render TODO STILL USED?
     // screen = SDL_GetWindowSurface(window);
 
     uint32_t pixels[HEIGHT * WIDTH];
+    memset(pixels, ALPHA, HEIGHT * WIDTH * 4);
 
     // Main application loop
     struct timespec time_at_top;
@@ -101,13 +159,9 @@ int main(int argc, char* argv[]){
     first_micros_at_top = to_micros(&first_time_at_top);
     printf("first_micros_at_top is %ld\n", first_micros_at_top);
 
-    initialize(WIDTH, HEIGHT, micros_per_frame);
+    // initialize(WIDTH, HEIGHT, micros_per_frame);
 
     long target_time = first_micros_at_top;
-
-    int PITCH = WIDTH * 32 / 8;
-    // Apparently SDL_LockTexture sets the pitch parameter? Not sure why, but I don't think we want it changing PITCH
-    int pitch_from_lock_texture = PITCH;
 
     // software render
     // process_frame_and_blit(0, first_micros_at_top, pixels, WIDTH, HEIGHT);
@@ -116,7 +170,9 @@ int main(int argc, char* argv[]){
     // SDL_FreeSurface(surface);
     // SDL_UpdateWindowSurface(window);
 
-    while(!should_stop()){
+    // TODO just for testing while(!should_stop()){
+    bool should_stop = false;
+    while(!should_stop) {
         clock_gettime(CLOCK_REALTIME, &time_at_top);
         time_at_top_micros = to_micros(&time_at_top);
         // printf("Current time %ld.%ld\n", time_at_top.tv_sec, time_at_top.tv_nsec);
@@ -132,11 +188,20 @@ int main(int argc, char* argv[]){
         }
         SDL_Event event;
         // Start our event loop
-        while(SDL_PollEvent(&event)){
-            process_event(event);
+        while (SDL_PollEvent(&event)) {
+            // TODO just for testing process_event(event);
+            if (event.type == SDL_QUIT) {
+                should_stop = true;
+            }
         }
 
-        process_frame_and_blit(total_frame_count, first_micros_at_top, pixels, WIDTH, HEIGHT);
+        // TODO just for testing process_frame_and_blit(total_frame_count, first_micros_at_top, pixels, WIDTH, HEIGHT);
+        for (int y = 0; y < image.height; ++y) {
+            for (int x = 0; x < image.width; ++x) {
+                pixels[y * WIDTH + x] = image.pixels[(image.height - y) * image.width + x];
+            }
+        }
+
         clock_gettime(CLOCK_REALTIME, &time_start_render);
 
         // software render
@@ -146,12 +211,9 @@ int main(int argc, char* argv[]){
         // SDL_UpdateWindowSurface(window);
 
         // hardware render
-        // for testing SDL_UnlockTexture(screen_texture);
-        SDL_UpdateTexture(screen_texture, NULL, pixels, PITCH);
+        SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * 32 / 8);
         SDL_RenderCopy(sdl_renderer, screen_texture, NULL, NULL);
         SDL_RenderPresent(sdl_renderer);
-        // for testing int lock_result = SDL_LockTexture(screen_texture, NULL, (void**)&pixels, &pitch_from_lock_texture);
-        // for testing printf("SDL_LockTexture result is %d, pitch_from_lock_texture set to %d\n", lock_result, pitch_from_lock_texture);
 
         clock_gettime(CLOCK_REALTIME, &time_end_render);
         printf("Render time: %ld\n", to_micros(&time_end_render) - to_micros(&time_start_render));
@@ -175,7 +237,7 @@ int main(int argc, char* argv[]){
     // a 'C-style' API, we don't have destructors.
     SDL_DestroyWindow(window);
 
-    cleanup();
+    // TODO just for testing cleanup();
 
     // our program.
     SDL_Quit();

@@ -6,6 +6,29 @@
 #include <stdio.h>
 #include <time.h>
 
+#define LITTLE_ENDIAN_32(array_name, offset) array_name[offset] << 24 | array_name[offset + 1] << 16 | array_name[offset + 2] << 8 | array_name[offset + 3]
+#define BIG_ENDIAN_32(array_name, offset) array_name[offset] | array_name[offset + 1] << 8 | array_name[offset + 2] << 16 | array_name[offset + 3] << 24
+#define LITTLE_ENDIAN_16(array_name, offset) array_name[offset] << 8 | array_name[offset + 1]
+#define BIG_ENDIAN_16(array_name, offset) array_name[offset] | array_name[offset + 1] << 8
+
+
+enum Endianess {
+    BIG_ENDIAN_ENDIANESS,
+    LITTLE_ENDIAN_ENDIANESS
+};
+static inline uint32_t get_uint32(uint8_t* array, int offset, enum Endianess endianess) {
+    if (endianess == BIG_ENDIAN_ENDIANESS) {
+        return BIG_ENDIAN_32(array, offset);
+    }
+    return LITTLE_ENDIAN_32(array, offset);
+}
+static inline uint32_t get_uint16(uint8_t* array, int offset, enum Endianess endianess) {
+    if (endianess == BIG_ENDIAN_ENDIANESS) {
+        return BIG_ENDIAN_16(array, offset);
+    }
+    return LITTLE_ENDIAN_16(array, offset);
+}
+
 static void to_byte_str(uint8_t b, int buffer_index, char* o_buffer) {
     printf("b is %d\n", b);
     uint8_t lower_hex_val = b & 0x0F;
@@ -71,6 +94,14 @@ static inline long micros_until_next_frame(struct timespec *initial, struct time
     long nanos_next_frame = initial->tv_nsec + nanos_remainder;
 
     return diff_time_in_micros(current, seconds_next_frame, nanos_next_frame);
+}
+
+inline int get_min(int a, int b) {
+    int c = a < b ? a : b;
+    if (a < b) {
+        return a;
+    }
+    return b;
 }
 
 #endif // _UTILS__C
