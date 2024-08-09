@@ -16,3 +16,6 @@ clang++ main_test_png.cpp image_png_loader.c stuff_happens_ball.c utils.c -F/Lib
 # bmp loading
 clang++ main_test_bmp.cpp image_bmp_loader.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
 
+# platformer
+clang++ main.cpp stuff_happens_platformer.c image_bmp_loader.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
+
