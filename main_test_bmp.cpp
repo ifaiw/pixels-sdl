@@ -15,7 +15,6 @@
 #include "image_bmp_loader.h"
 #include "stuff_happens.h"
 
-
 #define WIDTH 1280
 #define HEIGHT 960
 #define FRAMES_PER_SECOND 60
@@ -30,7 +29,7 @@ static inline long to_micros(struct timespec *t1) {
 
 
 int main(int argc, char* argv[]) {
-    struct Image_info image = {-1, -1, NULL};
+    struct ImageInfo image = {-1, -1, NULL};
     // char const *path = "/Users/matthew.enss/personal/c/assets/tilesets/FreeCuteTileset/Decors.png";
     // char const *path = "/Users/matthew.enss/personal/c/assets/tilesets/FreeCuteTileset/Decors-three-pixels-top-left.png";
     // char const *path = "/Users/matthew.enss/personal/c/assets/test-3x3b.bmp";
@@ -39,43 +38,6 @@ int main(int argc, char* argv[]) {
     // __FREE_REQUIRED
     int result = load_bmp_image(path, &image);
     printf("bmp result is %d\n", result);
-
-    // uint8_t* pixel_bytes = (uint8_t*)image.pixels;
-
-    // printf("all the bytes\n");
-    // for (int i = 0; i < 30; ++i) {
-    //     printf("%02x", pixel_bytes[i]);
-    // }
-    // printf("\n");
-    // printf("that's all the bytes\n");
-    // exit(0);
-    // printf("First 5 pixels as ints\n");
-    // for (int i = 0; i < 5; ++i) {
-    //     printf("%d\n", image.pixels[i]);
-    // }
-    // printf("First 20 pixels\n");
-    // int y = 0;
-    // for (int i = 0; i < 20; ++i) {
-    //     printf("%x ", image.pixels[(y * image.width) + i]);
-    // }
-    // printf("\n");
-    // printf("Pixels 20 to 40 on a few lines\n");
-    // y = 0;
-    // for (int i = 20; i < 40; ++i) {
-    //     printf("%x ", image.pixels[(y * image.width) + i]);
-    // }
-    // printf("\n");
-    // y = 20;
-    // for (int i = 20; i < 40; ++i) {
-    //     printf("%x ", image.pixels[(y * image.width) + i]);
-    // }
-    // printf("\n");
-    // y = 30;
-    // for (int i = 20; i < 40; ++i) {
-    //     printf("%x ", image.pixels[(y * image.width) + i]);
-    // }
-    // printf("\n");
-
 
     // Create a window data type
     // This pointer will point to the
@@ -126,14 +88,6 @@ int main(int argc, char* argv[]) {
         SDL_DestroyWindow(window);
         exit(-1);
     }
-
-    // TODO just for testing
-    // SDL_UpdateTexture(screen_texture, NULL, image.pixels, image.width * 4);
-    // SDL_RenderCopy(sdl_renderer, screen_texture, NULL, NULL);
-    // SDL_RenderPresent(sdl_renderer);
-    // usleep(10000000);
-    // exit(0);
-
 
     // software render TODO STILL USED?
     // screen = SDL_GetWindowSurface(window);

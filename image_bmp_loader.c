@@ -52,7 +52,7 @@ inline void print_info_header(  uint32_t info_header_size,
 
 
 // __FREE_REQUIRED for r_image_info.pixels
-int load_bmp_image(const char* file_path, struct Image_info* r_image_info) {
+int load_bmp_image(const char* file_path, struct ImageInfo* r_image_info) {
 
     FILE* file_ptr;
 
