@@ -12,6 +12,7 @@
 
 // Our stuff
 #include "graphics_constants.h"
+#include "image_png_loader.h"
 #include "stuff_happens.h"
 
 
@@ -28,7 +29,55 @@ static inline long to_micros(struct timespec *t1) {
 }
 
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
+    struct Image_info image = {-1, -1, NULL};
+    // char const *path = "/Users/matthew.enss/personal/c/assets/tilesets/FreeCuteTileset/Decors.png";
+    // char const *path = "/Users/matthew.enss/personal/c/assets/tilesets/FreeCuteTileset/Decors-three-pixels-top-left.png";
+    char const *path = "/Users/matthew.enss/personal/c/assets/test-3x3b.png";
+    // __FREE_REQUIRED
+    int result = load_image(path, &image);
+    printf("png result is %d\n", result);
+    // TODO just for testing
+    image.width = 224;
+    image.height = 112;
+
+    uint8_t* pixel_bytes = (uint8_t*)image.pixels;
+
+    printf("all the bytes\n");
+    for (int i = 0; i < 30; ++i) {
+        printf("%02x", pixel_bytes[i]);
+    }
+    printf("\n");
+    printf("that's all the bytes\n");
+    exit(0);
+    // printf("First 5 pixels as ints\n");
+    // for (int i = 0; i < 5; ++i) {
+    //     printf("%d\n", image.pixels[i]);
+    // }
+    // printf("First 20 pixels\n");
+    // int y = 0;
+    // for (int i = 0; i < 20; ++i) {
+    //     printf("%x ", image.pixels[(y * image.width) + i]);
+    // }
+    // printf("\n");
+    // printf("Pixels 20 to 40 on a few lines\n");
+    // y = 0;
+    // for (int i = 20; i < 40; ++i) {
+    //     printf("%x ", image.pixels[(y * image.width) + i]);
+    // }
+    // printf("\n");
+    // y = 20;
+    // for (int i = 20; i < 40; ++i) {
+    //     printf("%x ", image.pixels[(y * image.width) + i]);
+    // }
+    // printf("\n");
+    // y = 30;
+    // for (int i = 20; i < 40; ++i) {
+    //     printf("%x ", image.pixels[(y * image.width) + i]);
+    // }
+    // printf("\n");
+
+
     // Create a window data type
     // This pointer will point to the
     // window that is allocated from SDL_CreateWindow
@@ -55,8 +104,8 @@ int main(int argc, char* argv[]){
     window = SDL_CreateWindow("C++ SDL2 Window",
             20,
             20,
-            WIDTH,
-            HEIGHT,
+            image.width,
+            image.height,
             SDL_WINDOW_SHOWN);
     if (window == NULL) {
         printf("Error creating window!\n");
@@ -67,16 +116,25 @@ int main(int argc, char* argv[]){
     sdl_renderer = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED);
     screen_texture = SDL_CreateTexture(
         sdl_renderer,
+        // original format SDL_PIXELFORMAT_RGBA32,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING,
-        WIDTH,
-        HEIGHT
+        image.width,
+        image.height
     );
     if (screen_texture == NULL) {
         printf("Error creating screen texture!\n");
         SDL_DestroyWindow(window);
         exit(-1);
     }
+
+    // TODO just for testing
+    SDL_UpdateTexture(screen_texture, NULL, image.pixels, image.width * 4);
+    SDL_RenderCopy(sdl_renderer, screen_texture, NULL, NULL);
+    SDL_RenderPresent(sdl_renderer);
+    usleep(10000000);
+    exit(0);
+
 
     // software render TODO STILL USED?
     // screen = SDL_GetWindowSurface(window);
@@ -101,16 +159,9 @@ int main(int argc, char* argv[]){
     first_micros_at_top = to_micros(&first_time_at_top);
     printf("first_micros_at_top is %ld\n", first_micros_at_top);
 
-    int initialize_result = initialize(WIDTH, HEIGHT, micros_per_frame);
-    if (initialize_result != 0) {
-        printf("ERROR in initialize: %d\n", initialize_result);
-    }
+    initialize(WIDTH, HEIGHT, micros_per_frame);
 
     long target_time = first_micros_at_top;
-
-    int PITCH = WIDTH * 32 / 8;
-    // Apparently SDL_LockTexture sets the pitch parameter? Not sure why, but I don't think we want it changing PITCH
-    int pitch_from_lock_texture = PITCH;
 
     // software render
     // process_frame_and_blit(0, first_micros_at_top, pixels, WIDTH, HEIGHT);
@@ -131,7 +182,7 @@ int main(int argc, char* argv[]){
         // }
 
         if (total_frame_count % 60 == 0) {
-            // printf("Frame %ld at %ld\n", total_frame_count, time_at_top_micros);
+            printf("Frame %ld at %ld\n", total_frame_count, time_at_top_micros);
         }
         SDL_Event event;
         // Start our event loop
@@ -149,15 +200,12 @@ int main(int argc, char* argv[]){
         // SDL_UpdateWindowSurface(window);
 
         // hardware render
-        // for testing SDL_UnlockTexture(screen_texture);
-        SDL_UpdateTexture(screen_texture, NULL, pixels, PITCH);
+        SDL_UpdateTexture(screen_texture, NULL, pixels, WIDTH * 32 / 8);
         SDL_RenderCopy(sdl_renderer, screen_texture, NULL, NULL);
         SDL_RenderPresent(sdl_renderer);
-        // for testing int lock_result = SDL_LockTexture(screen_texture, NULL, (void**)&pixels, &pitch_from_lock_texture);
-        // for testing printf("SDL_LockTexture result is %d, pitch_from_lock_texture set to %d\n", lock_result, pitch_from_lock_texture);
 
         clock_gettime(CLOCK_REALTIME, &time_end_render);
-        // printf("Render time: %ld\n", to_micros(&time_end_render) - to_micros(&time_start_render));
+        printf("Render time: %ld\n", to_micros(&time_end_render) - to_micros(&time_start_render));
         total_frame_count++;
 
         clock_gettime(CLOCK_REALTIME, &time_at_bottom);
@@ -168,7 +216,7 @@ int main(int argc, char* argv[]){
         if (micros_to_sleep > 0) {
            usleep(micros_to_sleep);
         } else {
-            // printf("Frame %ld No time to sleep, already over by %ld!\n", total_frame_count, -micros_to_sleep);
+            printf("Frame %ld No time to sleep, already over by %ld!\n", total_frame_count, -micros_to_sleep);
         }
     }
 

@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "image_info.h"
+
 #define LITTLE_ENDIAN_32(array_name, offset) array_name[offset] << 24 | array_name[offset + 1] << 16 | array_name[offset + 2] << 8 | array_name[offset + 3]
 #define BIG_ENDIAN_32(array_name, offset) array_name[offset] | array_name[offset + 1] << 8 | array_name[offset + 2] << 16 | array_name[offset + 3] << 24
 #define LITTLE_ENDIAN_16(array_name, offset) array_name[offset] << 8 | array_name[offset + 1]
@@ -16,76 +18,76 @@ enum Endianess {
     BIG_ENDIAN_ENDIANESS,
     LITTLE_ENDIAN_ENDIANESS
 };
-static inline uint32_t get_uint32(uint8_t* array, int offset, enum Endianess endianess) {
+inline uint32_t get_uint32(uint8_t* array, int offset, enum Endianess endianess) {
     if (endianess == BIG_ENDIAN_ENDIANESS) {
         return BIG_ENDIAN_32(array, offset);
     }
     return LITTLE_ENDIAN_32(array, offset);
 }
-static inline uint32_t get_uint16(uint8_t* array, int offset, enum Endianess endianess) {
+inline uint32_t get_uint16(uint8_t* array, int offset, enum Endianess endianess) {
     if (endianess == BIG_ENDIAN_ENDIANESS) {
         return BIG_ENDIAN_16(array, offset);
     }
     return LITTLE_ENDIAN_16(array, offset);
 }
 
-static void to_byte_str(uint8_t b, int buffer_index, char* o_buffer) {
-    printf("b is %d\n", b);
-    uint8_t lower_hex_val = b & 0x0F;
-    uint8_t upper_hex_val = (b & 0xF0) >> 4;
-    // printf("low=%d hi=%d\n", lower_hex_val, upper_hex_val);
-    assert(lower_hex_val < 16);
-    assert(upper_hex_val < 16);
-    if (lower_hex_val <= 9) {
-        o_buffer[buffer_index + 1] = '0' + lower_hex_val;
-    } else {
-        o_buffer[buffer_index + 1] = 'A' - 10 + lower_hex_val;
-    }
-    if (upper_hex_val <= 9) {
-        o_buffer[buffer_index] = '0' + upper_hex_val;
-    } else {
-        o_buffer[buffer_index] = 'A' - 10 + upper_hex_val;
-    }
+// void to_byte_str(uint8_t b, int buffer_index, char* o_buffer) {
+//     printf("b is %d\n", b);
+//     uint8_t lower_hex_val = b & 0x0F;
+//     uint8_t upper_hex_val = (b & 0xF0) >> 4;
+//     // printf("low=%d hi=%d\n", lower_hex_val, upper_hex_val);
+//     assert(lower_hex_val < 16);
+//     assert(upper_hex_val < 16);
+//     if (lower_hex_val <= 9) {
+//         o_buffer[buffer_index + 1] = '0' + lower_hex_val;
+//     } else {
+//         o_buffer[buffer_index + 1] = 'A' - 10 + lower_hex_val;
+//     }
+//     if (upper_hex_val <= 9) {
+//         o_buffer[buffer_index] = '0' + upper_hex_val;
+//     } else {
+//         o_buffer[buffer_index] = 'A' - 10 + upper_hex_val;
+//     }
 
-    // for (int i = 15; i >= 0; --i) {
-    //     uint8_t next_byte = b & 0xf;
-    //     assert(next_byte < 16);
-    //     if (next_byte < 9) {
-    //         o_buffer[buffer_index + i] = '0' + next_byte;
-    //     } else {
-    //         o_buffer[buffer_index + i] = 'A' - 10 + next_byte;
-    //     }
-    //     // printf("next_byte is %" PRIu8 "\n", next_byte);
-    //     b = b >> 4;
-    // }
-}
+//     // for (int i = 15; i >= 0; --i) {
+//     //     uint8_t next_byte = b & 0xf;
+//     //     assert(next_byte < 16);
+//     //     if (next_byte < 9) {
+//     //         o_buffer[buffer_index + i] = '0' + next_byte;
+//     //     } else {
+//     //         o_buffer[buffer_index + i] = 'A' - 10 + next_byte;
+//     //     }
+//     //     // printf("next_byte is %" PRIu8 "\n", next_byte);
+//     //     b = b >> 4;
+//     // }
+// }
 
-static void to_byte_str32(uint32_t b, int buffer_index, char* o_buffer) {
-    for (int i = 47; i >= 0; --i) {
-        uint32_t next_byte = b & 0xf;
-        assert(next_byte < 16);
-        if (next_byte < 9) {
-            o_buffer[buffer_index + i] = '0' + next_byte;
-        } else {
-            o_buffer[buffer_index + i] = 'A' - 10 + next_byte;
-        }
-        b = b >> 4;
-    }
-}
+// void to_byte_str32(uint32_t b, int buffer_index, char* o_buffer) {
+//     for (int i = 47; i >= 0; --i) {
+//         uint32_t next_byte = b & 0xf;
+//         assert(next_byte < 16);
+//         if (next_byte < 9) {
+//             o_buffer[buffer_index + i] = '0' + next_byte;
+//         } else {
+//             o_buffer[buffer_index + i] = 'A' - 10 + next_byte;
+//         }
+//         b = b >> 4;
+//     }
+// }
 
-static inline long diff_time_in_nanos(struct timespec *t1, struct timespec *t2) {
+inline long diff_time_in_nanos(struct timespec *t1, struct timespec *t2) {
     long diff_in_nanos_from_sec = (t2->tv_sec - t1->tv_sec) * (long)1000000000;
     long diff_in_nanos_from_nanos = t2->tv_nsec - t1->tv_nsec;
     return diff_in_nanos_from_sec + diff_in_nanos_from_nanos;
 }
 
-static inline long diff_time_in_micros(struct timespec *t1, long t2_secs, long t2_nanos) {
+inline long diff_time_in_micros(struct timespec *t1, long t2_secs, long t2_nanos) {
     long diff_in_micros_from_sec = (t2_secs - t1->tv_sec) * (long)1000000;
     long diff_in_micros_from_nanos = (t2_nanos - t1->tv_nsec) / (long)1000;
     return diff_in_micros_from_sec + diff_in_micros_from_nanos;
 }
 
-static inline long micros_until_next_frame(struct timespec *initial, struct timespec *current, long next_frame_count, long nanos_per_frame) {
+inline long micros_until_next_frame(struct timespec *initial, struct timespec *current, long next_frame_count, long nanos_per_frame) {
     long nanos_of_next_frame_since_initial = next_frame_count * nanos_per_frame;
     long seconds_of_next_frame_since_initial = nanos_of_next_frame_since_initial / (long)1000000000;
     long nanos_remainder = nanos_of_next_frame_since_initial - (seconds_of_next_frame_since_initial * (long)1000000000);
@@ -96,12 +98,36 @@ static inline long micros_until_next_frame(struct timespec *initial, struct time
     return diff_time_in_micros(current, seconds_next_frame, nanos_next_frame);
 }
 
+// TODO  does static on these functions actually do anything useful?
 inline int get_min(int a, int b) {
     int c = a < b ? a : b;
     if (a < b) {
         return a;
     }
     return b;
+}
+
+inline void scale_image_up(struct ImageInfo* current_image, uint8_t factor_increase, struct ImageInfo* r_scaled_image) {
+    r_scaled_image->height = current_image->height * factor_increase;
+    r_scaled_image->width = current_image->width * factor_increase;
+    r_scaled_image->pixels = (uint32_t*)malloc(r_scaled_image->height * r_scaled_image->width * 4);
+
+    int scaled_y = 0;
+    for (int y = 0; y < current_image->height; ++y) {
+        int scaled_x = 0;
+        for (int x = 0; x < current_image->width; ++x) {
+            for (int i = 0; i < factor_increase; ++i) {
+                r_scaled_image->pixels[scaled_y * r_scaled_image->width + scaled_x + i] = current_image->pixels[y * current_image->width + x];
+            }
+            scaled_x += factor_increase;
+        }
+        for (int i = 1; i < factor_increase; ++i) {
+            memcpy( r_scaled_image->pixels + (scaled_y + i) * r_scaled_image->width,
+                    r_scaled_image->pixels + scaled_y * r_scaled_image->width,
+                    r_scaled_image->width * 4);
+        }
+        scaled_y += factor_increase;
+    }
 }
 
 #endif // _UTILS__C

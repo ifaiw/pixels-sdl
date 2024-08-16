@@ -3,11 +3,7 @@
 
 #include <inttypes.h>
 
-struct ImageInfo {
-    int width;
-    int height;
-    uint32_t* pixels;
-};
+#include "image_info.h"
 
 // Returns error code, 0 is success
 // Caller is responsible for deleting &pixels

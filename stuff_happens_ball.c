@@ -122,7 +122,6 @@ void initialize(int width, int height, long micros_per_frame_param) {
         balls[i].colour = red | green | blue; // Currently adding alpha when drawing
         balls[i].thickness = BALL_THICKNESS;
         balls[i].x_speed = (rand() % 3) * ((rand() % 2) * 2 - 1);
-        // balls[i].x_speed = 0;
         balls[i].y_speed = 0;
     }
     printf("done initialize balls loop\n");
