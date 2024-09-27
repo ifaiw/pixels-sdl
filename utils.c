@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "image_info.h"
+#include "game_structs.h"
 
 #define LITTLE_ENDIAN_32(array_name, offset) array_name[offset] << 24 | array_name[offset + 1] << 16 | array_name[offset + 2] << 8 | array_name[offset + 3]
 #define BIG_ENDIAN_32(array_name, offset) array_name[offset] | array_name[offset + 1] << 8 | array_name[offset + 2] << 16 | array_name[offset + 3] << 24
@@ -105,29 +105,6 @@ inline int get_min(int a, int b) {
         return a;
     }
     return b;
-}
-
-inline void scale_image_up(struct ImageInfo* current_image, uint8_t factor_increase, struct ImageInfo* r_scaled_image) {
-    r_scaled_image->height = current_image->height * factor_increase;
-    r_scaled_image->width = current_image->width * factor_increase;
-    r_scaled_image->pixels = (uint32_t*)malloc(r_scaled_image->height * r_scaled_image->width * 4);
-
-    int scaled_y = 0;
-    for (int y = 0; y < current_image->height; ++y) {
-        int scaled_x = 0;
-        for (int x = 0; x < current_image->width; ++x) {
-            for (int i = 0; i < factor_increase; ++i) {
-                r_scaled_image->pixels[scaled_y * r_scaled_image->width + scaled_x + i] = current_image->pixels[y * current_image->width + x];
-            }
-            scaled_x += factor_increase;
-        }
-        for (int i = 1; i < factor_increase; ++i) {
-            memcpy( r_scaled_image->pixels + (scaled_y + i) * r_scaled_image->width,
-                    r_scaled_image->pixels + scaled_y * r_scaled_image->width,
-                    r_scaled_image->width * 4);
-        }
-        scaled_y += factor_increase;
-    }
 }
 
 #endif // _UTILS__C

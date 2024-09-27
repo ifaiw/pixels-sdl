@@ -17,10 +17,12 @@
 const uint8_t BITMAPFILEHEADER[] = {0x42, 0x4D};
 
 
+// PRIVATE
 inline void print_file_header(uint32_t file_size_from_header, uint32_t bitmap_data_start) {
     printf("BitmapFileHeader:\n  file_size_from_header=%u\n  bitmap_data_start=%u\n\n", file_size_from_header, bitmap_data_start);
 }
 
+// PRIVATE
 inline void print_info_header(  uint32_t info_header_size,
                                 uint32_t width,
                                 uint32_t height,
@@ -52,6 +54,7 @@ inline void print_info_header(  uint32_t info_header_size,
 
 
 // __FREE_REQUIRED for r_image_info.pixels
+// IMPLEMENTS
 int load_bmp_image(const char* file_path, struct ImageInfo* r_image_info) {
 
     FILE* file_ptr;
@@ -225,6 +228,7 @@ int load_bmp_image(const char* file_path, struct ImageInfo* r_image_info) {
     r_image_info->width = width;
     r_image_info->pixels = (uint32_t*)malloc(bytes_in_file_after_bitmap_data_start);
     memcpy(r_image_info->pixels, buffer + offset, bytes_in_file_after_bitmap_data_start);
+    free(buffer);
 
     return 0;
 }
