@@ -1,6 +1,7 @@
 #include "game_movement.h"
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 #include <SDL2/SDL.h>
 
@@ -13,9 +14,66 @@ inline void get_new_location(struct Character* current, double* r_new_x, double*
 }
 
 // IMPLEMENTS
-void do_movement(struct Character* character, double microseconds_to_advance) {
-    printf("do_movement frame_time_in_micros as double: %f\n", microseconds_to_advance);
-    character->center_x += character->x_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
+void do_movement(struct GameState* game_state, double microseconds_to_advance) {
+    printf("do_movement x_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, microseconds_to_advance);
+    double new_character_x = game_state->character.x_bottom_left + game_state->character.x_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
+    double new_character_y = game_state->character.y_inverted_bottom_left + game_state->character.y_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
+
+    printf("movement: old x %f old y %f new x %f new y %f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, new_character_x, new_character_y);
+
+    int new_character_x_rounded = round(new_character_x);
+    int new_character_y_rounded = round(new_character_y);
+    int right_pixel = new_character_x_rounded + game_state->character.width;
+    int left_pixel = new_character_x_rounded;
+    int bottom_pixel = new_character_y_rounded;
+    int top_pixel = new_character_y_rounded + game_state->character.height;
+
+    bool x_motion_stopped = false;
+
+    if (new_character_x > game_state->character.x_bottom_left) {
+        // Need to check block at feet height and block at head height
+        struct Block* new_block_feet = get_world_block_for_location(right_pixel, bottom_pixel, game_state);
+        struct Block* new_block_head = get_world_block_for_location(right_pixel, top_pixel, game_state);
+        if (new_block_feet->effects_flags & EFFECT_FLAG_SOLID) {
+            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
+            new_character_x = block_bottom_left.x - game_state->character.width;
+            x_motion_stopped = true;
+        }
+        else if (new_block_head->effects_flags & EFFECT_FLAG_SOLID) {
+            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_head);
+            new_character_x = block_bottom_left.x - game_state->character.width;
+            x_motion_stopped = true;
+        }
+    }
+    else if (new_character_x < game_state->character.x_bottom_left) {
+        printf("Moving left, get blocks for pixels %d,%d and %d,%d\n", left_pixel, bottom_pixel, left_pixel, top_pixel);
+        // Need to check block at feet height and block at head height
+        struct Block* new_block_feet = get_world_block_for_location(left_pixel, bottom_pixel, game_state);
+        struct Block* new_block_head = get_world_block_for_location(left_pixel, top_pixel, game_state);
+        printf("Feet and head blocks are %d,%d and %d,%d\n", new_block_feet->world_x, new_block_feet->world_y, new_block_head->world_x, new_block_head->world_y);
+        if (new_block_feet->effects_flags & EFFECT_FLAG_SOLID) {
+            printf("feet block is solid\n");
+            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
+            printf("bottom-left of block is %d,%d\n", block_bottom_left.x, block_bottom_left.y);
+            new_character_x = block_bottom_left.x + BLOCK_WIDTH_IN_PIXELS;
+            x_motion_stopped = true;
+        }
+        else if (new_block_head->effects_flags & EFFECT_FLAG_SOLID) {
+            printf("head block is solid\n");
+            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_head);
+            printf("bottom-left of block is %d,%d\n", block_bottom_left.x, block_bottom_left.y);
+            new_character_x = block_bottom_left.x + BLOCK_WIDTH_IN_PIXELS;
+            x_motion_stopped = true;
+        }
+    }
+
+    if (x_motion_stopped) {
+        game_state->character.x_velocity_pixels_per_second = 0;
+        game_state->character.motion = STOPPED;
+    }
+
+    game_state->character.x_bottom_left = new_character_x;
+    game_state->character.y_inverted_bottom_left = new_character_y;
 }
 
 // IMPLEMENTS
@@ -29,44 +87,27 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
         if (input_state->right_button_press_frame == -1) {
             input_state->right_button_press_frame = game_state->current_frame;
         }
-        switch (game_state->character.motion) {
-            case STOPPED_WALK_RIGHT:
-            case STOPPED_WALK_LEFT:
-                game_state->character.motion = START_WALK_RIGHT;
-                // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_initial_speed_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+
+        // TODO Handle in air case, and possibly consolidate?
+        switch (game_state->character.direction) {
+            case RIGHT:
+                switch (game_state->character.motion) {
+                    case STOPPED:
+                        game_state->character.motion = WALKING;
+                        // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_initial_speed_pixels_per_second;
+                        game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+                        break;
+                    case WALKING:
+                        // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_next_speed_1_pixels_per_second;
+                        game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+                        break;
+                }
                 break;
-            case START_WALK_RIGHT:
-                game_state->character.motion = WALK_RIGHT;
-                // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_next_speed_1_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case WALK_RIGHT:
-                game_state->character.motion = WALK_RIGHT;
-                // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_next_speed_1_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case STOPPING_WALK_RIGHT:
-                game_state->character.motion = WALK_RIGHT;
-                // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_next_speed_1_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case START_WALK_LEFT:
-                game_state->character.motion = STOPPED_WALK_RIGHT;
-                // game_state->character.x_velocity_pixels_per_second = 0;
-                game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case WALK_LEFT:
-                game_state->character.motion = STOPPING_WALK_LEFT;
-                // game_state->character.x_velocity_pixels_per_second = 0;
-                game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case STOPPING_WALK_LEFT:
-                game_state->character.motion = STOPPED_WALK_RIGHT;
-                // game_state->character.x_velocity_pixels_per_second = 0;
-                game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+            case LEFT:
+                game_state->character.x_velocity_pixels_per_second = 0;
                 break;
         }
+        game_state->character.direction = RIGHT;
         printf("right key pressed down frame %ld, now motion is %d\n", game_state->current_frame, game_state->character.motion);
     } else {
         if (input_state->right_button_press_frame != -1) {
@@ -74,32 +115,12 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
         }
         input_state->right_button_press_frame = -1;
 
-        switch (game_state->character.motion) {
-            case STOPPED_WALK_RIGHT:
-                game_state->character.motion = STOPPED_WALK_RIGHT;
+        switch (game_state->character.direction) {
+            case RIGHT:
+                game_state->character.motion = STOPPED;
                 game_state->character.x_velocity_pixels_per_second = 0;
                 break;
-            case START_WALK_RIGHT:
-                game_state->character.motion = STOPPED_WALK_RIGHT;
-                game_state->character.x_velocity_pixels_per_second = 0;
-                break;
-            case STOPPING_WALK_RIGHT:
-                game_state->character.motion = STOPPED_WALK_RIGHT;
-                game_state->character.x_velocity_pixels_per_second = 0;
-                break;
-            case WALK_RIGHT:
-                game_state->character.motion = STOPPING_WALK_RIGHT;
-                // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_initial_speed_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_deacceleration_pixels_per_second * seconds_to_advance;
-                if (game_state->character.x_velocity_pixels_per_second < 0) {
-                    game_state->character.x_velocity_pixels_per_second = 0;
-                }
-                break;
-            // If we're currently doing left motion and the right key stops being pressed, ignore it
-            case STOPPED_WALK_LEFT:
-            case STOPPING_WALK_LEFT:
-            case WALK_LEFT:
-            case START_WALK_LEFT:
+            case LEFT:
                 break;
         }
     }
@@ -109,44 +130,24 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
         if (input_state->left_button_press_frame == -1) {
             input_state->left_button_press_frame = game_state->current_frame;
         }
-        switch (game_state->character.motion) {
-            case STOPPED_WALK_LEFT:
-            case STOPPED_WALK_RIGHT:
-                game_state->character.motion = START_WALK_LEFT;
-                // game_state->character.x_velocity_pixels_per_second = -world_rules->x_movement_initial_speed_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+        // TODO Handle in air case, and possibly consolidate?
+        switch (game_state->character.direction) {
+            case LEFT:
+                switch (game_state->character.motion) {
+                    case STOPPED:
+                        game_state->character.motion = WALKING;
+                        game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+                        break;
+                    case WALKING:
+                        game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+                        break;
+                }
                 break;
-            case START_WALK_LEFT:
-                game_state->character.motion = WALK_LEFT;
-                // game_state->character.x_velocity_pixels_per_second = -world_rules->x_movement_next_speed_1_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case WALK_LEFT:
-                game_state->character.motion = WALK_LEFT;
-                // game_state->character.x_velocity_pixels_per_second = -world_rules->x_movement_next_speed_1_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case STOPPING_WALK_LEFT:
-                game_state->character.motion = WALK_LEFT;
-                // game_state->character.x_velocity_pixels_per_second = -world_rules->x_movement_next_speed_1_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case START_WALK_RIGHT:
-                game_state->character.motion = STOPPED_WALK_LEFT;
-                // game_state->character.x_velocity_pixels_per_second = 0;
-                game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case WALK_RIGHT:
-                game_state->character.motion = STOPPING_WALK_RIGHT;
-                // game_state->character.x_velocity_pixels_per_second = 0;
-                game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                break;
-            case STOPPING_WALK_RIGHT:
-                game_state->character.motion = STOPPED_WALK_LEFT;
-                // game_state->character.x_velocity_pixels_per_second = 0;
-                game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_deacceleration_pixels_per_second * seconds_to_advance;
+            case RIGHT:
+                game_state->character.x_velocity_pixels_per_second = 0;
                 break;
         }
+        game_state->character.direction = LEFT;
         printf("left key pressed down frame %ld, now motion is %d\n", game_state->current_frame, game_state->character.motion);
     } else {
         if (input_state->left_button_press_frame != -1) {
@@ -154,32 +155,12 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
         }
         input_state->left_button_press_frame = -1;
 
-        switch (game_state->character.motion) {
-            case STOPPED_WALK_LEFT:
-                game_state->character.motion = STOPPED_WALK_LEFT;
+        switch (game_state->character.direction) {
+            case LEFT:
+                game_state->character.motion = STOPPED;
                 game_state->character.x_velocity_pixels_per_second = 0;
                 break;
-            case START_WALK_LEFT:
-                game_state->character.motion = STOPPED_WALK_LEFT;
-                game_state->character.x_velocity_pixels_per_second = 0;
-                break;
-            case STOPPING_WALK_LEFT:
-                game_state->character.motion = STOPPED_WALK_LEFT;
-                game_state->character.x_velocity_pixels_per_second = 0;
-                break;
-            case WALK_LEFT:
-                game_state->character.motion = STOPPING_WALK_LEFT;
-                // game_state->character.x_velocity_pixels_per_second = -world_rules->x_movement_initial_speed_pixels_per_second;
-                game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
-                if (game_state->character.x_velocity_pixels_per_second > 0) {
-                    game_state->character.x_velocity_pixels_per_second = 0;
-                }
-                break;
-            // If we're currently doing right motion and the left key stops being pressed, ignore it
-            case STOPPED_WALK_RIGHT:
-            case STOPPING_WALK_RIGHT:
-            case WALK_RIGHT:
-            case START_WALK_RIGHT:
+            case RIGHT:
                 break;
         }
     }
@@ -187,8 +168,11 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
     if(state[SDL_SCANCODE_UP]){
         printf("up arrow key is pressed\n");
 
-        // gravity_pixels_per_second += 1;
-        // gravity_pixels_per_frame = (double)gravity_pixels_per_second / (double)1000000 * (double)micros_per_frame;
+        if (game_state->character.y_velocity_pixels_per_second == 0 && is_on_ground(game_state)) {
+            // Start jump
+            game_state->character.y_velocity_pixels_per_second = world_rules->y_jump_acceleration_pixels_per_second;
+            micros_when_jump_started = game_state->current_time_in_micros;
+        }
     }
     else if (state[SDL_SCANCODE_DOWN]){
         printf("down arrow key is pressed, ignored for now\n");

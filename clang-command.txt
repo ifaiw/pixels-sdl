@@ -21,3 +21,6 @@ clang++ main.cpp stuff_happens_platformer.c image_bmp_loader.c -F/Library/Framew
 
 # platformer refactoring
 clang++ game_blocks.c game_images.c game_movement.c game_sprites.c image_bmp_loader.c main.cpp stuff_happens_platformer.c   rendering.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
+
+clang++ game_blocks.c game_images.c game_movement.c game_sprites.c game_state.c image_bmp_loader.c main.cpp stuff_happens_platformer.c   rendering.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
+

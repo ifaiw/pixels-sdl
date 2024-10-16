@@ -1,6 +1,7 @@
 #ifndef _GAME_STRUCTS__H
 #define _GAME_STRUCTS__H
 
+#include <stdbool.h>
 #include <inttypes.h>
 
 struct ImageInfo {
@@ -20,6 +21,7 @@ struct Sprite {
     uint32_t* pixels_start;
     uint32_t height, width;
     uint32_t image_source_pitch_in_pixels;
+    bool flip_left_to_right;
 };
 
 struct Block {
@@ -31,25 +33,27 @@ struct Block {
 };
 
 enum CharacterMotion {
-    START_WALK_LEFT,
-    WALK_LEFT,
-    STOPPING_WALK_LEFT,
-    STOPPED_WALK_LEFT,
-    START_WALK_RIGHT,
-    WALK_RIGHT,
-    STOPPING_WALK_RIGHT,
-    STOPPED_WALK_RIGHT
+    WALKING,
+    STOPPED
+};
+
+enum CharacterDirection {
+    LEFT,
+    RIGHT,
 };
 
 struct Character {
-    double center_x;
-    double center_y_inverted;
+    double x_bottom_left;
+    double y_inverted_bottom_left;
     double x_velocity_pixels_per_second;
     double y_velocity_pixels_per_second;
     double width;
     double height;
     struct Sprite current_sprite;
     enum CharacterMotion motion;
+    enum CharacterDirection direction;
+    long micros_when_jump_started;
+    bool is_on_ground;
 };
 
 struct WorldRules {
@@ -69,6 +73,15 @@ struct WorldRules {
     double x_ground_acceleration_pixels_per_second;
     double x_ground_deacceleration_pixels_per_second;
 
+    double y_jump_acceleration_pixels_per_second;
+
+    int num_walking_animation_frames;
+    long micros_per_walking_animation_frame;
+};
+
+struct XY{
+    int x;
+    int y;
 };
 
 #endif  // _GAME_STRUCTS__H

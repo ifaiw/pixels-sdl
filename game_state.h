@@ -20,6 +20,11 @@ struct GameState {
     struct Character character;
 
     long current_frame;
+    long current_time_in_micros;
 };
+
+struct Block* get_world_block_for_location(int x, int y, struct GameState* game_state);
+
+struct XY get_bottom_left_world_pixel_for_block(struct Block* block);
 
 #endif  // _GAME_STATE__H

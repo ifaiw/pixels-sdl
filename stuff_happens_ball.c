@@ -144,7 +144,7 @@ void initialize(int width, int height, long micros_per_frame_param) {
 }
 
 // IMPLEMENTS
-void process_frame_and_blit(long frame_count, long frame_time_in_micros, uint32_t *pixels, int width, int height) {
+void process_frame_and_blit(long frame_count, long current_time_in_micros, uint32_t *pixels, int width, int height) {
     printf("top of process_frame_and_blit\n");
     blit(pixels, width, height);
 

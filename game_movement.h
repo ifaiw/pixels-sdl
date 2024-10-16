@@ -4,7 +4,7 @@
 #include "game_structs.h"
 
 
-void do_movement(struct Character* character, double microseconds_to_advance);
+void do_movement(struct GameState* game_state, double microseconds_to_advance);
 
 void handle_input(struct GameState* game_state, struct InputState* input_state, struct WorldRules* world_rules, double microseconds_to_advance);
 

@@ -139,7 +139,7 @@ int main(int argc, char* argv[]){
             process_event(event);
         }
 
-        process_frame_and_blit(total_frame_count, first_micros_at_top, pixels, WIDTH, HEIGHT);
+        process_frame_and_blit(total_frame_count, time_at_top_micros, pixels, WIDTH, HEIGHT);
         clock_gettime(CLOCK_REALTIME, &time_start_render);
 
         // software render

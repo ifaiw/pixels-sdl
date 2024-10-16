@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "game_structs.h"
@@ -11,28 +12,45 @@
 inline void write_sprite(int top_left_x, int top_left_y, struct Sprite sprite, int pixels_width, uint32_t* r_pixels) {
     for (int y = 0; y < sprite.height; ++y) {
         int pixels_offset = (top_left_y + y) * pixels_width + top_left_x;
-        // bmp images seem be loaded "upside-down", so invert the rows here
-        // TODO remove this? int sprite_pixels_offset = (sprite.height - y - 1) * sprite.image_source_pitch_in_pixels;
         int sprite_pixels_offset = y * sprite.image_source_pitch_in_pixels;
         memcpy(r_pixels + pixels_offset, sprite.pixels_start + sprite_pixels_offset, sprite.width * 4);
     }
 }
 
+inline void write_image(int top_left_x, int top_left_y, struct ImageInfo image, int pixels_width, uint32_t* r_pixels) {
+    printf("write_image called\n");
+    for (int y = 0; y < image.height; ++y) {
+        int pixels_offset = (top_left_y + y) * pixels_width + top_left_x;
+        int sprite_pixels_offset = y * image.width;
+        printf("about to memcpy pixels_offset=%d sprite_pixels_offset=%d image.width=%d\n", pixels_offset, sprite_pixels_offset, image.width);
+        memcpy(r_pixels + pixels_offset, image.pixels + sprite_pixels_offset, image.width * 4);
+    }
+}
+
 inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite sprite, int pixels_width, uint32_t* r_pixels) {
-    for (int y = 0; y < sprite.height; ++y) {
-        uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);
-        uint32_t* pixels_row_start = r_pixels + ((top_left_y + y) * pixels_width) + top_left_x;
-        for (int pixel_index = 0; pixel_index < sprite.width; ++pixel_index) {
-            switch (sprite_row_start[pixel_index] & ALPHA) {
-                case ALPHA: pixels_row_start[pixel_index] = sprite_row_start[pixel_index];
-                default: break;
+    if (sprite.flip_left_to_right) {
+        for (int y = 0; y < sprite.height; ++y) {
+            uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);
+            uint32_t* pixels_row_start = r_pixels + ((top_left_y + y) * pixels_width) + top_left_x;
+            for (int pixel_index = 0; pixel_index < sprite.width; ++pixel_index) {
+                switch (sprite_row_start[pixel_index] & ALPHA) {
+                    case ALPHA: pixels_row_start[sprite.width - 1 - pixel_index] = sprite_row_start[pixel_index];
+                    default: break;
+                }
             }
         }
-        // TODO Remove all of these commented lines?
-        // // bmp images seem be loaded "upside-down", so invert the rows here
-        // // TODO remove this? int sprite_pixels_offset = (sprite.height - y - 1) * sprite.image_source_pitch_in_pixels;
-        // int sprite_pixels_offset = y * sprite.image_source_pitch_in_pixels;
-        // memcpy(r_pixels + pixels_offset, sprite.pixels_start + sprite_pixels_offset, sprite.width * 4);
+    }
+    else {
+        for (int y = 0; y < sprite.height; ++y) {
+            uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);
+            uint32_t* pixels_row_start = r_pixels + ((top_left_y + y) * pixels_width) + top_left_x;
+            for (int pixel_index = 0; pixel_index < sprite.width; ++pixel_index) {
+                switch (sprite_row_start[pixel_index] & ALPHA) {
+                    case ALPHA: pixels_row_start[pixel_index] = sprite_row_start[pixel_index];
+                    default: break;
+                }
+            }
+        }
     }
 }
 

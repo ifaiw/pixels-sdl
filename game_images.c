@@ -8,10 +8,6 @@
 #include "image_bmp_loader.h"
 
 
-#define IMAGE_INDEX_BLANK 0
-#define IMAGE_INDEX_SOLIDS_1 1
-#define IMAGE_INDEX_ORC_1 2
-
 // PRIVATE
 inline void flip_upside_down(uint32_t* pixels, int width, int height) {
     int bottom = height - 1;
@@ -21,6 +17,17 @@ inline void flip_upside_down(uint32_t* pixels, int width, int height) {
         memcpy(pixels + bottom * width, pixels + top * width, width * 4);
         memcpy(pixels + top * width, swap_row, width * 4);
         bottom--;
+    }
+}
+
+// PRIVATE
+inline void flip_right_left(uint32_t* pixels, int width, int height) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width / 2; ++x) {
+            uint32_t swap_pixel = pixels[y * width + x];
+            pixels[y * width + x] = pixels[y * width + width - x - 1];
+            pixels[y * width + width - x - 1] = swap_pixel;
+        }
     }
 }
 
@@ -59,10 +66,19 @@ void load_images(struct ImageInfo* r_image_array) {
 
     load_bmp_image(IMAGE_PATH_SOLIDS_1, r_image_array + IMAGE_INDEX_SOLIDS_1);
     flip_upside_down(r_image_array[IMAGE_INDEX_SOLIDS_1].pixels, r_image_array[IMAGE_INDEX_SOLIDS_1].width, r_image_array[IMAGE_INDEX_SOLIDS_1].height);
+    // TODO not needed? flip_right_left(r_image_array[IMAGE_INDEX_SOLIDS_1].pixels, r_image_array[IMAGE_INDEX_SOLIDS_1].width, r_image_array[IMAGE_INDEX_SOLIDS_1].height);
 
     struct ImageInfo orcs_image_unscaled;
-    load_bmp_image(IMAGE_PATH_ORC_1, &orcs_image_unscaled);
+    load_bmp_image(IMAGE_PATH_ORC_1_RIGHT, &orcs_image_unscaled);
     flip_upside_down(orcs_image_unscaled.pixels, orcs_image_unscaled.width, orcs_image_unscaled.height);
-    scale_image_up(&orcs_image_unscaled, 2, r_image_array + IMAGE_INDEX_ORC_1);
+    // TODO not needed? flip_right_left(orcs_image_unscaled.pixels, orcs_image_unscaled.width, orcs_image_unscaled.height);
+    scale_image_up(&orcs_image_unscaled, 2, r_image_array + IMAGE_INDEX_ORC_1_RIGHT);
     free(orcs_image_unscaled.pixels);
+
+    // TODO can get rid of?
+    // r_image_array[IMAGE_INDEX_ORC_1_LEFT].height = r_image_array[IMAGE_INDEX_ORC_1_RIGHT].height;
+    // r_image_array[IMAGE_INDEX_ORC_1_LEFT].width = r_image_array[IMAGE_INDEX_ORC_1_RIGHT].width;
+    // r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels = (uint32_t*)malloc(sizeof(r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels));
+    // memcpy(r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels, r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels, sizeof(r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels));
+    // flip_right_left(r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels, r_image_array[IMAGE_INDEX_ORC_1_LEFT].width, r_image_array[IMAGE_INDEX_ORC_1_LEFT].height);
 }

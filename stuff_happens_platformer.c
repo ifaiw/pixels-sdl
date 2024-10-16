@@ -29,33 +29,15 @@ static uint32_t *blank_pixels;
 int blocks_area_offset_x;
 int blocks_area_offset_y;
 
+// TODO just for testing
+int last_walking_frame;
+
 struct GameState game_state;
 
 struct WorldRules world_rules;
 
 struct InputState input_state;
 
-// PRIVATE
-inline struct Block* get_world_block_for_location(int x, int y) {
-    // TODO is x or y outside the world bounds handled properly? Just force the world to have a rectangle of blocks all around the outmost edge?
-    if (x < 0 || y < 0) {
-        return NULL;
-    }
-
-    int block_x = x / SPRITE_WIDTH;
-    if (block_x * SPRITE_WIDTH < x) {
-        block_x += 1;
-    }
-    int block_y = y / SPRITE_HEIGHT;
-    if (block_y * SPRITE_HEIGHT < y) {
-        block_y += 1;
-    }
-    if (block_x >= WORLD_BLOCKS_WIDTH || block_y >= WORLD_BLOCKS_HEIGHT) {
-        return NULL;
-    }
-
-    return &game_state.world_blocks[block_y * WORLD_BLOCKS_WIDTH + block_x];
-}
 
 // PRIVATE
 void initialize_game_state() {
@@ -80,23 +62,27 @@ void initialize_game_state() {
             } else {
                 game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x] = game_state.base_blocks[BLOCK_TYPE_EMPTY];
             }
+
+            game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x].world_x = x;
+            game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x].world_y = y;
+            printf("Initializing blocks compare x %d to %d\n", game_state.base_blocks[BLOCK_TYPE_EMPTY].world_x, game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x].world_x);
         }
     }
 
-    game_state.character.current_sprite = game_state.base_sprites[SPRITE_TYPE_ORC_STAND];
-    game_state.character.center_x = WORLD_BLOCKS_WIDTH * SPRITE_WIDTH / 2;
-    game_state.character.center_y_inverted = SPRITE_HEIGHT + game_state.base_sprites[SPRITE_TYPE_ORC_STAND].height / 2;
+    game_state.character.current_sprite = game_state.base_sprites[SPRITE_TYPE_ORC_STAND_RIGHT];
+    game_state.character.x_bottom_left = WORLD_BLOCKS_WIDTH * BLOCK_WIDTH_IN_PIXELS / 2;
+    game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS;
     game_state.character.width = game_state.character.current_sprite.width;
     game_state.character.height = game_state.character.current_sprite.height;
     game_state.character.x_velocity_pixels_per_second = 0;
     game_state.character.y_velocity_pixels_per_second = 0;
-    game_state.character.motion = STOPPED_WALK_LEFT;
+    game_state.character.motion = STOPPED;
+    game_state.character.direction = LEFT;
 
-    printf("Initial character position is %f,%f\n", game_state.character.center_x, game_state.character.center_y_inverted);
+    printf("Initial character position is %f,%f\n", game_state.character.x_bottom_left, game_state.character.y_inverted_bottom_left);
 
     game_state.current_frame = -1;
 
-    // TODO just for testing
     // for (int i = 0; i < WORLD_BLOCKS_HEIGHT * WORLD_BLOCKS_WIDTH; ++i) {
     //     printf("%d block type %u\n", i, game_state.world_blocks[i].type);
     // }
@@ -114,8 +100,13 @@ inline void initialize_world_rules(double frames_per_second) {
     world_rules.x_movement_next_speed_1_pixels_per_second = 80;
     world_rules.x_movement_next_speed_1_pixels_per_frame = world_rules.x_movement_next_speed_1_pixels_per_second / frames_per_second;
 
-    world_rules.x_ground_acceleration_pixels_per_second = 400;
-    world_rules.x_movement_max_speed_pixels_per_second = 1000;
+    world_rules.x_ground_acceleration_pixels_per_second = 300;
+    world_rules.x_movement_max_speed_pixels_per_second = 180;
+
+    world_rules.num_walking_animation_frames = 7;
+    world_rules.micros_per_walking_animation_frame = 100000;
+
+    world_rules.y_jump_acceleration_pixels_per_second = 200;
 }
 
 // PRIVATE
@@ -124,6 +115,30 @@ inline void initialize_input_state() {
     input_state.right_button_press_frame = -1;
     input_state.up_button_press_frame = -1;
     input_state.down_button_press_frame = -1;
+}
+
+// PRIVATE
+inline void update_sprites(struct GameState* game_state_param, struct WorldRules* world_rules_param) {
+
+    switch (game_state_param->character.motion) {
+        case STOPPED:
+            game_state_param->character.current_sprite = game_state_param->base_sprites[SPRITE_TYPE_ORC_STAND_RIGHT];
+            game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
+            break;
+        case WALKING:
+            long microsecond_bucket = game_state_param->current_time_in_micros / world_rules_param->micros_per_walking_animation_frame;
+            int walking_animation_frame_num = microsecond_bucket % world_rules_param->num_walking_animation_frames;
+            // TODO just for testing
+            if (walking_animation_frame_num != last_walking_frame && walking_animation_frame_num != last_walking_frame+1 && !(last_walking_frame == 6 && walking_animation_frame_num == 0)) {
+                printf("skipped walk animation frame, from %d to %d\n", last_walking_frame, walking_animation_frame_num);
+            }
+            last_walking_frame = walking_animation_frame_num;
+
+            printf("we're walking, current_time_in_micros=%ld microsecond_bucket=%ld walking_animation_frame_num=%d\n", current_time_in_micros, microsecond_bucket, walking_animation_frame_num);
+            game_state_param->character.current_sprite = game_state_param->base_sprites[SPRITE_TYPE_ORC_WALK_RIGHT_1 + walking_animation_frame_num];
+            game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
+            break;
+    }
 }
 
 // PRIVATE
@@ -136,16 +151,16 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
             // if (game_state.world_blocks[WORLD_BLOCKS_HEIGHT * block_y + block_x].type == BLOCK_TYPE_EMPTY) {
             //     continue;
             // }
-            int top_left_x = blocks_area_offset_x + block_x * SPRITE_WIDTH;
-            int top_left_y = blocks_area_offset_y + (WORLD_BLOCKS_HEIGHT - 1 - block_y) * SPRITE_HEIGHT;
+            int top_left_x = blocks_area_offset_x + block_x * BLOCK_WIDTH_IN_PIXELS;
+            int top_left_y = blocks_area_offset_y + (WORLD_BLOCKS_HEIGHT - 1 - block_y) * BLOCK_HEIGHT_IN_PIXELS;
             // printf("Block at %d,%d will be drawn at %d,%d\n", block_x, block_y, top_left_x, top_left_y);
             write_sprite(top_left_x, top_left_y, game_state.world_blocks[WORLD_BLOCKS_WIDTH * block_y + block_x].sprite, width, r_pixels);
 
         }
     }
 
-    int char_left = round(game_state.character.center_x - game_state.character.current_sprite.width/2) + blocks_area_offset_x;
-    int char_top = blocks_area_offset_y + WORLD_BLOCKS_HEIGHT * SPRITE_HEIGHT - round(game_state.character.center_y_inverted + game_state.character.current_sprite.height/2);
+    int char_left = round(game_state.character.x_bottom_left) + blocks_area_offset_x;
+    int char_top = blocks_area_offset_y + (WORLD_BLOCKS_HEIGHT * BLOCK_HEIGHT_IN_PIXELS) - round(game_state.character.y_inverted_bottom_left) - game_state.character.current_sprite.height;
     // printf("Draw orc at %d,%d\n", char_left, char_top);
     write_sprite_aliased(char_left, char_top, game_state.character.current_sprite, width, r_pixels);
 }
@@ -193,18 +208,31 @@ int initialize(int width, int height, long micros_per_frame_param) {
 }
 
 // IMPLEMENTS
-void process_frame_and_blit(long frame_count, long frame_time_in_micros, uint32_t *pixels, int width, int height) {
+void process_frame_and_blit(long frame_count, long current_time_in_micros, uint32_t *pixels, int width, int height) {
     game_state.current_frame = frame_count;
 
-
+    game_state.current_time_in_micros = current_time_in_micros;
     handle_input(&game_state, &input_state, &world_rules, world_rules.microseconds_per_frame);
     printf("character.x_velocity_pixels_per_second is now %f\n", game_state.character.x_velocity_pixels_per_second);
 
-    do_movement(&game_state.character, world_rules.microseconds_per_frame);
-    printf("character.x is now %f\n", game_state.character.center_x);
+    do_movement(&game_state, world_rules.microseconds_per_frame);
+
+    update_sprites(&game_state, &world_rules, frame_count);
+
+    printf("character.x is now %f\n", game_state.character.x_bottom_left);
 
     // printf("top of process_frame_and_blit\n");
     blit(pixels, width, height);
+    // Below is test code for just rendering an image
+    // struct Sprite test_sprite;
+    // test_sprite.flip_left_to_right = false;
+    // test_sprite.width = width;
+    // test_sprite.height = height;
+    // test_sprite.image_source_pitch_in_pixels = game_state.base_bmp_images[IMAGE_INDEX_ORC_1_RIGHT].width;
+    // test_sprite.pixels_start = game_state.base_bmp_images[IMAGE_INDEX_ORC_1_RIGHT].pixels;
+    // write_sprite(0, 0, test_sprite, width, pixels);
+    // write_image(0, 0, game_state.base_bmp_images[IMAGE_INDEX_ORC_1_RIGHT], width, pixels);
+
 
     // Try skipping processing for the first second or so since framerate skips often happen at the very start
     if (frame_count < INITIAL_FRAMES_TO_WAIT) {
