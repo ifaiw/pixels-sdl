@@ -1,4 +1,5 @@
 a.out
+*.out
 
 # Byte-compiled / optimized / DLL files / cache / dumps
 __pycache__/
