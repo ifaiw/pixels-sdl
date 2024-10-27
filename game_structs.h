@@ -34,7 +34,8 @@ struct Block {
 
 enum CharacterMotion {
     WALKING,
-    STOPPED
+    STOPPED,
+    JUMPING
 };
 
 enum CharacterDirection {

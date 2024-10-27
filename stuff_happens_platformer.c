@@ -134,7 +134,7 @@ inline void update_sprites(struct GameState* game_state_param, struct WorldRules
             }
             last_walking_frame = walking_animation_frame_num;
 
-            printf("we're walking, current_time_in_micros=%ld microsecond_bucket=%ld walking_animation_frame_num=%d\n", current_time_in_micros, microsecond_bucket, walking_animation_frame_num);
+            printf("we're walking, current_time_in_micros=%ld microsecond_bucket=%ld walking_animation_frame_num=%d\n", game_state_param->current_time_in_micros, microsecond_bucket, walking_animation_frame_num);
             game_state_param->character.current_sprite = game_state_param->base_sprites[SPRITE_TYPE_ORC_WALK_RIGHT_1 + walking_animation_frame_num];
             game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
@@ -195,8 +195,6 @@ int initialize(int width, int height, long micros_per_frame_param) {
     // 60 frames per second
     // fps / 1000000 = frames per micros
     // 1000000/fps = micros per frame
-    // gravity per second / 1000000 = gravity per micros
-    // gravity per micros * micros per frame = gravity per frame
 
     blank_pixels = (uint32_t*)malloc(height * width * 4);
     for (int i = 0; i < height * width; ++i) {
@@ -210,14 +208,16 @@ int initialize(int width, int height, long micros_per_frame_param) {
 // IMPLEMENTS
 void process_frame_and_blit(long frame_count, long current_time_in_micros, uint32_t *pixels, int width, int height) {
     game_state.current_frame = frame_count;
-
     game_state.current_time_in_micros = current_time_in_micros;
+
+    game_state.character.is_on_ground = is_on_ground(&game_state);
+
     handle_input(&game_state, &input_state, &world_rules, world_rules.microseconds_per_frame);
     printf("character.x_velocity_pixels_per_second is now %f\n", game_state.character.x_velocity_pixels_per_second);
 
     do_movement(&game_state, world_rules.microseconds_per_frame);
 
-    update_sprites(&game_state, &world_rules, frame_count);
+    update_sprites(&game_state, &world_rules);
 
     printf("character.x is now %f\n", game_state.character.x_bottom_left);
 

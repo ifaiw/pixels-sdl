@@ -168,11 +168,17 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
     if(state[SDL_SCANCODE_UP]){
         printf("up arrow key is pressed\n");
 
-        if (game_state->character.y_velocity_pixels_per_second == 0 && is_on_ground(game_state)) {
+        bool motion_allows_jump;
+        switch(game_state-)
+
+        if (game_state->character.y_velocity_pixels_per_second == 0 && game_state->character.is_on_ground && game_state->character.motion == JUMPING) {
             // Start jump
             game_state->character.y_velocity_pixels_per_second = world_rules->y_jump_acceleration_pixels_per_second;
-            micros_when_jump_started = game_state->current_time_in_micros;
+            game_state->character.micros_when_jump_started = game_state->current_time_in_micros;
+            game_state->character.motion = JUMPING;
         }
+        // Holding down the up arrow a little longer makes the character jump higher
+        else if (game_state->character.y_velocity_pixels_per_second > 0 )
     }
     else if (state[SDL_SCANCODE_DOWN]){
         printf("down arrow key is pressed, ignored for now\n");

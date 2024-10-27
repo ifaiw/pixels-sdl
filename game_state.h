@@ -27,4 +27,6 @@ struct Block* get_world_block_for_location(int x, int y, struct GameState* game_
 
 struct XY get_bottom_left_world_pixel_for_block(struct Block* block);
 
+bool is_on_ground(struct GameState* game_state);
+
 #endif  // _GAME_STATE__H
