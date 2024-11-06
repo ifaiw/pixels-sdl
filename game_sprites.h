@@ -9,7 +9,7 @@
 #define SPRITE_WIDTH 48
 #define SPRITE_HEIGHT 48
 
-#define NUM_SPRITE_TYPES 10
+#define NUM_SPRITE_TYPES 12
 #define SPRITE_TYPE_EMPTY 0
 #define SPRITE_TYPE_GROUND 1
 #define SPRITE_TYPE_ORC_STAND_RIGHT 2
@@ -20,6 +20,9 @@
 #define SPRITE_TYPE_ORC_WALK_RIGHT_5 7
 #define SPRITE_TYPE_ORC_WALK_RIGHT_6 8
 #define SPRITE_TYPE_ORC_WALK_RIGHT_7 9
+
+#define SPRITE_TYPE_GROUND_TEST 10
+#define SPRITE_TYPE_GROUND_TEST2 11
 
 void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_array);
 

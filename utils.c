@@ -107,4 +107,22 @@ inline int get_min(int a, int b) {
     return b;
 }
 
+// Assumes chars is null-terminated
+inline int chars_to_int(char* chars) {
+    int total = 0;
+    int flip = 1;
+    int start = 0;
+    if (chars[0] == '-') {
+        flip = -1;
+        start++;
+    }
+    for (int i = start; ; ++i) {
+        if (chars[i] == 0) {
+            break;
+        }
+        total = total * 10 + chars[i] - '0';
+    }
+    return total * flip;
+}
+
 #endif // _UTILS__C

@@ -61,20 +61,21 @@ struct WorldRules {
     double frames_per_second;
     double microseconds_per_frame;
     double gravity_pixels_per_second;
-    double gravity_pixels_per_frame;
-    double x_movement_initial_speed_pixels_per_second;
-    double x_movement_next_speed_1_pixels_per_second;
+    double y_max_fall_speed_pixels_per_second;
     // TODO max x speed not needed?
     double x_movement_max_speed_pixels_per_second;
-    double x_movement_initial_speed_pixels_per_frame;
-    double x_movement_next_speed_1_pixels_per_frame;
     // TODO max x speed not needed?
     double x_movement_max_speed_pixels_per_frame;
 
     double x_ground_acceleration_pixels_per_second;
     double x_ground_deacceleration_pixels_per_second;
 
+    double x_air_acceleration_pixels_per_second;
+    double x_air_deacceleration_pixels_per_second;
+
     double y_jump_acceleration_pixels_per_second;
+
+    double microseconds_after_jump_start_check_jump_still_pressed;
 
     int num_walking_animation_frames;
     long micros_per_walking_animation_frame;

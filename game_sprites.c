@@ -70,4 +70,16 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
     r_sprite_array[SPRITE_TYPE_ORC_WALK_RIGHT_7].pixels_start = image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels + (366 * image_array[IMAGE_INDEX_ORC_1_RIGHT].width) + 1320;
     r_sprite_array[SPRITE_TYPE_ORC_WALK_RIGHT_7].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_ORC_1_RIGHT].width;
 
+
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST].height = SPRITE_HEIGHT;
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST].width = SPRITE_WIDTH;
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels;
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].height = SPRITE_HEIGHT;
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].width = SPRITE_WIDTH;
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels + 48;
+    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
 }

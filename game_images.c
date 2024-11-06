@@ -1,8 +1,10 @@
 #include "game_images.h"
 
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 
+#include "game_paths.h"
 #include "game_sprites.h"
 #include "graphics_constants.h"
 #include "image_bmp_loader.h"
@@ -56,7 +58,7 @@ inline void scale_image_up(struct ImageInfo* current_image, uint8_t factor_incre
 }
 
 // IMPLEMENTS
-void load_images(struct ImageInfo* r_image_array) {
+int load_images(struct ImageInfo* r_image_array) {
     r_image_array[IMAGE_INDEX_BLANK].pixels = (uint32_t*)malloc(SPRITE_WIDTH * SPRITE_HEIGHT * 4);
     for (int i = 0; i < SPRITE_WIDTH * SPRITE_HEIGHT; ++i) {
         r_image_array[IMAGE_INDEX_BLANK].pixels[i] = ALPHA;
@@ -64,12 +66,20 @@ void load_images(struct ImageInfo* r_image_array) {
     r_image_array[IMAGE_INDEX_BLANK].height = SPRITE_HEIGHT;
     r_image_array[IMAGE_INDEX_BLANK].width = SPRITE_WIDTH;
 
-    load_bmp_image(IMAGE_PATH_SOLIDS_1, r_image_array + IMAGE_INDEX_SOLIDS_1);
+    int load_image_result = load_bmp_image(GAME_PATH__IMAGE_PATH_SOLIDS_1_FULL, r_image_array + IMAGE_INDEX_SOLIDS_1);
+    if (load_image_result != 0) {
+        printf("Error loading IMAGE_PATH_SOLIDS_1: %d\n", load_image_result);
+        return load_image_result;
+    }
     flip_upside_down(r_image_array[IMAGE_INDEX_SOLIDS_1].pixels, r_image_array[IMAGE_INDEX_SOLIDS_1].width, r_image_array[IMAGE_INDEX_SOLIDS_1].height);
     // TODO not needed? flip_right_left(r_image_array[IMAGE_INDEX_SOLIDS_1].pixels, r_image_array[IMAGE_INDEX_SOLIDS_1].width, r_image_array[IMAGE_INDEX_SOLIDS_1].height);
 
     struct ImageInfo orcs_image_unscaled;
-    load_bmp_image(IMAGE_PATH_ORC_1_RIGHT, &orcs_image_unscaled);
+    load_image_result = load_bmp_image(GAME_PATH__IMAGE_PATH_ORC_1_RIGHT_FULL, &orcs_image_unscaled);
+    if (load_image_result != 0) {
+        printf("Error loading IMAGE_PATH_ORC_1_RIGHT: %d\n", load_image_result);
+        return load_image_result;
+    }
     flip_upside_down(orcs_image_unscaled.pixels, orcs_image_unscaled.width, orcs_image_unscaled.height);
     // TODO not needed? flip_right_left(orcs_image_unscaled.pixels, orcs_image_unscaled.width, orcs_image_unscaled.height);
     scale_image_up(&orcs_image_unscaled, 2, r_image_array + IMAGE_INDEX_ORC_1_RIGHT);
@@ -81,4 +91,6 @@ void load_images(struct ImageInfo* r_image_array) {
     // r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels = (uint32_t*)malloc(sizeof(r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels));
     // memcpy(r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels, r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels, sizeof(r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels));
     // flip_right_left(r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels, r_image_array[IMAGE_INDEX_ORC_1_LEFT].width, r_image_array[IMAGE_INDEX_ORC_1_LEFT].height);
+
+    return 0;
 }

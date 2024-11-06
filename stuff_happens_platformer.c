@@ -7,10 +7,12 @@
 #include "game_blocks.h"
 #include "game_images.h"
 #include "game_movement.h"
+#include "game_paths.h"
 #include "game_sprites.h"
 #include "game_state.h"
 #include "graphics_constants.h"
 #include "rendering.h"
+#include "text_file_reader.h"
 #include "utils.c"
 
 #define INITIAL_FRAMES_TO_WAIT 180
@@ -41,9 +43,20 @@ struct InputState input_state;
 
 // PRIVATE
 void initialize_game_state() {
-    load_images(game_state.base_bmp_images);
+    printf("Top of initialize_game_state\n");
+    fflush(stdout);
+    printf("initialize_game_state: load_images\n");
+    int load_image_result = load_images(game_state.base_bmp_images);
+    if (load_image_result != 0) {
+        printf("Error loading images: %d\n", load_image_result);
+        exit(-1);
+    }
+    fflush(stdout);
+    printf("initialize_game_state: initialize_sprites\n");
     initialize_sprites(game_state.base_bmp_images, game_state.base_sprites);
+    printf("initialize_game_state: initialize_blocks\n");
     initialize_blocks(game_state.base_sprites, game_state.base_blocks);
+    fflush(stdout);
 
     for (int y = 0; y < WORLD_BLOCKS_HEIGHT; ++y) {
         for (int x = 0; x < WORLD_BLOCKS_WIDTH; ++x) {
@@ -71,7 +84,7 @@ void initialize_game_state() {
 
     game_state.character.current_sprite = game_state.base_sprites[SPRITE_TYPE_ORC_STAND_RIGHT];
     game_state.character.x_bottom_left = WORLD_BLOCKS_WIDTH * BLOCK_WIDTH_IN_PIXELS / 2;
-    game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS;
+    game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS * 1;
     game_state.character.width = game_state.character.current_sprite.width;
     game_state.character.height = game_state.character.current_sprite.height;
     game_state.character.x_velocity_pixels_per_second = 0;
@@ -89,12 +102,71 @@ void initialize_game_state() {
 }
 
 // PRIVATE
+inline void load_world_rules_from_file() {
+    struct FileBytes world_rules_file_bytes;
+    int file_load_result = read_file(GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, &world_rules_file_bytes);
+    if (file_load_result != 0) {
+        printf("Unable to load world rules file $%s$ result %d\n", GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, file_load_result);
+        exit(-1);
+    }
+    printf("Below is the world_rules file\n%s\n", world_rules_file_bytes.bytes);
+    struct TextKeyValueFileContents world_rules_file_dict;
+    world_rules_file_dict.chars = (char*)world_rules_file_bytes.bytes;
+    world_rules_file_dict.num_chars = world_rules_file_bytes.num_bytes;
+    int key_value_parse_result = convert_file_to_key_values(&world_rules_file_dict);
+    if (key_value_parse_result != 0) {
+        printf("Unable to parse key/values from world rules file $%s$ result %d\n", GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, file_load_result);
+        exit(-1);
+    }
+    for (int i = 0; i < world_rules_file_dict.num_keys; ++i) {
+        printf("Key: %s Value %s\n", world_rules_file_dict.chars + world_rules_file_dict.key_indices[i], world_rules_file_dict.chars + world_rules_file_dict.value_indices[i]);
+    }
+
+    world_rules.gravity_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"gravity_pixels_per_second", &world_rules_file_dict));
+    printf("from dict_get_value, world_rules.gravity_pixels_per_second is %f\n", world_rules.gravity_pixels_per_second);
+    world_rules.y_max_fall_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_max_fall_speed_pixels_per_second", &world_rules_file_dict));
+
+	world_rules.x_ground_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_ground_acceleration_pixels_per_second", &world_rules_file_dict));
+	world_rules.x_movement_max_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_movement_max_speed_pixels_per_second", &world_rules_file_dict));
+
+    world_rules.num_walking_animation_frames = chars_to_int(dict_get_value((char*)"num_walking_animation_frames", &world_rules_file_dict));
+	world_rules.micros_per_walking_animation_frame = (long)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
+
+    world_rules.y_jump_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_jump_acceleration_pixels_per_second", &world_rules_file_dict));
+	world_rules.microseconds_after_jump_start_check_jump_still_pressed = (double)chars_to_int(dict_get_value((char*)"microseconds_after_jump_start_check_jump_still_pressed", &world_rules_file_dict));
+
+    free(world_rules_file_dict.chars);
+    free(world_rules_file_dict.key_indices);
+    free(world_rules_file_dict.value_indices);
+}
+
+// PRIVATE
 inline void initialize_world_rules(double frames_per_second) {
+    struct FileBytes world_rules_file_bytes;
+    int file_load_result = read_file(GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, &world_rules_file_bytes);
+    if (file_load_result != 0) {
+        printf("Unable to load world rules file $%s$ result %d\n", GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, file_load_result);
+        exit(-1);
+    }
+    printf("Below is the world_rules file\n%s\n", world_rules_file_bytes.bytes);
+    struct TextKeyValueFileContents world_rules_file_dict;
+    world_rules_file_dict.chars = (char*)world_rules_file_bytes.bytes;
+    world_rules_file_dict.num_chars = world_rules_file_bytes.num_bytes;
+    int key_value_parse_result = convert_file_to_key_values(&world_rules_file_dict);
+    if (key_value_parse_result != 0) {
+        printf("Unable to parse key/values from world rules file $%s$ result %d\n", GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, file_load_result);
+        exit(-1);
+    }
+    for (int i = 0; i < world_rules_file_dict.num_keys; ++i) {
+        printf("Key: %s Value %s\n", world_rules_file_dict.chars + world_rules_file_dict.key_indices[i], world_rules_file_dict.chars + world_rules_file_dict.value_indices[i]);
+    }
+
     world_rules.frames_per_second = frames_per_second;
     world_rules.microseconds_per_frame = (double)1000000/frames_per_second;
     // TODO remove all the per_frame values? Are they used anywhere?
-    world_rules.gravity_pixels_per_second = 22;
-    world_rules.gravity_pixels_per_frame = world_rules.gravity_pixels_per_second / frames_per_second;
+    world_rules.gravity_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"gravity_pixels_per_second", &world_rules_file_dict));
+    printf("from dict_get_value, world_rules.gravity_pixels_per_second is %f\n", world_rules.gravity_pixels_per_second);
+    world_rules.y_max_fall_speed_pixels_per_second = 400;
     world_rules.x_movement_initial_speed_pixels_per_second = 40;
     world_rules.x_movement_initial_speed_pixels_per_frame = world_rules.x_movement_initial_speed_pixels_per_second / frames_per_second;
     world_rules.x_movement_next_speed_1_pixels_per_second = 80;
@@ -106,7 +178,12 @@ inline void initialize_world_rules(double frames_per_second) {
     world_rules.num_walking_animation_frames = 7;
     world_rules.micros_per_walking_animation_frame = 100000;
 
-    world_rules.y_jump_acceleration_pixels_per_second = 200;
+    world_rules.y_jump_acceleration_pixels_per_second = 400;
+    world_rules.microseconds_after_jump_start_check_jump_still_pressed = 50000;
+
+    free(world_rules_file_dict.chars);
+    free(world_rules_file_dict.key_indices);
+    free(world_rules_file_dict.value_indices);
 }
 
 // PRIVATE
@@ -119,6 +196,8 @@ inline void initialize_input_state() {
 
 // PRIVATE
 inline void update_sprites(struct GameState* game_state_param, struct WorldRules* world_rules_param) {
+    long microsecond_bucket;
+    int walking_animation_frame_num;
 
     switch (game_state_param->character.motion) {
         case STOPPED:
@@ -126,8 +205,8 @@ inline void update_sprites(struct GameState* game_state_param, struct WorldRules
             game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
         case WALKING:
-            long microsecond_bucket = game_state_param->current_time_in_micros / world_rules_param->micros_per_walking_animation_frame;
-            int walking_animation_frame_num = microsecond_bucket % world_rules_param->num_walking_animation_frames;
+            microsecond_bucket = game_state_param->current_time_in_micros / world_rules_param->micros_per_walking_animation_frame;
+            walking_animation_frame_num = microsecond_bucket % world_rules_param->num_walking_animation_frames;
             // TODO just for testing
             if (walking_animation_frame_num != last_walking_frame && walking_animation_frame_num != last_walking_frame+1 && !(last_walking_frame == 6 && walking_animation_frame_num == 0)) {
                 printf("skipped walk animation frame, from %d to %d\n", last_walking_frame, walking_animation_frame_num);
@@ -136,6 +215,10 @@ inline void update_sprites(struct GameState* game_state_param, struct WorldRules
 
             printf("we're walking, current_time_in_micros=%ld microsecond_bucket=%ld walking_animation_frame_num=%d\n", game_state_param->current_time_in_micros, microsecond_bucket, walking_animation_frame_num);
             game_state_param->character.current_sprite = game_state_param->base_sprites[SPRITE_TYPE_ORC_WALK_RIGHT_1 + walking_animation_frame_num];
+            game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
+            break;
+        case JUMPING:
+            game_state_param->character.current_sprite = game_state_param->base_sprites[SPRITE_TYPE_ORC_WALK_RIGHT_1];
             game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
     }
@@ -186,9 +269,10 @@ int initialize(int width, int height, long micros_per_frame_param) {
 
     printf("blocks_area_width=%d blocks_area_height=%d blocks_area_offset_x=%d blocks_area_offset_y=%d\n", blocks_area_width, blocks_area_height, blocks_area_offset_x, blocks_area_offset_y);
 
-    printf("About to initialize_game_state");
+    printf("About to initialize_game_state\n");
+    fflush(stdout);
     initialize_game_state();
-    printf("Done initialize_game_state");
+    printf("Done initialize_game_state\n");
 
     initialize_input_state();
 
@@ -215,7 +299,7 @@ void process_frame_and_blit(long frame_count, long current_time_in_micros, uint3
     handle_input(&game_state, &input_state, &world_rules, world_rules.microseconds_per_frame);
     printf("character.x_velocity_pixels_per_second is now %f\n", game_state.character.x_velocity_pixels_per_second);
 
-    do_movement(&game_state, world_rules.microseconds_per_frame);
+    do_movement(&game_state, &world_rules, world_rules.microseconds_per_frame);
 
     update_sprites(&game_state, &world_rules);
 

@@ -99,7 +99,7 @@ inline void blit(uint32_t *pixels, int width, int height) {
 }
 
 // IMPLEMENTS
-void initialize(int width, int height, long micros_per_frame_param) {
+int initialize(int width, int height, long micros_per_frame_param) {
     printf("top of initialize\n");
     still_running = true;
     srand(time(NULL));
@@ -141,6 +141,8 @@ void initialize(int width, int height, long micros_per_frame_param) {
     dull_red = 80 << RED_SHIFT;
 
     printf("bottom of initialize\n");
+    
+    return 0;
 }
 
 // IMPLEMENTS

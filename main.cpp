@@ -104,6 +104,8 @@ int main(int argc, char* argv[]){
     int initialize_result = initialize(WIDTH, HEIGHT, micros_per_frame);
     if (initialize_result != 0) {
         printf("ERROR in initialize: %d\n", initialize_result);
+        fflush(stdout);
+        exit(-1);
     }
 
     long target_time = first_micros_at_top;
