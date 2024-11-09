@@ -40,13 +40,14 @@ bool is_on_ground(struct GameState* game_state) {
 
     struct Block* bottom_left = get_world_block_for_location(bottom_left_x_floor, just_below_pixel, game_state);
     // TODO just for testing make the blocks below look different
-    bottom_left->sprite = game_state->base_sprites[SPRITE_TYPE_GROUND_TEST];
+    // bottom_left->sprite = game_state->base_sprites[SPRITE_TYPE_GROUND_TEST];
     printf("effects flag for bottom_left is %d\n", bottom_left->effects_flags);
     if (bottom_left->effects_flags & EFFECT_FLAG_SOLID) {
         return true;
     }
     struct Block* bottom_right = get_world_block_for_location(right_pixel, just_below_pixel, game_state);
-    bottom_right->sprite = game_state->base_sprites[SPRITE_TYPE_GROUND_TEST2];
+    // TODO just for testing make the blocks below look different
+    // bottom_right->sprite = game_state->base_sprites[SPRITE_TYPE_GROUND_TEST2];
     printf("effects flag for bottom_right is %d\n", bottom_left->effects_flags);
     return bottom_right->effects_flags & EFFECT_FLAG_SOLID;
 }

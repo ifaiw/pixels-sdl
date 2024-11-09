@@ -24,7 +24,7 @@ inline uint32_t get_uint32(uint8_t* array, int offset, enum Endianess endianess)
     }
     return LITTLE_ENDIAN_32(array, offset);
 }
-inline uint32_t get_uint16(uint8_t* array, int offset, enum Endianess endianess) {
+inline uint16_t get_uint16(uint8_t* array, int offset, enum Endianess endianess) {
     if (endianess == BIG_ENDIAN_ENDIANESS) {
         return BIG_ENDIAN_16(array, offset);
     }

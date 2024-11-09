@@ -130,7 +130,7 @@ int convert_file_to_key_values(struct TextKeyValueFileContents* r_file_contents)
         }
     }
 
-    printf("Number of keys is %d\n", num_keys);
+    // printf("Number of keys is %d\n", num_keys);
 
     r_file_contents->num_keys = num_keys;
     r_file_contents->key_indices = (uint64_t*)malloc(num_keys * sizeof(uint64_t));
@@ -169,12 +169,14 @@ int convert_file_to_key_values(struct TextKeyValueFileContents* r_file_contents)
             case NON_WHITESPACE:
                 switch (state) {
                     case WHITESPACE_KEY:
+                        // printf("Found non whitespace %c at %llu, change to value state, set value_indices[%hu]\n", r_file_contents->chars[i], i, key_index);
                         state = VALUE;
                         r_file_contents->value_indices[key_index] = i;
                         break;
                     case WHITESPACE_VALUE:
                         state = KEY;
                         key_index += 1;
+                        // printf("Found non whitespace %c at %llu, change to key state, set key_indices[%hu]\n", r_file_contents->chars[i], i, key_index);
                         r_file_contents->key_indices[key_index] = i;
                         break;
                     case KEY:
@@ -184,14 +186,14 @@ int convert_file_to_key_values(struct TextKeyValueFileContents* r_file_contents)
                 break;
         }
     }
-    printf("at end key_index is %d\n", key_index);
+    // printf("at end key_index is %d\n", key_index);
 
     return 0;
 }
 
 char* dict_get_value(char* key, struct TextKeyValueFileContents* dict) {
     for (int i = 0; i < dict->num_keys; ++i) {
-        if (strcmp(key, dict->chars + dict->key_indices[i])) {
+        if (strcmp(key, dict->chars + dict->key_indices[i]) == 0) {
             return dict->chars + dict->value_indices[i];
         }
     }

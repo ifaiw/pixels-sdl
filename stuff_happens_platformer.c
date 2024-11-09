@@ -63,7 +63,7 @@ void initialize_game_state() {
             if (y == 0) {
                 printf("world block at %d,%d is ground\n", x, y);
                 game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x] = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (y == 1 && (x < 3 || x >= WORLD_BLOCKS_WIDTH - 3)) {
+            } else if (y == 1 && (x < 1 || x >= WORLD_BLOCKS_WIDTH - 1)) {
                 printf("world block at %d,%d is ground\n", x, y);
                 game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x] = game_state.base_blocks[BLOCK_TYPE_GROUND];
             } else if (y == 2 && (x < 1 || x >= WORLD_BLOCKS_WIDTH - 1)) {
@@ -102,7 +102,7 @@ void initialize_game_state() {
 }
 
 // PRIVATE
-inline void load_world_rules_from_file() {
+inline void load_world_rules_from_file(struct WorldRules* r_world_rules) {
     struct FileBytes world_rules_file_bytes;
     int file_load_result = read_file(GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, &world_rules_file_bytes);
     if (file_load_result != 0) {
@@ -122,18 +122,17 @@ inline void load_world_rules_from_file() {
         printf("Key: %s Value %s\n", world_rules_file_dict.chars + world_rules_file_dict.key_indices[i], world_rules_file_dict.chars + world_rules_file_dict.value_indices[i]);
     }
 
-    world_rules.gravity_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"gravity_pixels_per_second", &world_rules_file_dict));
-    printf("from dict_get_value, world_rules.gravity_pixels_per_second is %f\n", world_rules.gravity_pixels_per_second);
-    world_rules.y_max_fall_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_max_fall_speed_pixels_per_second", &world_rules_file_dict));
+    r_world_rules->gravity_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"gravity_pixels_per_second", &world_rules_file_dict));
+    r_world_rules->y_max_fall_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_max_fall_speed_pixels_per_second", &world_rules_file_dict));
 
-	world_rules.x_ground_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_ground_acceleration_pixels_per_second", &world_rules_file_dict));
-	world_rules.x_movement_max_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_movement_max_speed_pixels_per_second", &world_rules_file_dict));
+	r_world_rules->x_ground_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_ground_acceleration_pixels_per_second", &world_rules_file_dict));
+	r_world_rules->x_movement_max_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_movement_max_speed_pixels_per_second", &world_rules_file_dict));
 
-    world_rules.num_walking_animation_frames = chars_to_int(dict_get_value((char*)"num_walking_animation_frames", &world_rules_file_dict));
-	world_rules.micros_per_walking_animation_frame = (long)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
+    r_world_rules->num_walking_animation_frames = chars_to_int(dict_get_value((char*)"num_walking_animation_frames", &world_rules_file_dict));
+	r_world_rules->micros_per_walking_animation_frame = (long)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
 
-    world_rules.y_jump_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_jump_acceleration_pixels_per_second", &world_rules_file_dict));
-	world_rules.microseconds_after_jump_start_check_jump_still_pressed = (double)chars_to_int(dict_get_value((char*)"microseconds_after_jump_start_check_jump_still_pressed", &world_rules_file_dict));
+    r_world_rules->y_jump_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_jump_acceleration_pixels_per_second", &world_rules_file_dict));
+	r_world_rules->microseconds_after_jump_start_check_jump_still_pressed = (double)chars_to_int(dict_get_value((char*)"microseconds_after_jump_start_check_jump_still_pressed", &world_rules_file_dict));
 
     free(world_rules_file_dict.chars);
     free(world_rules_file_dict.key_indices);
@@ -142,48 +141,19 @@ inline void load_world_rules_from_file() {
 
 // PRIVATE
 inline void initialize_world_rules(double frames_per_second) {
-    struct FileBytes world_rules_file_bytes;
-    int file_load_result = read_file(GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, &world_rules_file_bytes);
-    if (file_load_result != 0) {
-        printf("Unable to load world rules file $%s$ result %d\n", GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, file_load_result);
-        exit(-1);
-    }
-    printf("Below is the world_rules file\n%s\n", world_rules_file_bytes.bytes);
-    struct TextKeyValueFileContents world_rules_file_dict;
-    world_rules_file_dict.chars = (char*)world_rules_file_bytes.bytes;
-    world_rules_file_dict.num_chars = world_rules_file_bytes.num_bytes;
-    int key_value_parse_result = convert_file_to_key_values(&world_rules_file_dict);
-    if (key_value_parse_result != 0) {
-        printf("Unable to parse key/values from world rules file $%s$ result %d\n", GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, file_load_result);
-        exit(-1);
-    }
-    for (int i = 0; i < world_rules_file_dict.num_keys; ++i) {
-        printf("Key: %s Value %s\n", world_rules_file_dict.chars + world_rules_file_dict.key_indices[i], world_rules_file_dict.chars + world_rules_file_dict.value_indices[i]);
-    }
-
     world_rules.frames_per_second = frames_per_second;
     world_rules.microseconds_per_frame = (double)1000000/frames_per_second;
-    // TODO remove all the per_frame values? Are they used anywhere?
-    world_rules.gravity_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"gravity_pixels_per_second", &world_rules_file_dict));
-    printf("from dict_get_value, world_rules.gravity_pixels_per_second is %f\n", world_rules.gravity_pixels_per_second);
-    world_rules.y_max_fall_speed_pixels_per_second = 400;
-    world_rules.x_movement_initial_speed_pixels_per_second = 40;
-    world_rules.x_movement_initial_speed_pixels_per_frame = world_rules.x_movement_initial_speed_pixels_per_second / frames_per_second;
-    world_rules.x_movement_next_speed_1_pixels_per_second = 80;
-    world_rules.x_movement_next_speed_1_pixels_per_frame = world_rules.x_movement_next_speed_1_pixels_per_second / frames_per_second;
 
-    world_rules.x_ground_acceleration_pixels_per_second = 300;
-    world_rules.x_movement_max_speed_pixels_per_second = 180;
+    load_world_rules_from_file(&world_rules);
 
-    world_rules.num_walking_animation_frames = 7;
-    world_rules.micros_per_walking_animation_frame = 100000;
-
-    world_rules.y_jump_acceleration_pixels_per_second = 400;
-    world_rules.microseconds_after_jump_start_check_jump_still_pressed = 50000;
-
-    free(world_rules_file_dict.chars);
-    free(world_rules_file_dict.key_indices);
-    free(world_rules_file_dict.value_indices);
+    // printf("from dict_get_value, world_rules.gravity_pixels_per_second is %f\n", world_rules.gravity_pixels_per_second);
+    // printf("from dict_get_value, world_rules.y_max_fall_speed_pixels_per_second is %f\n", world_rules.y_max_fall_speed_pixels_per_second);
+    // printf("from dict_get_value, world_rules.x_ground_acceleration_pixels_per_second is %f\n", world_rules.x_ground_acceleration_pixels_per_second);
+    // printf("from dict_get_value, world_rules.x_movement_max_speed_pixels_per_second is %f\n", world_rules.x_movement_max_speed_pixels_per_second);
+    // printf("from dict_get_value, world_rules.num_walking_animation_frames is %d\n", world_rules.num_walking_animation_frames);
+    // printf("from dict_get_value, world_rules.micros_per_walking_animation_frame is %ld\n", world_rules.micros_per_walking_animation_frame);
+    // printf("from dict_get_value, world_rules.y_jump_acceleration_pixels_per_second is %f\n", world_rules.y_jump_acceleration_pixels_per_second);
+    // printf("from dict_get_value, world_rules.microseconds_after_jump_start_check_jump_still_pressed is %f\n", world_rules.microseconds_after_jump_start_check_jump_still_pressed);
 }
 
 // PRIVATE
