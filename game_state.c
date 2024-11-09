@@ -29,8 +29,6 @@ struct XY get_bottom_left_world_pixel_for_block(struct Block* block) {
 }
 
 bool is_on_ground(struct GameState* game_state) {
-    // TODO is rounding a problem here? Do we need to specifically check if we should floor or ceil?
-    // Same question applies to collision detection I assume
     int bottom_left_x_floor = floor(game_state->character.x_bottom_left);
     int bottom_left_y_floor = floor(game_state->character.y_inverted_bottom_left);
     int right_pixel = bottom_left_x_floor + game_state->character.width;

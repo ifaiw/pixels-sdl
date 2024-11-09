@@ -25,26 +25,19 @@ void do_movement(struct GameState* game_state, struct WorldRules* world_rules, d
         printf("At top of do_movement moving-down\n");
     }
 
-    // TODO still using these old_ vars?
-    // int old_character_x_rounded = round(game_state->character.x_bottom_left);
-    // int old_character_y_rounded = round(game_state->character.y_inverted_bottom_left);
     int old_character_x_floor = floor(game_state->character.x_bottom_left);
     int old_character_y_floor = floor(game_state->character.y_inverted_bottom_left);
-    int old_character_x_ceiling = old_character_x_floor + 1;
-    int old_character_y_ceiling = old_character_y_floor + 1;
-    int right_pixel_old = old_character_x_ceiling + game_state->character.width;
+    int right_pixel_old = old_character_x_floor + game_state->character.width;
     int left_pixel_old = old_character_x_floor;
     int bottom_pixel_old = old_character_y_floor;
-    int top_pixel_old = old_character_y_ceiling + game_state->character.height;
+    int top_pixel_old = old_character_y_floor + game_state->character.height;
 
     int new_character_x_floor = floor(new_character_x);
     int new_character_y_floor = floor(new_character_y);
-    int new_character_x_ceiling = new_character_x_floor + 1;
-    int new_character_y_ceiling = new_character_y_floor + 1;
-    int right_pixel_new = new_character_x_ceiling + game_state->character.width;
+    int right_pixel_new = new_character_x_floor + game_state->character.width;
     int left_pixel_new = new_character_x_floor;
     int bottom_pixel_new = new_character_y_floor;
-    int top_pixel_new = new_character_y_ceiling + game_state->character.height;
+    int top_pixel_new = new_character_y_floor + game_state->character.height;
 
     bool x_motion_stopped = false;
     bool y_motion_stopped = false;
