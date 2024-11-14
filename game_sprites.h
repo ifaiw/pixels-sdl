@@ -6,10 +6,11 @@
 #include "game_structs.h"
 
 // Height and width in pixels
+// TODO Need to rename this at least
 #define SPRITE_WIDTH 48
 #define SPRITE_HEIGHT 48
 
-#define NUM_SPRITE_TYPES 12
+#define NUM_SPRITE_TYPES 20
 #define SPRITE_TYPE_EMPTY 0
 #define SPRITE_TYPE_GROUND 1
 #define SPRITE_TYPE_ORC_STAND_RIGHT 2
@@ -21,8 +22,18 @@
 #define SPRITE_TYPE_ORC_WALK_RIGHT_6 8
 #define SPRITE_TYPE_ORC_WALK_RIGHT_7 9
 
-#define SPRITE_TYPE_GROUND_TEST 10
-#define SPRITE_TYPE_GROUND_TEST2 11
+#define SPRITE_TYPE_MUSHROOM_STAND_RIGHT 10
+#define SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 11
+#define SPRITE_TYPE_MUSHROOM_WALK_RIGHT_2 12
+#define SPRITE_TYPE_MUSHROOM_WALK_RIGHT_3 13
+#define SPRITE_TYPE_MUSHROOM_WALK_RIGHT_4 14
+#define SPRITE_TYPE_MUSHROOM_WALK_RIGHT_5 15
+#define SPRITE_TYPE_MUSHROOM_WALK_RIGHT_6 16
+#define SPRITE_TYPE_MUSHROOM_WALK_RIGHT_7 17
+
+#define SPRITE_TYPE_GROUND_TEST 18
+#define SPRITE_TYPE_GROUND_TEST2 19
+
 
 void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_array);
 

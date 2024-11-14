@@ -15,6 +15,10 @@ struct InputState {
     long right_button_press_frame;
     long up_button_press_frame;
     long down_button_press_frame;
+    uint32_t letter_keys_down_bitmask;
+    uint32_t mouse_button_state;
+    int mouse_x;
+    int mouse_y;
 };
 
 struct Sprite {

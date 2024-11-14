@@ -8,18 +8,86 @@
 #include "game_state.h"
 
 
-// PRIVATE
-inline void get_new_location(struct Character* current, double* r_new_x, double* r_new_y) {
-    //current.
-}
+// SDL_SCANCODE_A = 4
+uint32_t LETTER_SCANCODE_MASKS[36] = {
+    0,0,0,0,  // First letter scancode, A, is 4, so pad first 4 elements of this array
+    0b00000000000000000000000000000001,  // SDL_SCANCODE_A = 4
+    0b00000000000000000000000000000010,
+    0b00000000000000000000000000000100,
+    0b00000000000000000000000000001000,
+    0b00000000000000000000000000010000,
+    0b00000000000000000000000000100000,
+    0b00000000000000000000000001000000,
+    0b00000000000000000000000010000000,
+    0b00000000000000000000000100000000,
+    0b00000000000000000000001000000000,
+    0b00000000000000000000010000000000,
+    0b00000000000000000000100000000000,
+    0b00000000000000000001000000000000,
+    0b00000000000000000010000000000000,
+    0b00000000000000000100000000000000,
+    0b00000000000000001000000000000000,
+    0b00000000000000010000000000000000,
+    0b00000000000000100000000000000000,
+    0b00000000000001000000000000000000,
+    0b00000000000010000000000000000000,
+    0b00000000000100000000000000000000,
+    0b00000000001000000000000000000000,
+    0b00000000010000000000000000000000,
+    0b00000000100000000000000000000000,
+    0b00000001000000000000000000000000,
+    0b00000010000000000000000000000000,  // SDL_SCANCODE_Z = 29
+    0b00000100000000000000000000000000,  // From here down is unused, but leaving here so it can easily be copy/pasted for other bitmask arrays
+    0b00001000000000000000000000000000,
+    0b00010000000000000000000000000000,
+    0b00100000000000000000000000000000,
+    0b01000000000000000000000000000000,
+    0b10000000000000000000000000000000
+};
+uint32_t LETTER_SCANCODE_MASKS_NEGATED[36] = {
+    0,0,0,0,  // First letter scancode, A, is 4, so pad first 4 elements of this array
+    0b11111111111111111111111111111110,  // SDL_SCANCODE_A = 4
+    0b11111111111111111111111111111101,
+    0b11111111111111111111111111111011,
+    0b11111111111111111111111111110111,
+    0b11111111111111111111111111101111,
+    0b11111111111111111111111111011111,
+    0b11111111111111111111111110111111,
+    0b11111111111111111111111101111111,
+    0b11111111111111111111111011111111,
+    0b11111111111111111111110111111111,
+    0b11111111111111111111101111111111,
+    0b11111111111111111111011111111111,
+    0b11111111111111111110111111111111,
+    0b11111111111111111101111111111111,
+    0b11111111111111111011111111111111,
+    0b11111111111111110111111111111111,
+    0b11111111111111101111111111111111,
+    0b11111111111111011111111111111111,
+    0b11111111111110111111111111111111,
+    0b11111111111101111111111111111111,
+    0b11111111111011111111111111111111,
+    0b11111111110111111111111111111111,
+    0b11111111101111111111111111111111,
+    0b11111111011111111111111111111111,
+    0b11111110111111111111111111111111,
+    0b11111101111111111111111111111111,  // SDL_SCANCODE_Z = 29
+    0b11111011111111111111111111111111,  // From here down is unused, but leaving here so it can easily be copy/pasted for other bitmask arrays
+    0b11110111111111111111111111111111,
+    0b11101111111111111111111111111111,
+    0b11011111111111111111111111111111,
+    0b10111111111111111111111111111111,
+    0b01111111111111111111111111111111
+};
+
 
 // IMPLEMENTS
-void do_movement(struct GameState* game_state, struct WorldRules* world_rules, double microseconds_to_advance) {
-    printf("do_movement x_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, microseconds_to_advance);
+void do_movement(struct GameState* game_state, double microseconds_to_advance) {
+    printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
     double new_character_x = game_state->character.x_bottom_left + game_state->character.x_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
     double new_character_y = game_state->character.y_inverted_bottom_left + game_state->character.y_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
 
-    printf("movement: old x %f old y %f new x %f new y %f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, new_character_x, new_character_y);
+    printf("movement: old_x %f old_y %f new_x %f new_y %f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, new_character_x, new_character_y);
     // TODO just for testing
     if (new_character_y < game_state->character.y_inverted_bottom_left) {
         printf("At top of do_movement moving-down\n");
@@ -56,7 +124,7 @@ void do_movement(struct GameState* game_state, struct WorldRules* world_rules, d
             struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
             // TODO not needed? x_collision_distance = block_bottom_left.x - new_character_x + game_state->character.width;
 
-            new_character_x = block_bottom_left.x - game_state->character.width;
+            new_character_x = block_bottom_left.x - game_state->character.width - 1;
             x_motion_stopped = true;
         }
         if (new_block_head->effects_flags & EFFECT_FLAG_SOLID) {
@@ -67,7 +135,7 @@ void do_movement(struct GameState* game_state, struct WorldRules* world_rules, d
             //     x_collision_distance = block_bottom_left.x - new_character_x + game_state->character.width;
             // }
 
-            new_character_x = block_bottom_left.x - game_state->character.width;
+            new_character_x = block_bottom_left.x - game_state->character.width - 1;
             x_motion_stopped = true;
         }
     }
@@ -102,6 +170,7 @@ void do_movement(struct GameState* game_state, struct WorldRules* world_rules, d
         if (new_block_left->effects_flags & EFFECT_FLAG_SOLID) {
             printf("do_movement collision check moving-down TRUE left block is solid\n");
             struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
+            // TODO is this extra chek needed here and for the other block? Don't we already know at this point that the character is past the edge of the block?
             if (new_character_y < block_bottom_left.y + BLOCK_HEIGHT_IN_PIXELS) {
                 new_character_y = block_bottom_left.y + BLOCK_HEIGHT_IN_PIXELS;
                 printf("do_movement collision check moving-down left block is solid new_character_y to %f\n", new_character_y);
@@ -115,6 +184,27 @@ void do_movement(struct GameState* game_state, struct WorldRules* world_rules, d
                 new_character_y = block_bottom_right.y + BLOCK_HEIGHT_IN_PIXELS;
                 printf("do_movement collision check moving-down right block is solid new_character_y to %f\n", new_character_y);
             }
+            y_motion_stopped = true;
+        }
+    }
+
+    // MOVING UP COLLISION CHECK
+    else if (new_character_y > game_state->character.y_inverted_bottom_left) {
+        printf("do_movement collision check moving-up\n");
+        struct Block* new_block_left = get_world_block_for_location(left_pixel_old, top_pixel_new, game_state);
+        struct Block* new_block_right = get_world_block_for_location(right_pixel_old, top_pixel_new, game_state);
+        if (new_block_left->effects_flags & EFFECT_FLAG_SOLID) {
+            printf("do_movement collision check moving-up TRUE left block is solid\n");
+            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
+            new_character_y = block_bottom_left.y - game_state->character.height - 1;
+            printf("do_movement collision check moving-up left block is solid new_character_y to %f\n", new_character_y);
+            y_motion_stopped = true;
+        }
+        if (new_block_right->effects_flags & EFFECT_FLAG_SOLID) {
+            printf("do_movement collision check moving-up TRUE right block is solid\n");
+            struct XY block_bottom_right = get_bottom_left_world_pixel_for_block(new_block_right);
+            new_character_y = block_bottom_right.y - game_state->character.height - 1;
+            printf("do_movement collision check moving-up right block is solid new_character_y to %f\n", new_character_y);
             y_motion_stopped = true;
         }
     }
@@ -140,9 +230,9 @@ void do_movement(struct GameState* game_state, struct WorldRules* world_rules, d
     printf("Check if is on ground before applying gravity\n");
     if (!is_on_ground(game_state)) {
         printf("not on ground, apply gravity\n");
-        game_state->character.y_velocity_pixels_per_second -= world_rules->gravity_pixels_per_second;
-        if (game_state->character.y_velocity_pixels_per_second < -world_rules->y_max_fall_speed_pixels_per_second) {
-            game_state->character.y_velocity_pixels_per_second = -world_rules->y_max_fall_speed_pixels_per_second;
+        game_state->character.y_velocity_pixels_per_second -= game_state->world_rules.gravity_pixels_per_second;
+        if (game_state->character.y_velocity_pixels_per_second < -game_state->world_rules.y_max_fall_speed_pixels_per_second) {
+            game_state->character.y_velocity_pixels_per_second = -game_state->world_rules.y_max_fall_speed_pixels_per_second;
         }
     }
     // TODO just for testing
@@ -152,7 +242,7 @@ void do_movement(struct GameState* game_state, struct WorldRules* world_rules, d
 }
 
 // IMPLEMENTS
-void handle_input(struct GameState* game_state, struct InputState* input_state, struct WorldRules* world_rules, double microseconds_to_advance) {
+void handle_input(struct GameState* game_state, struct InputState* input_state, double microseconds_to_advance) {
     double seconds_to_advance = microseconds_to_advance / (double)1000000;
 // Handle specific key presses from scancodes
     const Uint8* state = SDL_GetKeyboardState(NULL);
@@ -169,15 +259,13 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
                 switch (game_state->character.motion) {
                     case STOPPED:
                         game_state->character.motion = WALKING;
-                        // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_initial_speed_pixels_per_second;
-                        game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+                        game_state->character.x_velocity_pixels_per_second += game_state->world_rules.x_ground_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case WALKING:
-                        // game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_next_speed_1_pixels_per_second;
-                        game_state->character.x_velocity_pixels_per_second += world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+                        game_state->character.x_velocity_pixels_per_second += game_state->world_rules.x_ground_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case JUMPING:
-                        game_state->character.x_velocity_pixels_per_second += world_rules->x_air_acceleration_pixels_per_second * seconds_to_advance;
+                        game_state->character.x_velocity_pixels_per_second += game_state->world_rules.x_air_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                 }
                 break;
@@ -214,13 +302,13 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
                 switch (game_state->character.motion) {
                     case STOPPED:
                         game_state->character.motion = WALKING;
-                        game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+                        game_state->character.x_velocity_pixels_per_second -= game_state->world_rules.x_ground_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case WALKING:
-                        game_state->character.x_velocity_pixels_per_second -= world_rules->x_ground_acceleration_pixels_per_second * seconds_to_advance;
+                        game_state->character.x_velocity_pixels_per_second -= game_state->world_rules.x_ground_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case JUMPING:
-                        game_state->character.x_velocity_pixels_per_second -= world_rules->x_air_acceleration_pixels_per_second * seconds_to_advance;
+                        game_state->character.x_velocity_pixels_per_second -= game_state->world_rules.x_air_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                 }
                 break;
@@ -265,7 +353,7 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
         if (game_state->character.y_velocity_pixels_per_second == 0 && game_state->character.is_on_ground && motion_allows_jump) {
             printf("Start jump\n");
             // Start jump
-            game_state->character.y_velocity_pixels_per_second = world_rules->y_jump_acceleration_pixels_per_second;
+            game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
             game_state->character.micros_when_jump_started = game_state->current_time_in_micros;
             game_state->character.motion = JUMPING;
         }
@@ -275,9 +363,9 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
             // TODO tidy?
             long micros_since_jump_start = game_state->current_time_in_micros - game_state->character.micros_when_jump_started;
             printf("micros_since_jump_start is %ld\n", micros_since_jump_start);
-            if (micros_since_jump_start < world_rules->microseconds_after_jump_start_check_jump_still_pressed) {
+            if (micros_since_jump_start < game_state->world_rules.microseconds_after_jump_start_check_jump_still_pressed) {
                 printf("Jumping higher\n");
-                game_state->character.y_velocity_pixels_per_second = world_rules->y_jump_acceleration_pixels_per_second;
+                game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
             }
         }
     }
@@ -287,13 +375,55 @@ void handle_input(struct GameState* game_state, struct InputState* input_state, 
         // gravity_pixels_per_frame = (double)gravity_pixels_per_second / (double)1000000 * (double)micros_per_frame;
     }
 
-    printf("Bottom of handle_input game_state->character.x_velocity_pixels_per_second=%f\n", game_state->character.x_velocity_pixels_per_second);
-    if (game_state->character.x_velocity_pixels_per_second > world_rules->x_movement_max_speed_pixels_per_second) {
-        printf("At max x speed right\n");
-        game_state->character.x_velocity_pixels_per_second = world_rules->x_movement_max_speed_pixels_per_second;
+    if (state[SDL_SCANCODE_L]) {
+        if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_L])) {
+            printf("L key pressed down\n");
+            input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_L];
+            load_world_rules_from_file(&game_state->world_rules);
+        }
+    } else {
+        input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_L];
     }
-    else if (game_state->character.x_velocity_pixels_per_second < -world_rules->x_movement_max_speed_pixels_per_second) {
+
+    int new_mouse_x;
+    int new_mouse_y;
+    uint32_t new_mouse_button_state = SDL_GetMouseState(&new_mouse_x, &new_mouse_y);
+    printf("SDL_GetMouseState button=%d x=%d y=%d\n", new_mouse_button_state, new_mouse_x, new_mouse_y);
+    input_state->mouse_x = new_mouse_x;
+    input_state->mouse_y = new_mouse_y;
+    if (new_mouse_button_state != input_state->mouse_button_state) {
+        printf("Mouse button change from %d to %d\n", input_state->mouse_button_state, new_mouse_button_state);
+        if (new_mouse_button_state == 1 && input_state->mouse_button_state == 0) {
+            printf("mouse left-button click at %d,%d\n", new_mouse_x, new_mouse_y);
+            int in_game_x = new_mouse_x - game_state->blocks_area_offset_x;
+            int in_game_y_inverted = WORLD_BLOCKS_HEIGHT * BLOCK_HEIGHT_IN_PIXELS - (new_mouse_y - game_state->blocks_area_offset_y);
+            printf("mouse left-button click at %d,%d translated to ingame is %d,%d\n", new_mouse_x, new_mouse_y, in_game_x, in_game_y_inverted);
+            struct Block* mouse_block = get_world_block_for_location(in_game_x, in_game_y_inverted, game_state);
+            if (mouse_block != NULL) {
+                printf("clicked block effects_flag is %d\n", mouse_block->effects_flags);
+                if (mouse_block->effects_flags & EFFECT_FLAG_SOLID) {
+                    mouse_block->type = BLOCK_TYPE_EMPTY;
+                    mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_EMPTY].effects_flags;
+                    mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite;
+                } else {
+                    mouse_block->type = BLOCK_TYPE_GROUND;
+                    mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_GROUND].effects_flags;
+                    mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_GROUND].sprite;
+                }
+            } else {
+                printf("No block at click\n");
+            }
+        }
+        input_state->mouse_button_state = new_mouse_button_state;
+    }
+
+    printf("Bottom of handle_input game_state->character.x_velocity_pixels_per_second=%f\n", game_state->character.x_velocity_pixels_per_second);
+    if (game_state->character.x_velocity_pixels_per_second > game_state->world_rules.x_movement_max_speed_pixels_per_second) {
+        printf("At max x speed right\n");
+        game_state->character.x_velocity_pixels_per_second = game_state->world_rules.x_movement_max_speed_pixels_per_second;
+    }
+    else if (game_state->character.x_velocity_pixels_per_second < -game_state->world_rules.x_movement_max_speed_pixels_per_second) {
         printf("At max x speed left\n");
-        game_state->character.x_velocity_pixels_per_second = -world_rules->x_movement_max_speed_pixels_per_second;
+        game_state->character.x_velocity_pixels_per_second = -game_state->world_rules.x_movement_max_speed_pixels_per_second;
     }
 }

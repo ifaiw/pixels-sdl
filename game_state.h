@@ -19,8 +19,14 @@ struct GameState {
 
     struct Character character;
 
+    struct WorldRules world_rules;
+
     long current_frame;
     long current_time_in_micros;
+
+    // Pixel offset of the top-left corner of the area where blocks are rendered in the window
+    int blocks_area_offset_x;
+    int blocks_area_offset_y;
 };
 
 struct Block* get_world_block_for_location(int x, int y, struct GameState* game_state);
@@ -28,5 +34,7 @@ struct Block* get_world_block_for_location(int x, int y, struct GameState* game_
 struct XY get_bottom_left_world_pixel_for_block(struct Block* block);
 
 bool is_on_ground(struct GameState* game_state);
+
+void load_world_rules_from_file(struct WorldRules* r_world_rules);
 
 #endif  // _GAME_STATE__H
