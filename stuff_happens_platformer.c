@@ -33,6 +33,8 @@ struct GameState game_state;
 
 struct InputState input_state;
 
+struct CharacterSprite character_sprite;
+
 
 // PRIVATE
 void initialize_game_state() {
@@ -75,7 +77,11 @@ void initialize_game_state() {
         }
     }
 
-    game_state.character.current_sprite = game_state.base_sprites[SPRITE_TYPE_ORC_STAND_RIGHT];
+    game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_CAT_STAND_RIGHT;
+    game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_CAT_WALK_RIGHT_1;
+    game_state.character_sprite.num_walking_animation_frames = 5;
+
+    game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];
     game_state.character.x_bottom_left = WORLD_BLOCKS_WIDTH * BLOCK_WIDTH_IN_PIXELS / 2;
     game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS * 1;
     game_state.character.width = game_state.character.current_sprite.width;
@@ -107,7 +113,6 @@ inline void initialize_world_rules(double frames_per_second, struct WorldRules* 
     // printf("from dict_get_value, world_rules.y_max_fall_speed_pixels_per_second is %f\n", world_rules.y_max_fall_speed_pixels_per_second);
     // printf("from dict_get_value, world_rules.x_ground_acceleration_pixels_per_second is %f\n", world_rules.x_ground_acceleration_pixels_per_second);
     // printf("from dict_get_value, world_rules.x_movement_max_speed_pixels_per_second is %f\n", world_rules.x_movement_max_speed_pixels_per_second);
-    // printf("from dict_get_value, world_rules.num_walking_animation_frames is %d\n", world_rules.num_walking_animation_frames);
     // printf("from dict_get_value, world_rules.micros_per_walking_animation_frame is %ld\n", world_rules.micros_per_walking_animation_frame);
     // printf("from dict_get_value, world_rules.y_jump_acceleration_pixels_per_second is %f\n", world_rules.y_jump_acceleration_pixels_per_second);
     // printf("from dict_get_value, world_rules.microseconds_after_jump_start_check_jump_still_pressed is %f\n", world_rules.microseconds_after_jump_start_check_jump_still_pressed);
@@ -129,12 +134,12 @@ inline void update_sprites(struct GameState* game_state_param) {
     switch (game_state_param->character.motion) {
         case STOPPED:
             printf("motion is STOPPED show sprite STAND\n");
-            game_state_param->character.current_sprite = game_state_param->base_sprites[SPRITE_TYPE_ORC_STAND_RIGHT];
+            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.stand_sprite_index];
             game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
         case WALKING:
             microsecond_bucket = game_state_param->current_time_in_micros / game_state_param->world_rules.micros_per_walking_animation_frame;
-            walking_animation_frame_num = microsecond_bucket % game_state_param->world_rules.num_walking_animation_frames;
+            walking_animation_frame_num = microsecond_bucket % game_state_param->character_sprite.num_walking_animation_frames;
             // TODO just for testing
             if (walking_animation_frame_num != last_walking_frame && walking_animation_frame_num != last_walking_frame+1 && !(last_walking_frame == 6 && walking_animation_frame_num == 0)) {
                 printf("skipped walk animation frame, from %d to %d\n", last_walking_frame, walking_animation_frame_num);
@@ -143,12 +148,12 @@ inline void update_sprites(struct GameState* game_state_param) {
 
             printf("motion is WALKING show sprite WALK %d\n", walking_animation_frame_num);
             printf("we're walking, current_time_in_micros=%ld microsecond_bucket=%ld walking_animation_frame_num=%d\n", game_state_param->current_time_in_micros, microsecond_bucket, walking_animation_frame_num);
-            game_state_param->character.current_sprite = game_state_param->base_sprites[SPRITE_TYPE_ORC_WALK_RIGHT_1 + walking_animation_frame_num];
+            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index + walking_animation_frame_num];
             game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
         case JUMPING:
             printf("motion is STOPPED show sprite WALK0\n");
-            game_state_param->character.current_sprite = game_state_param->base_sprites[SPRITE_TYPE_ORC_WALK_RIGHT_1];
+            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index];
             game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
     }
@@ -174,7 +179,7 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
 
     int char_left = round(game_state.character.x_bottom_left) + game_state.blocks_area_offset_x;
     int char_top = game_state.blocks_area_offset_y + (WORLD_BLOCKS_HEIGHT * BLOCK_HEIGHT_IN_PIXELS) - round(game_state.character.y_inverted_bottom_left) - game_state.character.current_sprite.height;
-    printf("Draw orc at %d,%d\n", char_left, char_top);
+    printf("Draw character at %d,%d\n", char_left, char_top);
     write_sprite_aliased(char_left, char_top, game_state.character.current_sprite, width, r_pixels);
 }
 
@@ -242,10 +247,10 @@ void process_frame_and_blit(long frame_count, long current_time_in_micros, uint3
     // test_sprite.flip_left_to_right = false;
     // test_sprite.width = width;
     // test_sprite.height = height;
-    // test_sprite.image_source_pitch_in_pixels = game_state.base_bmp_images[IMAGE_INDEX_ORC_1_RIGHT].width;
-    // test_sprite.pixels_start = game_state.base_bmp_images[IMAGE_INDEX_ORC_1_RIGHT].pixels;
+    // test_sprite.image_source_pitch_in_pixels = game_state.base_bmp_images[IMAGE_INDEX_MUSHROOM_1_RIGHT].width;
+    // test_sprite.pixels_start = game_state.base_bmp_images[IMAGE_INDEX_MUSHROOM_1_RIGHT].pixels;
     // write_sprite(0, 0, test_sprite, width, pixels);
-    // write_image(0, 0, game_state.base_bmp_images[IMAGE_INDEX_ORC_1_RIGHT], width, pixels);
+    // write_image(0, 0, game_state.base_bmp_images[IMAGE_INDEX_MUSHROOM_1_RIGHT], width, pixels);
 
 
     // Try skipping processing for the first second or so since framerate skips often happen at the very start

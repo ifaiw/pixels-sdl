@@ -25,17 +25,28 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
     r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].height = 32;
     r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].width = 26;
     r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].flip_left_to_right = false;
-    r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_1_RIGHT].pixels + 1;
-    r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_1_RIGHT].width;
+    r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + 1;
+    r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
 
     int mushroom_width = 26;
-    int mushroom_gap = 2;
+    // The gaps are not uniform, so hardcode starting indices  int mushroom_gap = 4;
+    int mushroom_starting_x_values[7] = {34, 68, 98, 130, 162, 196, 226};
     for (int walk_index = 0; walk_index < 7; ++walk_index) {
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].height = 32;
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].width = mushroom_width;
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].flip_left_to_right = false;
-        r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_1_RIGHT].pixels + 1 + ((width + gap) * walk_index);
-        r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_1_RIGHT].width;
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + mushroom_starting_x_values[walk_index];
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
+    }
+
+    int cat_width = 26;
+    int cat_gap = 6;
+    for (int walk_index = 0; walk_index < 5; ++walk_index) {
+        r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].height = 32;
+        r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].width = cat_width;
+        r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].flip_left_to_right = false;
+        r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].pixels_start = image_array[IMAGE_INDEX_CAT_RIGHT].pixels + 2 + (cat_width + cat_gap) * walk_index;
+        r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_CAT_RIGHT].width;
     }
 
     r_sprite_array[SPRITE_TYPE_GROUND_TEST].height = SPRITE_HEIGHT;

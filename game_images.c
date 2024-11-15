@@ -95,6 +95,13 @@ int load_images(struct ImageInfo* r_image_array) {
     scale_image_up(&mushrooms_image_unscaled, 2, r_image_array + IMAGE_INDEX_MUSHROOM_RIGHT);
     free(mushrooms_image_unscaled.pixels);
 
+    load_image_result = load_bmp_image(GAME_PATH__IMAGE_PATH_CAT_RIGHT_FULL, r_image_array + IMAGE_INDEX_CAT_RIGHT);
+    if (load_image_result != 0) {
+        printf("Error loading GAME_PATH__IMAGE_PATH_CAT_RIGHT_FULL: %d\n", load_image_result);
+        return load_image_result;
+    }
+    flip_upside_down(r_image_array[IMAGE_INDEX_CAT_RIGHT].pixels, r_image_array[IMAGE_INDEX_CAT_RIGHT].width, r_image_array[IMAGE_INDEX_CAT_RIGHT].height);
+
     // TODO can get rid of?
     // r_image_array[IMAGE_INDEX_ORC_1_LEFT].height = r_image_array[IMAGE_INDEX_ORC_1_RIGHT].height;
     // r_image_array[IMAGE_INDEX_ORC_1_LEFT].width = r_image_array[IMAGE_INDEX_ORC_1_RIGHT].width;

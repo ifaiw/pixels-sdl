@@ -81,6 +81,7 @@ uint32_t LETTER_SCANCODE_MASKS_NEGATED[36] = {
 };
 
 
+#define FUDGE
 // IMPLEMENTS
 void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
@@ -124,7 +125,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
             struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
             // TODO not needed? x_collision_distance = block_bottom_left.x - new_character_x + game_state->character.width;
 
-            new_character_x = block_bottom_left.x - game_state->character.width - 1;
+            new_character_x = block_bottom_left.x - game_state->character.width - 0.000001;
             x_motion_stopped = true;
         }
         if (new_block_head->effects_flags & EFFECT_FLAG_SOLID) {
@@ -135,7 +136,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
             //     x_collision_distance = block_bottom_left.x - new_character_x + game_state->character.width;
             // }
 
-            new_character_x = block_bottom_left.x - game_state->character.width - 1;
+            new_character_x = block_bottom_left.x - game_state->character.width - 0.000001;
             x_motion_stopped = true;
         }
     }

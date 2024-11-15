@@ -21,6 +21,8 @@ struct GameState {
 
     struct WorldRules world_rules;
 
+    struct CharacterSprite character_sprite;
+
     long current_frame;
     long current_time_in_micros;
 

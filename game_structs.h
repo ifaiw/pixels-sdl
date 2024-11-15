@@ -47,6 +47,12 @@ enum CharacterDirection {
     RIGHT,
 };
 
+struct CharacterSprite {
+    int stand_sprite_index;
+    int first_walk_sprite_index;
+    int num_walking_animation_frames;
+};
+
 struct Character {
     double x_bottom_left;
     double y_inverted_bottom_left;
@@ -81,7 +87,6 @@ struct WorldRules {
 
     double microseconds_after_jump_start_check_jump_still_pressed;
 
-    int num_walking_animation_frames;
     long micros_per_walking_animation_frame;
 };
 
