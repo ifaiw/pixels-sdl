@@ -57,11 +57,28 @@ inline void scale_image_up(struct ImageInfo* current_image, uint8_t factor_incre
     }
 }
 
+// This modifies r_current_image.pixels directly
+// All pixels that match old_pixel_colour ignoring alpha, are changed to new_pixel_colour, including the alpha value of new_pixel_colour
+// PRIVATE
+inline void swap_pixel_colour(struct ImageInfo* r_current_image, uint32_t old_pixel_colour, uint32_t new_pixel_colour) {
+    old_pixel_colour = old_pixel_colour & NOT_ALPHA;
+    for (int i = 0; i < r_current_image->width * r_current_image->height; ++i) {
+        if ((r_current_image->pixels[i] & NOT_ALPHA) == old_pixel_colour) {
+            r_current_image->pixels[i] = new_pixel_colour;
+        }
+    }
+}
+
 // IMPLEMENTS
 int load_images(struct ImageInfo* r_image_array) {
     r_image_array[IMAGE_INDEX_BLANK].pixels = (uint32_t*)malloc(SPRITE_WIDTH * SPRITE_HEIGHT * 4);
     for (int i = 0; i < SPRITE_WIDTH * SPRITE_HEIGHT; ++i) {
+        #ifdef CAT_CHARACTER
+        // If using the black cat sprite, need to change the background to something other than black for the cat to show up
+        r_image_array[IMAGE_INDEX_BLANK].pixels[i] = ALPHA | BLUE;
+        #else
         r_image_array[IMAGE_INDEX_BLANK].pixels[i] = ALPHA;
+        #endif
     }
     r_image_array[IMAGE_INDEX_BLANK].height = SPRITE_HEIGHT;
     r_image_array[IMAGE_INDEX_BLANK].width = SPRITE_WIDTH;
@@ -72,6 +89,11 @@ int load_images(struct ImageInfo* r_image_array) {
         return load_image_result;
     }
     flip_upside_down(r_image_array[IMAGE_INDEX_SOLIDS_1].pixels, r_image_array[IMAGE_INDEX_SOLIDS_1].width, r_image_array[IMAGE_INDEX_SOLIDS_1].height);
+
+    #ifdef CAT_CHARACTER
+    // If using the black cat sprite, need to change the background to something other than black for the cat to show up
+    swap_pixel_colour(&r_image_array[IMAGE_INDEX_SOLIDS_1], 0, ALPHA | BLUE);
+    #endif
     // TODO not needed? flip_right_left(r_image_array[IMAGE_INDEX_SOLIDS_1].pixels, r_image_array[IMAGE_INDEX_SOLIDS_1].width, r_image_array[IMAGE_INDEX_SOLIDS_1].height);
 
     struct ImageInfo orcs_image_unscaled;

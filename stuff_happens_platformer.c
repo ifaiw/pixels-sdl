@@ -77,9 +77,15 @@ void initialize_game_state() {
         }
     }
 
+    #ifdef CAT_CHARACTER
     game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_CAT_STAND_RIGHT;
     game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_CAT_WALK_RIGHT_1;
     game_state.character_sprite.num_walking_animation_frames = 5;
+    #else
+    game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_MUSHROOM_STAND_RIGHT;
+    game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1;
+    game_state.character_sprite.num_walking_animation_frames = 7;
+    #endif
 
     game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];
     game_state.character.x_bottom_left = WORLD_BLOCKS_WIDTH * BLOCK_WIDTH_IN_PIXELS / 2;
@@ -159,30 +165,6 @@ inline void update_sprites(struct GameState* game_state_param) {
     }
 }
 
-// PRIVATE
-inline void blit(uint32_t* r_pixels, int width, int height) {
-    memcpy(r_pixels, blank_pixels, width * height * 4);
-
-    for (int block_y = 0; block_y < WORLD_BLOCKS_HEIGHT; ++block_y) {
-        for (int block_x = 0; block_x < WORLD_BLOCKS_WIDTH; ++block_x) {
-            // TODO not needed?
-            // if (game_state.world_blocks[WORLD_BLOCKS_HEIGHT * block_y + block_x].type == BLOCK_TYPE_EMPTY) {
-            //     continue;
-            // }
-            int top_left_x = game_state.blocks_area_offset_x + block_x * BLOCK_WIDTH_IN_PIXELS;
-            int top_left_y = game_state.blocks_area_offset_y + (WORLD_BLOCKS_HEIGHT - 1 - block_y) * BLOCK_HEIGHT_IN_PIXELS;
-            // printf("Block at %d,%d will be drawn at %d,%d\n", block_x, block_y, top_left_x, top_left_y);
-            write_sprite(top_left_x, top_left_y, game_state.world_blocks[WORLD_BLOCKS_WIDTH * block_y + block_x].sprite, width, r_pixels);
-
-        }
-    }
-
-    int char_left = round(game_state.character.x_bottom_left) + game_state.blocks_area_offset_x;
-    int char_top = game_state.blocks_area_offset_y + (WORLD_BLOCKS_HEIGHT * BLOCK_HEIGHT_IN_PIXELS) - round(game_state.character.y_inverted_bottom_left) - game_state.character.current_sprite.height;
-    printf("Draw character at %d,%d\n", char_left, char_top);
-    write_sprite_aliased(char_left, char_top, game_state.character.current_sprite, width, r_pixels);
-}
-
 // IMPLEMENTS
 int initialize(int width, int height, long micros_per_frame_param) {
     printf("top of initialize\n");
@@ -222,6 +204,30 @@ int initialize(int width, int height, long micros_per_frame_param) {
 
     printf("bottom of initialize\n");
     return 0;
+}
+
+// PRIVATE
+inline void blit(uint32_t* r_pixels, int width, int height) {
+    memcpy(r_pixels, blank_pixels, width * height * 4);
+
+    for (int block_y = 0; block_y < WORLD_BLOCKS_HEIGHT; ++block_y) {
+        for (int block_x = 0; block_x < WORLD_BLOCKS_WIDTH; ++block_x) {
+            // TODO not needed?
+            // if (game_state.world_blocks[WORLD_BLOCKS_HEIGHT * block_y + block_x].type == BLOCK_TYPE_EMPTY) {
+            //     continue;
+            // }
+            int top_left_x = game_state.blocks_area_offset_x + block_x * BLOCK_WIDTH_IN_PIXELS;
+            int top_left_y = game_state.blocks_area_offset_y + (WORLD_BLOCKS_HEIGHT - 1 - block_y) * BLOCK_HEIGHT_IN_PIXELS;
+            // printf("Block at %d,%d will be drawn at %d,%d\n", block_x, block_y, top_left_x, top_left_y);
+            write_sprite_aliased(top_left_x, top_left_y, game_state.world_blocks[WORLD_BLOCKS_WIDTH * block_y + block_x].sprite, width, r_pixels);
+
+        }
+    }
+
+    int char_left = round(game_state.character.x_bottom_left) + game_state.blocks_area_offset_x;
+    int char_top = game_state.blocks_area_offset_y + (WORLD_BLOCKS_HEIGHT * BLOCK_HEIGHT_IN_PIXELS) - round(game_state.character.y_inverted_bottom_left) - game_state.character.current_sprite.height;
+    printf("Draw character at %d,%d\n", char_left, char_top);
+    write_sprite_aliased(char_left, char_top, game_state.character.current_sprite, width, r_pixels);
 }
 
 // IMPLEMENTS

@@ -41,11 +41,16 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
 
     int cat_width = 26;
     int cat_gap = 6;
+    r_sprite_array[SPRITE_TYPE_CAT_STAND_RIGHT].height = 32;
+    r_sprite_array[SPRITE_TYPE_CAT_STAND_RIGHT].width = cat_width;
+    r_sprite_array[SPRITE_TYPE_CAT_STAND_RIGHT].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_CAT_STAND_RIGHT].pixels_start = image_array[IMAGE_INDEX_CAT_RIGHT].pixels + 2;
+    r_sprite_array[SPRITE_TYPE_CAT_STAND_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_CAT_RIGHT].width;
     for (int walk_index = 0; walk_index < 5; ++walk_index) {
         r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].height = 32;
         r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].width = cat_width;
         r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].flip_left_to_right = false;
-        r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].pixels_start = image_array[IMAGE_INDEX_CAT_RIGHT].pixels + 2 + (cat_width + cat_gap) * walk_index;
+        r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].pixels_start = image_array[IMAGE_INDEX_CAT_RIGHT].pixels + 2 + (cat_width + cat_gap) * (walk_index + 1);
         r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_CAT_RIGHT].width;
     }
 
