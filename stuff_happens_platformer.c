@@ -53,27 +53,28 @@ void initialize_game_state() {
     initialize_blocks(game_state.base_sprites, game_state.base_blocks);
     fflush(stdout);
 
-    for (int y = 0; y < WORLD_BLOCKS_HEIGHT; ++y) {
-        for (int x = 0; x < WORLD_BLOCKS_WIDTH; ++x) {
+    struct Block base_block_for_spot;
+    for (int y = 0; y < HEIGHT_OF_WORLD_IN_BLOCKS; ++y) {
+        for (int x = 0; x < WIDTH_OF_WORLD_IN_BLOCKS; ++x) {
             if (y == 0) {
                 printf("world block at %d,%d is ground\n", x, y);
-                game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x] = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (y == 1 && (x < 1 || x >= WORLD_BLOCKS_WIDTH - 1)) {
+                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
+            } else if (y == 1 && (x < 1 || x >= WIDTH_OF_WORLD_IN_BLOCKS - 1)) {
                 printf("world block at %d,%d is ground\n", x, y);
-                game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x] = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (y == 2 && (x < 1 || x >= WORLD_BLOCKS_WIDTH - 1)) {
+                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
+            } else if (y == 2 && (x % 5 == 0)) {
                 printf("world block at %d,%d is ground\n", x, y);
-                game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x] = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (y == 3 && (x < 1 || x >= WORLD_BLOCKS_WIDTH - 1)) {
+                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
+            } else if (y == 3 && (x % 3 == 0)) {
                 printf("world block at %d,%d is ground\n", x, y);
-                game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x] = game_state.base_blocks[BLOCK_TYPE_GROUND];
+                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
             } else {
-                game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x] = game_state.base_blocks[BLOCK_TYPE_EMPTY];
+                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_EMPTY];
             }
+            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x] = base_block_for_spot;
 
-            game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x].world_x = x;
-            game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x].world_y = y;
-            printf("Initializing blocks compare x %d to %d\n", game_state.base_blocks[BLOCK_TYPE_EMPTY].world_x, game_state.world_blocks[WORLD_BLOCKS_WIDTH * y + x].world_x);
+            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_x = x;
+            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_y = y;
         }
     }
 
@@ -88,7 +89,7 @@ void initialize_game_state() {
     #endif
 
     game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];
-    game_state.character.x_bottom_left = WORLD_BLOCKS_WIDTH * BLOCK_WIDTH_IN_PIXELS / 2;
+    game_state.character.x_bottom_left = WIDTH_OF_SCREEN_IN_BLOCKS * BLOCK_WIDTH_IN_PIXELS / 2;
     game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS * 1;
     game_state.character.width = game_state.character.current_sprite.width;
     game_state.character.height = game_state.character.current_sprite.height;
@@ -175,8 +176,8 @@ int initialize(int width, int height, long micros_per_frame_param) {
 
     initialize_world_rules(frames_per_second, &game_state.world_rules);
 
-    int blocks_area_width = SPRITE_WIDTH * WORLD_BLOCKS_WIDTH;
-    int blocks_area_height = SPRITE_HEIGHT * WORLD_BLOCKS_HEIGHT;
+    int blocks_area_width = SPRITE_WIDTH * WIDTH_OF_SCREEN_IN_BLOCKS;
+    int blocks_area_height = SPRITE_HEIGHT * HEIGHT_OF_SCREEN_IN_BLOCKS;
     if (blocks_area_width >= width || blocks_area_height >= height) {
         printf("ERROR: window area too small for game display: need width=%d height=%d but got width=%d height=%d\n", blocks_area_width, blocks_area_height, width, height);
         return -1;
@@ -209,6 +210,9 @@ int initialize(int width, int height, long micros_per_frame_param) {
 // PRIVATE
 inline void blit(uint32_t* r_pixels, int width, int height) {
     memcpy(r_pixels, blank_pixels, width * height * 4);
+
+    int screen_bottom_left_world_x = game_state.character.x_bottom_left + (game_state.character.width / 2) - (WIDTH_OF_SCREEN_IN_BLOCKS * BLOCK_WIDTH_IN_PIXELS / 2);
+    int screen_bottom_left_world_y = game_state.character.y_inverted_bottom_left + (game_state.character.height / 2) - (HEIGHT_OF_SCREEN_IN_BLOCKS * BLOCK_HEIGHT_IN_PIXELS / 2);
 
     for (int block_y = 0; block_y < WORLD_BLOCKS_HEIGHT; ++block_y) {
         for (int block_x = 0; block_x < WORLD_BLOCKS_WIDTH; ++block_x) {
