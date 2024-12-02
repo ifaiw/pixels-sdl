@@ -7,15 +7,25 @@
 #include "game_structs.h"
 
 
-#define WORLD_BLOCKS_WIDTH  25
-#define WORLD_BLOCKS_HEIGHT 18
+#define WIDTH_OF_SCREEN_IN_BLOCKS 25
+#define HEIGHT_OF_SCREEN_IN_BLOCKS 18
+
+#define WIDTH_OF_WORLD_IN_SCREENS 4
+#define HEIGHT_OF_WORLD_IN_SCREENS 2
+
+#define WIDTH_OF_WORLD_IN_BLOCKS WIDTH_OF_SCREEN_IN_BLOCKS * WIDTH_OF_WORLD_IN_SCREENS
+#define HEIGHT_OF_WORLD_IN_BLOCKS HEIGHT_OF_SCREEN_IN_BLOCKS * HEIGHT_OF_WORLD_IN_SCREENS
 
 struct GameState {
     struct ImageInfo base_bmp_images[NUM_BMP_IMAGES];
     struct Sprite base_sprites[NUM_SPRITE_TYPES];
     struct Block base_blocks[NUM_BLOCK_TYPES];
 
-    struct Block world_blocks[WORLD_BLOCKS_WIDTH * WORLD_BLOCKS_HEIGHT];
+    // Layout of world_blocks
+    // Easiest layout I think is:
+    // Bottom/lowest row of blocks is at y = 0
+    // world_blocks starts with entire first y=0 row of the world, then y=1 1 row, and so on
+    struct Block world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * HEIGHT_OF_WORLD_IN_BLOCKS];
 
     struct Character character;
 
@@ -26,9 +36,7 @@ struct GameState {
     long current_frame;
     long current_time_in_micros;
 
-    // Pixel offset of the top-left corner of the area where blocks are rendered in the window
-    int blocks_area_offset_x;
-    int blocks_area_offset_y;
+    struct ViewState view_state;
 };
 
 struct Block* get_world_block_for_location(int x, int y, struct GameState* game_state);

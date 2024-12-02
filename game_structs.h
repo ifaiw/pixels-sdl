@@ -95,4 +95,17 @@ struct XY{
     int y;
 };
 
+struct ViewState {
+    int window_width;
+    int window_height;
+    int view_width;
+    int view_height;
+    // Pixel offset of the top-left corner of the area where the world is rendered in the window
+    int view_area_offset_x;
+    int view_area_offset_y;
+
+    int view_bottom_left_world_x;
+    int view_bottom_left_world_y;
+};
+
 #endif  // _GAME_STRUCTS__H

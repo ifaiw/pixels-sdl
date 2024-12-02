@@ -54,12 +54,12 @@ struct Block* get_world_block_for_location(int x, int y, struct GameState* game_
 
     int block_x = x / BLOCK_WIDTH_IN_PIXELS;
     int block_y = y / BLOCK_HEIGHT_IN_PIXELS;
-    printf("x=%d y=%d block_x=%d block_y=%d\n", x, y, block_x, block_y);
-    if (block_x >= WORLD_BLOCKS_WIDTH || block_y >= WORLD_BLOCKS_HEIGHT) {
+    // printf("x=%d y=%d block_x=%d block_y=%d\n", x, y, block_x, block_y);
+    if (block_x >= WIDTH_OF_WORLD_IN_BLOCKS || block_y >= HEIGHT_OF_WORLD_IN_BLOCKS) {
         return NULL;
     }
 
-    return &game_state->world_blocks[block_y * WORLD_BLOCKS_WIDTH + block_x];
+    return &game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x];
 }
 
 // Returns inverted y I think?
