@@ -54,6 +54,35 @@ inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite s
     }
 }
 
+inline void write_sprite_aliased(int screen_top_left_x, int screen_top_left_y, struct Sprite sprite, int start_sprite_x, int start_sprite_y, int draw_width, int draw_height, int pixels_width, uint32_t* r_pixels) {
+    int end_x = start_sprite_x + draw_width;
+    int end_y = start_sprite_y + draw_height
+    if (sprite.flip_left_to_right) {
+        for (int y = start_sprite_y; y < end_y; ++y) {
+            uint32_t* sprite_row_start = start_sprite_x + (y * sprite.image_source_pitch_in_pixels);
+            uint32_t* pixels_row_start = r_pixels + ((screen_top_left_y + y) * pixels_width) + top_left_x;
+            for (int pixel_index = 0; pixel_index < (end_sprite_x - start_sprite_x); ++pixel_index) {
+                switch (sprite_row_start[pixel_index] & ALPHA) {
+                    case ALPHA: pixels_row_start[end_sprite_x - pixel_index] = sprite_row_start[pixel_index];
+                    default: break;
+                }
+            }
+        }
+    }
+    else {
+        for (int y = 0; y < sprite.height; ++y) {
+            uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);
+            uint32_t* pixels_row_start = r_pixels + ((top_left_y + y) * pixels_width) + top_left_x;
+            for (int pixel_index = 0; pixel_index < sprite.width; ++pixel_index) {
+                switch (sprite_row_start[pixel_index] & ALPHA) {
+                    case ALPHA: pixels_row_start[pixel_index] = sprite_row_start[pixel_index];
+                    default: break;
+                }
+            }
+        }
+    }
+}
+
 inline void draw_circle(
     uint32_t *pixels,
     int pixels_pitch_in_pixels,
