@@ -35,8 +35,6 @@ struct GameState {
 
     long current_frame;
     long current_time_in_micros;
-
-    struct ViewState view_state;
 };
 
 struct Block* get_world_block_for_location(int x, int y, struct GameState* game_state);

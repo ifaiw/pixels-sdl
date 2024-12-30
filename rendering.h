@@ -54,12 +54,18 @@ inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite s
     }
 }
 
-inline void write_sprite_aliased(int screen_top_left_x, int screen_top_left_y, struct Sprite sprite, int start_sprite_x, int start_sprite_y, int end_sprite_x, int end_sprite_y, int pixels_width, uint32_t* r_pixels) {
+inline void write_sprite_aliased_subsection(int screen_top_left_x, int screen_top_left_y, struct Sprite sprite, int start_sprite_x, int start_sprite_y, int end_sprite_x, int end_sprite_y, int pixels_width, uint32_t* r_pixels) {
     // TODO I don't think this flip_left_to_right branch has been tested
+    // What does it mean to only draw part of a flipped image? E.g. If start_sprite_x=0 and end_sprite_x=halfwidth, does that draw the left half
+    // of the original sprite but flipped on on the right side of the output area, or does that mean flip the image and then draw the left half
+    // of the flipped image on the left side of the output area?
+    // I think the latter?
+    // Lets say we wanted to draw the character (original image faces right) moving off the left edge of the screen? We'd just want to draw
+    // the right side of the flipped image on the right side of the area. So, the second of the two options described above.
     if (sprite.flip_left_to_right) {
         for (int y = start_sprite_y; y <= end_sprite_y; ++y) {
-            uint32_t* sprite_row_start = start_sprite_x + (y * sprite.image_source_pitch_in_pixels);
-            uint32_t* pixels_row_start = r_pixels + ((screen_top_left_y + y) * pixels_width) + screen_top_left_x;
+            uint32_t* sprite_row_start = sprite.pixels_start + start_sprite_x + (y * sprite.image_source_pitch_in_pixels);
+            uint32_t* pixels_row_start = r_pixels + ((screen_top_left_y + y) * pixels_width) + screen_top_left_x + start_sprite_x;
             for (int pixel_index = 0; pixel_index <= (end_sprite_x - start_sprite_x); ++pixel_index) {
                 switch (sprite_row_start[pixel_index] & ALPHA) {
                     case ALPHA: pixels_row_start[end_sprite_x - pixel_index] = sprite_row_start[pixel_index];
@@ -70,8 +76,8 @@ inline void write_sprite_aliased(int screen_top_left_x, int screen_top_left_y, s
     }
     else {
         for (int y = start_sprite_y; y <= end_sprite_y; ++y) {
-            uint32_t* sprite_row_start = start_sprite_x + (y * sprite.image_source_pitch_in_pixels);
-            uint32_t* pixels_row_start = r_pixels + ((screen_top_left_y + y) * pixels_width) + screen_top_left_x;
+            uint32_t* sprite_row_start = sprite.pixels_start + start_sprite_x + (y * sprite.image_source_pitch_in_pixels);
+            uint32_t* pixels_row_start = r_pixels + ((screen_top_left_y + y) * pixels_width) + screen_top_left_x + start_sprite_x;
             for (int pixel_index = 0; pixel_index <= (end_sprite_x - start_sprite_x); ++pixel_index) {
                 switch (sprite_row_start[pixel_index] & ALPHA) {
                     case ALPHA: pixels_row_start[pixel_index] = sprite_row_start[pixel_index];

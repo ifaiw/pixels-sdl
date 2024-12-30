@@ -29,8 +29,8 @@ struct Sprite {
 };
 
 struct Block {
-    int world_x;
-    int world_y;
+    int world_pixel_x; // Bottom-left
+    int world_pixel_y; // Bottom-left
     uint16_t type;
     uint32_t effects_flags;
     struct Sprite sprite;
@@ -101,6 +101,7 @@ struct ViewState {
     int view_width;
     int view_height;
     // Pixel offset of the top-left corner of the area where the world is rendered in the window
+    // y is not inverted, it is the number of pixels down from the top of the window
     int view_area_offset_x;
     int view_area_offset_y;
 

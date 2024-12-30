@@ -124,12 +124,5 @@ int load_images(struct ImageInfo* r_image_array) {
     }
     flip_upside_down(r_image_array[IMAGE_INDEX_CAT_RIGHT].pixels, r_image_array[IMAGE_INDEX_CAT_RIGHT].width, r_image_array[IMAGE_INDEX_CAT_RIGHT].height);
 
-    // TODO can get rid of?
-    // r_image_array[IMAGE_INDEX_ORC_1_LEFT].height = r_image_array[IMAGE_INDEX_ORC_1_RIGHT].height;
-    // r_image_array[IMAGE_INDEX_ORC_1_LEFT].width = r_image_array[IMAGE_INDEX_ORC_1_RIGHT].width;
-    // r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels = (uint32_t*)malloc(sizeof(r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels));
-    // memcpy(r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels, r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels, sizeof(r_image_array[IMAGE_INDEX_ORC_1_RIGHT].pixels));
-    // flip_right_left(r_image_array[IMAGE_INDEX_ORC_1_LEFT].pixels, r_image_array[IMAGE_INDEX_ORC_1_LEFT].width, r_image_array[IMAGE_INDEX_ORC_1_LEFT].height);
-
     return 0;
 }

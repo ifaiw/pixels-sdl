@@ -15,7 +15,8 @@
 #include "stuff_happens.h"
 
 
-#define WIDTH 1280
+//#define WIDTH 1280
+#define WIDTH 1500
 #define HEIGHT 960
 #define FRAMES_PER_SECOND 60
 #define SLEEP_BUFFER_MICROS 500
