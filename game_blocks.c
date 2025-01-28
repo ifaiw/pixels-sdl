@@ -10,5 +10,5 @@ void initialize_blocks(struct Sprite* sprite_array, struct Block* r_block_array)
 
     r_block_array[BLOCK_TYPE_GROUND].type = BLOCK_TYPE_GROUND;
     r_block_array[BLOCK_TYPE_GROUND].effects_flags = EFFECT_FLAG_SOLID;
-    r_block_array[BLOCK_TYPE_GROUND].sprite = sprite_array[SPRITE_TYPE_GROUND];
+    r_block_array[BLOCK_TYPE_GROUND].sprite = sprite_array[SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES];
 }

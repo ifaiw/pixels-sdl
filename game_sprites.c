@@ -1,20 +1,113 @@
 #include "game_sprites.h"
 
+#include "game_blocks.h"
 #include "game_images.h"
 
 // IMPLEMENTS
 void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_array) {
-    r_sprite_array[SPRITE_TYPE_EMPTY].height = SPRITE_HEIGHT;
-    r_sprite_array[SPRITE_TYPE_EMPTY].width = SPRITE_WIDTH;
+    r_sprite_array[SPRITE_TYPE_EMPTY].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_EMPTY].width = BLOCK_WIDTH_IN_PIXELS;
     r_sprite_array[SPRITE_TYPE_EMPTY].flip_left_to_right = false;
     r_sprite_array[SPRITE_TYPE_EMPTY].pixels_start = image_array[IMAGE_INDEX_BLANK].pixels;
     r_sprite_array[SPRITE_TYPE_EMPTY].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_BLANK].width;
 
-    r_sprite_array[SPRITE_TYPE_GROUND].height = SPRITE_HEIGHT;
-    r_sprite_array[SPRITE_TYPE_GROUND].width = SPRITE_WIDTH;
-    r_sprite_array[SPRITE_TYPE_GROUND].flip_left_to_right = false;
-    r_sprite_array[SPRITE_TYPE_GROUND].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels + 48 * image_array[IMAGE_INDEX_SOLIDS_1].width;
-    r_sprite_array[SPRITE_TYPE_GROUND].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width + 48;
+    r_sprite_array[SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 192 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 96 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 144 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_DOWN].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP_DOWN].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 192 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP_DOWN].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 96 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP_DOWN].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 144 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
+
 
     // r_sprite_array[SPRITE_TYPE_ORC_STAND_LEFT].height = 28;
     // r_sprite_array[SPRITE_TYPE_ORC_STAND_LEFT].width = 42;
@@ -54,17 +147,21 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
         r_sprite_array[SPRITE_TYPE_CAT_WALK_RIGHT_1 + walk_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_CAT_RIGHT].width;
     }
 
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST].height = SPRITE_HEIGHT;
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST].width = SPRITE_WIDTH;
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST].flip_left_to_right = false;
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels;
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
+    for (int sprite_index = 0; sprite_index < NUM_SPRITE_TYPES; ++sprite_index) {
+        r_sprite_array[sprite_index].sprite_index = sprite_index;
+    }
 
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].height = SPRITE_HEIGHT;
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].width = SPRITE_WIDTH;
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].flip_left_to_right = false;
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels + 48;
-    r_sprite_array[SPRITE_TYPE_GROUND_TEST2].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].height = SPRITE_HEIGHT;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].width = SPRITE_WIDTH;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].flip_left_to_right = false;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
+
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].height = SPRITE_HEIGHT;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].width = SPRITE_WIDTH;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].flip_left_to_right = false;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels + 48;
+    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
 
 
 }
