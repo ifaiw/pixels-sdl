@@ -403,14 +403,17 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
             if (mouse_block != NULL) {
                 // printf("clicked block effects_flag is %d\n", mouse_block->effects_flags);
                 if (mouse_block->effects_flags & EFFECT_FLAG_SOLID) {
+                    printf("remove ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                     mouse_block->type = BLOCK_TYPE_EMPTY;
                     mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_EMPTY].effects_flags;
                     mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite;
                 } else {
+                    printf("add ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                     mouse_block->type = BLOCK_TYPE_GROUND;
                     mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_GROUND].effects_flags;
                     mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_GROUND].sprite;
                 }
+                update_ground_images(game_state);
             } else {
                 // printf("No block at click\n");
             }

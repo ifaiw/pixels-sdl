@@ -6,8 +6,19 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "game_sprites.h"
 #include "game_structs.h"
 #include "graphics_constants.h"
+
+// inline void copy_pixels(uint32_t* source_pixels, int source_pixels_width, uint32_t* r_dest_pixels, int dest_pixels_width, int source_top_left_x, int source_top_left_y, int source_bottom_right_x, int source_bottom_right_y, ) {
+//     printf("write_image called\n");
+//     for (int y = 0; y < image.height; ++y) {
+//         int pixels_offset = (top_left_y + y) * pixels_width + top_left_x;
+//         int sprite_pixels_offset = y * image.width;
+//         printf("about to memcpy pixels_offset=%d sprite_pixels_offset=%d image.width=%d\n", pixels_offset, sprite_pixels_offset, image.width);
+//         memcpy(r_pixels + pixels_offset, image.pixels + sprite_pixels_offset, image.width * 4);
+//     }
+// }
 
 inline void write_sprite(int top_left_x, int top_left_y, struct Sprite sprite, int pixels_width, uint32_t* r_pixels) {
     for (int y = 0; y < sprite.height; ++y) {
@@ -28,6 +39,13 @@ inline void write_image(int top_left_x, int top_left_y, struct ImageInfo image, 
 }
 
 inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite sprite, int pixels_width, uint32_t* r_pixels) {
+    // TODO just for testing
+    if (sprite.sprite_index >= NUM_SPRITE_TYPES) {
+        printf("Invalid sprite index: %d\n", sprite.sprite_index);
+        fflush(stdout);
+        exit(0);
+    }
+
     if (sprite.flip_left_to_right) {
         for (int y = 0; y < sprite.height; ++y) {
             uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);

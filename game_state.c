@@ -92,15 +92,44 @@ bool is_on_ground(struct GameState* game_state) {
     // printf("y_inverted_bottom_left=%f bottom_left_y_floor=%d just_below_pixel=%d\n", game_state->character.y_inverted_bottom_left, bottom_left_y_floor, just_below_pixel);
 
     struct Block* bottom_left = get_world_block_for_location(bottom_left_x_floor, just_below_pixel, game_state);
-    // TODO just for testing make the blocks below look different
-    // bottom_left->sprite = game_state->base_sprites[SPRITE_TYPE_GROUND_TEST];
-    // printf("effects flag for bottom_left is %d\n", bottom_left->effects_flags);
     if (bottom_left->effects_flags & EFFECT_FLAG_SOLID) {
         return true;
     }
     struct Block* bottom_right = get_world_block_for_location(right_pixel, just_below_pixel, game_state);
-    // TODO just for testing make the blocks below look different
-    // bottom_right->sprite = game_state->base_sprites[SPRITE_TYPE_GROUND_TEST2];
-    // printf("effects flag for bottom_right is %d\n", bottom_right->effects_flags);
     return bottom_right->effects_flags & EFFECT_FLAG_SOLID;
+}
+
+// IMPLEMENTS
+void update_ground_images(struct GameState* game_state) {
+    for (int block_x = 0; block_x < WIDTH_OF_WORLD_IN_BLOCKS; ++block_x) {
+        for (int block_y = 0; block_y < HEIGHT_OF_WORLD_IN_BLOCKS; ++block_y) {
+            struct Block* block = &(game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x]);
+            if (block->type == BLOCK_TYPE_GROUND) {
+                printf("updating ground sprite for %d,%d\n", block_x, block_y);
+                int surrounding_block_mask = 0;
+                if (block_x > 0 && game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x - 1].type != BLOCK_TYPE_GROUND) {
+                    surrounding_block_mask += DIRECTION_MASK_LEFT;
+                    printf("not ground on left\n");
+                }
+                if (block_x < WIDTH_OF_WORLD_IN_BLOCKS - 1 && game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x + 1].type != BLOCK_TYPE_GROUND) {
+                    surrounding_block_mask += DIRECTION_MASK_RIGHT;
+                    printf("not ground on right\n");
+                }
+                if (block_y > 0 && game_state->world_blocks[(block_y - 1) * WIDTH_OF_WORLD_IN_BLOCKS + block_x].type != BLOCK_TYPE_GROUND) {
+                    surrounding_block_mask += DIRECTION_MASK_DOWN;
+                    printf("not ground below\n");
+                }
+                if (block_y < HEIGHT_OF_WORLD_IN_BLOCKS - 1 && game_state->world_blocks[(block_y + 1) * WIDTH_OF_WORLD_IN_BLOCKS + block_x].type != BLOCK_TYPE_GROUND) {
+                    surrounding_block_mask += DIRECTION_MASK_UP;
+                    printf("not ground above\n");
+                }
+
+                int new_sprite_index = SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES + surrounding_block_mask;
+                printf("Set Block %d,%d surrounding_block_mask=%d new_sprite_index=%d\n", block_x, block_y, surrounding_block_mask, new_sprite_index);
+
+                block->sprite = game_state->base_sprites[new_sprite_index];
+                printf("sprite_index of block->sprite is now %d\n", block->sprite.sprite_index);
+            }
+        }
+    }
 }

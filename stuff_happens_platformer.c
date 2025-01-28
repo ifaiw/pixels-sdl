@@ -86,9 +86,13 @@ void initialize_game_state() {
 
             game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_x = x * BLOCK_WIDTH_IN_PIXELS;
             game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_y = y * BLOCK_HEIGHT_IN_PIXELS;
+            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].block_x = x;
+            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].block_y = y;
             // printf("Initialize world block x=%d y=%d world_pixel_x=%d world_pixel_y=%d\n", x, y, game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_x, game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_y);
         }
     }
+
+    update_ground_images(&game_state);
 
     #ifdef CAT_CHARACTER
     game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_CAT_STAND_RIGHT;
@@ -188,8 +192,8 @@ int initialize(int width, int height, long micros_per_frame_param) {
 
     initialize_world_rules(frames_per_second, &game_state.world_rules);
 
-    int blocks_area_width = SPRITE_WIDTH * WIDTH_OF_SCREEN_IN_BLOCKS;
-    int blocks_area_height = SPRITE_HEIGHT * HEIGHT_OF_SCREEN_IN_BLOCKS;
+    int blocks_area_width = BLOCK_WIDTH_IN_PIXELS * WIDTH_OF_SCREEN_IN_BLOCKS;
+    int blocks_area_height = BLOCK_HEIGHT_IN_PIXELS * HEIGHT_OF_SCREEN_IN_BLOCKS;
     if (blocks_area_width >= width || blocks_area_height >= height) {
         // printf("ERROR: window area too small for game display: need width=%d height=%d but got width=%d height=%d\n", blocks_area_width, blocks_area_height, width, height);
         return -1;
@@ -291,7 +295,10 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
             int world_diff_y = game_state.world_blocks[block_index].world_pixel_y - view_state.view_bottom_left_world_y;
             int top_left_test_y = view_state.view_area_offset_y + view_state.view_height - world_diff_y - BLOCK_HEIGHT_IN_PIXELS;
             // printf("Using block pixel x and y, top-left on screen should be %d,%d\n", top_left_test_x, top_left_test_y);
-            // printf("write block %d,%d at pixel top-left %d,%d\n", block_x_index, block_y_index, top_left_x, top_left_y);
+            // TODO just for testing
+            int sprite_index = game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + block_x_index].sprite.sprite_index;
+            printf("write block %d,%d [sprite_index=%d] at pixel top-left %d,%d\n", block_x_index, block_y_index, sprite_index, top_left_x, top_left_y);
+            fflush(stdout);
             write_sprite_aliased(top_left_x, top_left_y, game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + block_x_index].sprite, width, r_pixels);
         }
     }

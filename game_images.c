@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "game_blocks.h"
 #include "game_paths.h"
 #include "game_sprites.h"
 #include "graphics_constants.h"
@@ -71,8 +72,8 @@ inline void swap_pixel_colour(struct ImageInfo* r_current_image, uint32_t old_pi
 
 // IMPLEMENTS
 int load_images(struct ImageInfo* r_image_array) {
-    r_image_array[IMAGE_INDEX_BLANK].pixels = (uint32_t*)malloc(SPRITE_WIDTH * SPRITE_HEIGHT * 4);
-    for (int i = 0; i < SPRITE_WIDTH * SPRITE_HEIGHT; ++i) {
+    r_image_array[IMAGE_INDEX_BLANK].pixels = (uint32_t*)malloc(BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS * 4);
+    for (int i = 0; i < BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS; ++i) {
         #ifdef CAT_CHARACTER
         // If using the black cat sprite, need to change the background to something other than black for the cat to show up
         r_image_array[IMAGE_INDEX_BLANK].pixels[i] = ALPHA | BLUE;
@@ -80,8 +81,8 @@ int load_images(struct ImageInfo* r_image_array) {
         r_image_array[IMAGE_INDEX_BLANK].pixels[i] = ALPHA;
         #endif
     }
-    r_image_array[IMAGE_INDEX_BLANK].height = SPRITE_HEIGHT;
-    r_image_array[IMAGE_INDEX_BLANK].width = SPRITE_WIDTH;
+    r_image_array[IMAGE_INDEX_BLANK].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_image_array[IMAGE_INDEX_BLANK].width = BLOCK_WIDTH_IN_PIXELS;
 
     int load_image_result = load_bmp_image(GAME_PATH__IMAGE_PATH_SOLIDS_1_FULL, r_image_array + IMAGE_INDEX_SOLIDS_1);
     if (load_image_result != 0) {
@@ -89,6 +90,13 @@ int load_images(struct ImageInfo* r_image_array) {
         return load_image_result;
     }
     flip_upside_down(r_image_array[IMAGE_INDEX_SOLIDS_1].pixels, r_image_array[IMAGE_INDEX_SOLIDS_1].width, r_image_array[IMAGE_INDEX_SOLIDS_1].height);
+
+    load_image_result = load_bmp_image(GAME_PATH__IMAGE_PATH_SOLIDS_2_FULL, r_image_array + IMAGE_INDEX_SOLIDS_2);
+    if (load_image_result != 0) {
+        printf("Error loading IMAGE_PATH_SOLIDS_2: %d\n", load_image_result);
+        return load_image_result;
+    }
+    flip_upside_down(r_image_array[IMAGE_INDEX_SOLIDS_2].pixels, r_image_array[IMAGE_INDEX_SOLIDS_2].width, r_image_array[IMAGE_INDEX_SOLIDS_2].height);
 
     #ifdef CAT_CHARACTER
     // If using the black cat sprite, need to change the background to something other than black for the cat to show up

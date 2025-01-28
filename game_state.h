@@ -45,4 +45,6 @@ bool is_on_ground(struct GameState* game_state);
 
 void load_world_rules_from_file(struct WorldRules* r_world_rules);
 
+void update_ground_images(struct GameState* game_state);
+
 #endif  // _GAME_STATE__H

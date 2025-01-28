@@ -26,11 +26,15 @@ struct Sprite {
     uint32_t height, width;
     uint32_t image_source_pitch_in_pixels;
     bool flip_left_to_right;
+    // TODO only used for testing?
+    int sprite_index;
 };
 
 struct Block {
     int world_pixel_x; // Bottom-left
     int world_pixel_y; // Bottom-left
+    int block_x;
+    int block_y;
     uint16_t type;
     uint32_t effects_flags;
     struct Sprite sprite;
