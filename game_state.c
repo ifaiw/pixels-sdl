@@ -34,6 +34,7 @@ void load_world_rules_from_file(struct WorldRules* r_world_rules) {
 
 	r_world_rules->x_ground_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_ground_acceleration_pixels_per_second", &world_rules_file_dict));
 	r_world_rules->x_movement_max_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_movement_max_speed_pixels_per_second", &world_rules_file_dict));
+    r_world_rules->x_air_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_air_acceleration_pixels_per_second", &world_rules_file_dict));
 
 	r_world_rules->micros_per_walking_animation_frame = (long)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
 

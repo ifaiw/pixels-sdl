@@ -68,19 +68,19 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].flip_left_to_right = false;
-    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 320 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 320 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
 
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].flip_left_to_right = false;
-    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 368 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_RIGHT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
 
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].flip_left_to_right = false;
-    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 320 + 48 * image_array[IMAGE_INDEX_SOLIDS_2].width;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
 
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;

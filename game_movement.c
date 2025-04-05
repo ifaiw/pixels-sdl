@@ -109,7 +109,8 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     int top_pixel_new = new_character_y_floor + game_state->character.height;
 
     bool x_motion_stopped = false;
-    bool y_motion_stopped = false;
+    bool y_motion_stopped_above = false;
+    bool y_motion_stopped_below = false;
 
     double x_collision_distance = -1;
     double y_collision_distance = -1;
@@ -176,7 +177,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
                 new_character_y = block_bottom_left.y + BLOCK_HEIGHT_IN_PIXELS;
                 // printf("do_movement collision check moving-down left block is solid new_character_y to %f\n", new_character_y);
             }
-            y_motion_stopped = true;
+            y_motion_stopped_below = true;
         }
         if (new_block_right->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("do_movement collision check moving-down TRUE right block is solid\n");
@@ -185,7 +186,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
                 new_character_y = block_bottom_right.y + BLOCK_HEIGHT_IN_PIXELS;
                 // printf("do_movement collision check moving-down right block is solid new_character_y to %f\n", new_character_y);
             }
-            y_motion_stopped = true;
+            y_motion_stopped_below = true;
         }
     }
 
@@ -199,28 +200,50 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
             struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
             new_character_y = block_bottom_left.y - game_state->character.height - 1;
             // printf("do_movement collision check moving-up left block is solid new_character_y to %f\n", new_character_y);
-            y_motion_stopped = true;
+            y_motion_stopped_above = true;
         }
         if (new_block_right->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("do_movement collision check moving-up TRUE right block is solid\n");
             struct XY block_bottom_right = get_bottom_left_world_pixel_for_block(new_block_right);
             new_character_y = block_bottom_right.y - game_state->character.height - 1;
             // printf("do_movement collision check moving-up right block is solid new_character_y to %f\n", new_character_y);
-            y_motion_stopped = true;
+            y_motion_stopped_above = true;
         }
     }
 
 
     // TODO Shouln't switch to stopped if just one axis is blocked but still moving in other axis
-    if (y_motion_stopped) {
-        // printf("do_movement y_motion_stopped is true\n");
+    if (y_motion_stopped_above) {
+        printf("do_movement y_motion_stopped_above is true, current motion is %d\n", game_state->character.motion);
         game_state->character.y_velocity_pixels_per_second = 0;
-        game_state->character.motion = STOPPED;
+        // TODO how can motion get stopped above if character is not jumping?
+        if (game_state->character.motion != JUMPING) {
+            printf("do_movement y_motion_stopped_above is true motion_change to STOPPED\n");
+            game_state->character.motion = STOPPED;
+        }
     }
 
     if (x_motion_stopped) {
+        printf("do_movement x_motion_stopped is true, current motion is %d\n", game_state->character.motion);
         game_state->character.x_velocity_pixels_per_second = 0;
-        game_state->character.motion = STOPPED;
+        if (game_state->character.motion != JUMPING) {
+            printf("do_movement x_motion_stopped is true motion_change to STOPPED\n");
+            game_state->character.motion = STOPPED;
+        }
+    }
+
+    if (y_motion_stopped_below) {
+        printf("do_movement y_motion_stopped_below is true, current motion is %d, x velocity is %f\n", game_state->character.motion, game_state->character.x_velocity_pixels_per_second);
+        game_state->character.y_velocity_pixels_per_second = 0;
+
+        // TODO Should this just check x_motion_stopped?
+        if (game_state->character.x_velocity_pixels_per_second != 0) {
+            printf("do_movement y_motion_stopped_below is true but x velocity is not 0, motion_change to WALKING\n");
+            game_state->character.motion = WALKING;
+        } else {
+            printf("do_movement y_motion_stopped_below is true and x velocity is 0, motion_change to STOPPED\n");
+            game_state->character.motion = STOPPED;
+        }
     }
 
     // printf("In do_movement set x_bottom_left=%f y_inverted_bottom_left=%f\n", new_character_x, new_character_y);
@@ -230,11 +253,12 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
 
     // printf("Check if is on ground before applying gravity\n");
     if (!is_on_ground(game_state)) {
-        // printf("not on ground, apply gravity\n");
+        printf("not on ground, apply gravity\n");
         game_state->character.y_velocity_pixels_per_second -= game_state->world_rules.gravity_pixels_per_second;
         if (game_state->character.y_velocity_pixels_per_second < -game_state->world_rules.y_max_fall_speed_pixels_per_second) {
             game_state->character.y_velocity_pixels_per_second = -game_state->world_rules.y_max_fall_speed_pixels_per_second;
         }
+        printf("now y_velocity_pixels_per_second is %f\n", game_state->character.y_velocity_pixels_per_second);
     }
     // TODO just for testing
     else {
@@ -259,6 +283,7 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
             case RIGHT:
                 switch (game_state->character.motion) {
                     case STOPPED:
+                        printf("handle_input spot 1 motion_change to WALKING\n");
                         game_state->character.motion = WALKING;
                         game_state->character.x_velocity_pixels_per_second += game_state->world_rules.x_ground_acceleration_pixels_per_second * seconds_to_advance;
                         break;
@@ -276,16 +301,20 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
         }
         game_state->character.direction = RIGHT;
         // printf("right key pressed down frame %ld, now motion is %d\n", game_state->current_frame, game_state->character.motion);
-    } else {
+    } else { // TODO this doesn't seem right, need better check for right button released?
         if (input_state->right_button_press_frame != -1) {
-            // printf("right button released\n");
+            printf("right button released\n");
         }
         input_state->right_button_press_frame = -1;
 
         switch (game_state->character.direction) {
             case RIGHT:
-                game_state->character.motion = STOPPED;
-                game_state->character.x_velocity_pixels_per_second = 0;
+                if (game_state->character.motion == WALKING) {
+                    printf("right button released I think, motion from WALKING to STOPPED\n");
+                    printf("handle_input spot 2 motion_change to STOPPED\n");
+                    game_state->character.motion = STOPPED;
+                    game_state->character.x_velocity_pixels_per_second = 0;
+                }
                 break;
             case LEFT:
                 break;
@@ -302,6 +331,7 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
             case LEFT:
                 switch (game_state->character.motion) {
                     case STOPPED:
+                        printf("handle_input spot 3 motion_change to WALKING\n");
                         game_state->character.motion = WALKING;
                         game_state->character.x_velocity_pixels_per_second -= game_state->world_rules.x_ground_acceleration_pixels_per_second * seconds_to_advance;
                         break;
@@ -319,16 +349,20 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
         }
         game_state->character.direction = LEFT;
         // printf("left key pressed down frame %ld, now motion is %d\n", game_state->current_frame, game_state->character.motion);
-    } else {
+    } else { // TODO this doesn't seem right, need better check for left button released?
         if (input_state->left_button_press_frame != -1) {
-            // printf("left button released\n");
+            printf("left button released\n");
         }
         input_state->left_button_press_frame = -1;
 
         switch (game_state->character.direction) {
             case LEFT:
-                game_state->character.motion = STOPPED;
-                game_state->character.x_velocity_pixels_per_second = 0;
+                if (game_state->character.motion == WALKING) {
+                    printf("left button released I think, motion from WALKING to STOPPED\n");
+                    printf("handle_input spot 4 motion_change to STOPPED\n");
+                    game_state->character.motion = STOPPED;
+                    game_state->character.x_velocity_pixels_per_second = 0;
+                }
                 break;
             case RIGHT:
                 break;
@@ -349,7 +383,7 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
                 break;
         }
 
-        // printf("up arrow pressed, y_velocity_pixels_per_second=%f is_on_ground=%d\n", game_state->character.y_velocity_pixels_per_second, game_state->character.is_on_ground);
+        printf("up arrow pressed, y_velocity_pixels_per_second=%f is_jumping? %d motion=%d is_on_ground=%d\n", game_state->character.y_velocity_pixels_per_second, game_state->character.motion == JUMPING, game_state->character.motion, game_state->character.is_on_ground);
 
         if (game_state->character.y_velocity_pixels_per_second == 0 && game_state->character.is_on_ground && motion_allows_jump) {
             // printf("Start jump\n");
@@ -357,16 +391,17 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
             game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
             game_state->character.micros_when_jump_started = game_state->current_time_in_micros;
             game_state->character.motion = JUMPING;
+            printf("start jump, motion_change to JUMPING y_velocity_pixels_per_second is now %f\n", game_state->world_rules.y_jump_acceleration_pixels_per_second);
         }
         // Holding down the up arrow a little longer makes the character jump higher
         else if (game_state->character.y_velocity_pixels_per_second > 0 && game_state->character.motion == JUMPING) {
-            // printf("up button still pressed, check if we can jump more\n");
+            printf("up button still pressed, check if we can jump more\n");
             // TODO tidy?
             long micros_since_jump_start = game_state->current_time_in_micros - game_state->character.micros_when_jump_started;
-            // printf("micros_since_jump_start is %ld\n", micros_since_jump_start);
+            printf("micros_since_jump_start is %ld\n", micros_since_jump_start);
             if (micros_since_jump_start < game_state->world_rules.microseconds_after_jump_start_check_jump_still_pressed) {
-                // printf("Jumping higher\n");
                 game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
+                printf("Jumping higher, y_velocity_pixels_per_second to %f\n", game_state->character.y_velocity_pixels_per_second);
             }
         }
     }
