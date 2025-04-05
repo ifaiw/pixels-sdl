@@ -105,7 +105,7 @@ void initialize_game_state() {
     #endif
 
     game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];
-    game_state.character.x_bottom_left = 600;
+    game_state.character.x_bottom_left = 680;
     game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS * 7;
     game_state.character.width = game_state.character.current_sprite.width;
     game_state.character.height = game_state.character.current_sprite.height;
