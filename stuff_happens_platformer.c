@@ -32,6 +32,7 @@ int last_walking_frame;
 struct GameState game_state;
 struct ViewState view_state;
 struct InputState input_state;
+struct EditorState editor_state;
 
 struct CharacterSprite character_sprite;
 
@@ -147,6 +148,10 @@ inline void initialize_input_state() {
     input_state.right_button_press_frame = -1;
     input_state.up_button_press_frame = -1;
     input_state.down_button_press_frame = -1;
+
+    input_state.letter_keys_down_bitmask = 0;
+    input_state.number_keys_down_bitmask = 0;
+    input_state.mouse_button_state = 0;
 }
 
 // PRIVATE
@@ -160,6 +165,8 @@ inline void update_sprites(struct GameState* game_state_param) {
             game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.stand_sprite_index];
             game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
+        case CLIMBING:
+            // TODO need to implement climbing animation, for now just do walking frames
         case WALKING:
             microsecond_bucket = game_state_param->current_time_in_micros / game_state_param->world_rules.micros_per_walking_animation_frame;
             walking_animation_frame_num = microsecond_bucket % game_state_param->character_sprite.num_walking_animation_frames;
@@ -220,6 +227,8 @@ int initialize(int width, int height, long micros_per_frame_param) {
     for (int i = 0; i < height * width; ++i) {
         blank_pixels[i] = ALPHA;
     }
+
+    editor_state.block_type = BLOCK_TYPE_LADDER;
 
     // printf("bottom of initialize\n");
     return 0;
@@ -477,7 +486,7 @@ void process_frame_and_blit(long frame_count, long current_time_in_micros, uint3
 
     game_state.character.is_on_ground = is_on_ground(&game_state);
 
-    handle_input(&game_state, &view_state, &input_state, game_state.world_rules.microseconds_per_frame);
+    handle_input(&game_state, &view_state, &input_state, &editor_state, game_state.world_rules.microseconds_per_frame);
     // printf("character.x_velocity_pixels_per_second is now %f\n", game_state.character.x_velocity_pixels_per_second);
 
     do_movement(&game_state, game_state.world_rules.microseconds_per_frame);

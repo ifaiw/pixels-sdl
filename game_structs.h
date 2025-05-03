@@ -16,9 +16,14 @@ struct InputState {
     long up_button_press_frame;
     long down_button_press_frame;
     uint32_t letter_keys_down_bitmask;
+    uint16_t number_keys_down_bitmask;
     uint32_t mouse_button_state;
     int mouse_x;
     int mouse_y;
+};
+
+struct EditorState {
+    uint16_t block_type;
 };
 
 struct Sprite {
@@ -43,7 +48,8 @@ struct Block {
 enum CharacterMotion {
     WALKING,
     STOPPED,
-    JUMPING
+    JUMPING,
+    CLIMBING,
 };
 
 enum CharacterDirection {
@@ -88,6 +94,8 @@ struct WorldRules {
     double x_air_deacceleration_pixels_per_second;
 
     double y_jump_acceleration_pixels_per_second;
+
+    double y_climb_speed_pixels_per_second;
 
     double microseconds_after_jump_start_check_jump_still_pressed;
 

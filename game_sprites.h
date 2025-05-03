@@ -5,7 +5,7 @@
 
 #include "game_structs.h"
 
-#define NUM_SPRITE_TYPES 40
+#define NUM_SPRITE_TYPES 41
 #define SPRITE_TYPE_EMPTY 0
 // 1 intentionally skipped
 #define SPRITE_TYPE_ORC_STAND_RIGHT 2
@@ -54,6 +54,10 @@
 #define SPRITE_TYPE_GROUND_OPEN_LEFT_UP_DOWN 13 + SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES
 #define SPRITE_TYPE_GROUND_OPEN_RIGHT_UP_DOWN 14 + SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES
 #define SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN 15 + SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES
+
+#define SPRITE_TYPE_LADDER 40
+
+// Remember to update NUM_SPRITE_TYPES
 
 
 void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_array);

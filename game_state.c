@@ -41,6 +41,8 @@ void load_world_rules_from_file(struct WorldRules* r_world_rules) {
     r_world_rules->y_jump_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_jump_acceleration_pixels_per_second", &world_rules_file_dict));
 	r_world_rules->microseconds_after_jump_start_check_jump_still_pressed = (double)chars_to_int(dict_get_value((char*)"microseconds_after_jump_start_check_jump_still_pressed", &world_rules_file_dict));
 
+    r_world_rules->y_climb_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_climb_speed_pixels_per_second", &world_rules_file_dict));
+
     free(world_rules_file_dict.chars);
     free(world_rules_file_dict.key_indices);
     free(world_rules_file_dict.value_indices);
@@ -98,6 +100,26 @@ bool is_on_ground(struct GameState* game_state) {
     }
     struct Block* bottom_right = get_world_block_for_location(right_pixel, just_below_pixel, game_state);
     return bottom_right->effects_flags & EFFECT_FLAG_SOLID;
+}
+
+// IMPLEMENTS
+bool is_on_climable(struct GameState* game_state) {
+    // printf("game_state.is_on_ground x_bottom_left=%f y_inverted_bottom_left=%f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left);
+    int bottom_left_x_floor = floor(game_state->character.x_bottom_left);
+    int bottom_left_y_floor = floor(game_state->character.y_inverted_bottom_left);
+    int right_pixel = bottom_left_x_floor + game_state->character.width;
+
+    struct Block* bottom_left = get_world_block_for_location(bottom_left_x_floor, bottom_left_y_floor, game_state);
+    if ((bottom_left->effects_flags & EFFECT_FLAG_CLIMABLE) == 0) {
+        return false;
+    }
+    struct Block* bottom_right = get_world_block_for_location(right_pixel, bottom_left_y_floor, game_state);
+    // If character is straddling two different blocks then return false, even if both blocks are climable
+    // Means that this method won't work for blocks that allow horizontal climbing, like lattice or web?
+    if (bottom_left->block_x != bottom_right->block_x) {
+        return false;
+    }
+    return true;
 }
 
 // IMPLEMENTS

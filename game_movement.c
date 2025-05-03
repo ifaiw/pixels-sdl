@@ -80,8 +80,51 @@ uint32_t LETTER_SCANCODE_MASKS_NEGATED[36] = {
     0b01111111111111111111111111111111
 };
 
+uint16_t NUMBER_SCANCODE_MASKS[16] = {
+    0b0000000000000001,  // SDL_SCANCODE_1 = 30, need to subtract SDL_SCANCODE_1 when indexing into these masks
+    0b0000000000000010,
+    0b0000000000000100,
+    0b0000000000001000,
+    0b0000000000010000,
+    0b0000000000100000,
+    0b0000000001000000,
+    0b0000000010000000,
+    0b0000000100000000,
+    0b0000001000000000,  // SDL_SCANCODE_0 = 39, codes under here are currently unused
+    0b0000010000000000,
+    0b0000100000000000,
+    0b0001000000000000,
+    0b0010000000000000,
+    0b0100000000000000,
+    0b1000000000000000,
+};
+uint16_t NUMBER_SCANCODE_MASKS_NEGATED[16] = {
+    0b1111111111111110,  // SDL_SCANCODE_1 = 30, need to subtract SDL_SCANCODE_1 when indexing into these masks
+    0b1111111111111101,
+    0b1111111111111011,
+    0b1111111111110111,
+    0b1111111111101111,
+    0b1111111111011111,
+    0b1111111110111111,
+    0b1111111101111111,
+    0b1111111011111111,
+    0b1111110111111111,  // SDL_SCANCODE_0 = 39, codes under here are currently unused
+    0b1111101111111111,
+    0b1111011111111111,
+    0b1110111111111111,
+    0b1101111111111111,
+    0b1011111111111111,
+    0b0111111111111111,
+};
 
-#define FUDGE
+// PRIVATE
+// Find the world block that the player is entirely
+struct Block* get_vertical_middle_block(struct GameState* game_state) {
+
+
+    return NULL;
+}
+
 // IMPLEMENTS
 void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     // printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
@@ -252,8 +295,8 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     game_state->character.y_inverted_bottom_left = new_character_y;
 
     // printf("Check if is on ground before applying gravity\n");
-    if (!is_on_ground(game_state)) {
-        printf("not on ground, apply gravity\n");
+    if (!is_on_ground(game_state) && game_state->character.motion != CLIMBING) {
+        printf("not on ground or climbing, apply gravity\n");
         game_state->character.y_velocity_pixels_per_second -= game_state->world_rules.gravity_pixels_per_second;
         if (game_state->character.y_velocity_pixels_per_second < -game_state->world_rules.y_max_fall_speed_pixels_per_second) {
             game_state->character.y_velocity_pixels_per_second = -game_state->world_rules.y_max_fall_speed_pixels_per_second;
@@ -262,12 +305,23 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     }
     // TODO just for testing
     else {
-        // printf("on ground, DO NOT apply gravity\n");
+        // printf("on ground or climbing, DO NOT apply gravity\n");
+    }
+
+    // Climbing stops x and y motion after movement applied
+    if (game_state->character.motion == CLIMBING) {
+        game_state->character.x_velocity_pixels_per_second = 0;
+        game_state->character.y_velocity_pixels_per_second = 0;
     }
 }
 
 // IMPLEMENTS
-void handle_input(struct GameState* game_state, struct ViewState* view_state, struct InputState* input_state, double microseconds_to_advance) {
+void handle_input(  struct GameState* game_state,
+                    struct ViewState* view_state,
+                    struct InputState* input_state,
+                    struct EditorState* editor_state,
+                    double microseconds_to_advance)
+{
     double seconds_to_advance = microseconds_to_advance / (double)1000000;
 // Handle specific key presses from scancodes
     const Uint8* state = SDL_GetKeyboardState(NULL);
@@ -292,6 +346,9 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
                         break;
                     case JUMPING:
                         game_state->character.x_velocity_pixels_per_second += game_state->world_rules.x_air_acceleration_pixels_per_second * seconds_to_advance;
+                        break;
+                    case CLIMBING:
+                        // TODO not implemented yet
                         break;
                 }
                 break;
@@ -341,6 +398,9 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
                     case JUMPING:
                         game_state->character.x_velocity_pixels_per_second -= game_state->world_rules.x_air_acceleration_pixels_per_second * seconds_to_advance;
                         break;
+                    case CLIMBING:
+                        // TODO not implemented yet
+                        break;
                 }
                 break;
             case RIGHT:
@@ -369,8 +429,26 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
         }
     }
 
-    if(state[SDL_SCANCODE_UP]){
-        // printf("up arrow key is pressed\n");
+    if (state[SDL_SCANCODE_UP]) {
+        switch (game_state->character.motion)
+        {
+            case WALKING:
+            case JUMPING:
+                if (is_on_climable(game_state)) {
+                    game_state->character.motion = CLIMBING;
+                    // Setting x and y velocities to 0 should happen in do_movement now that motion is CLIMBING
+                }
+                break;
+            case CLIMBING:
+                game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_climb_speed_pixels_per_second;
+                break;
+            default:
+                break;
+            }
+    }
+
+    if(state[SDL_SCANCODE_SPACE]) {
+        // printf("space key is pressed\n");
 
         bool motion_allows_jump = false;
         switch(game_state->character.motion) {
@@ -421,6 +499,26 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
         input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_L];
     }
 
+    if (state[SDL_SCANCODE_1]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_1 - SDL_SCANCODE_1])) {
+            // printf("1 key pressed down\n");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_1 - SDL_SCANCODE_1];
+            editor_state->block_type = BLOCK_TYPE_GROUND;
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_1 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_2]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_2 - SDL_SCANCODE_1])) {
+            // printf("2 key pressed down\n");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_2 - SDL_SCANCODE_1];
+            editor_state->block_type = BLOCK_TYPE_LADDER;
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_2 - SDL_SCANCODE_1];
+    }
+
     int new_mouse_x;
     int new_mouse_y;
     uint32_t new_mouse_button_state = SDL_GetMouseState(&new_mouse_x, &new_mouse_y);
@@ -437,16 +535,24 @@ void handle_input(struct GameState* game_state, struct ViewState* view_state, st
             struct Block* mouse_block = get_world_block_for_location(in_game_x, in_game_y_inverted, game_state);
             if (mouse_block != NULL) {
                 // printf("clicked block effects_flag is %d\n", mouse_block->effects_flags);
-                if (mouse_block->effects_flags & EFFECT_FLAG_SOLID) {
-                    printf("remove ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                if (mouse_block->effects_flags & EFFECT_FLAG_SOLID || mouse_block->type == BLOCK_TYPE_LADDER) {
+                    printf("remove ground or ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                     mouse_block->type = BLOCK_TYPE_EMPTY;
                     mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_EMPTY].effects_flags;
                     mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite;
-                } else {
-                    printf("add ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                    mouse_block->type = BLOCK_TYPE_GROUND;
-                    mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_GROUND].effects_flags;
-                    mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_GROUND].sprite;
+                } else if (mouse_block->type == BLOCK_TYPE_EMPTY) {
+                    if (editor_state->block_type == BLOCK_TYPE_GROUND) {
+                        printf("add ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                        mouse_block->type = BLOCK_TYPE_GROUND;
+                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_GROUND].effects_flags;
+                        mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_GROUND].sprite;
+                    }
+                    else if (editor_state->block_type == BLOCK_TYPE_LADDER) {
+                        printf("add ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                        mouse_block->type = BLOCK_TYPE_LADDER;
+                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_LADDER].effects_flags;
+                        mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_LADDER].sprite;
+                    }
                 }
                 update_ground_images(game_state);
             } else {

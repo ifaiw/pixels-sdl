@@ -107,6 +107,12 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 48 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
     r_sprite_array[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
 
+    r_sprite_array[SPRITE_TYPE_LADDER].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_LADDER].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_LADDER].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_LADDER].pixels_start = image_array[IMAGE_INDEX_SOLIDS_2].pixels + 416 + 0 * image_array[IMAGE_INDEX_SOLIDS_2].width;
+    r_sprite_array[SPRITE_TYPE_LADDER].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_2].width;
+
 
 
     // r_sprite_array[SPRITE_TYPE_ORC_STAND_LEFT].height = 28;

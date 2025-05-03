@@ -43,6 +43,8 @@ struct XY get_bottom_left_world_pixel_for_block(struct Block* block);
 
 bool is_on_ground(struct GameState* game_state);
 
+bool is_on_climable(struct GameState* game_state);
+
 void load_world_rules_from_file(struct WorldRules* r_world_rules);
 
 void update_ground_images(struct GameState* game_state);
