@@ -254,6 +254,10 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
         }
     }
 
+    // Moved off climbing check
+    if (game_state->character.motion == CLIMBING && !is_on_climable(game_state)) {
+        game_state->character.motion = JUMPING;
+    }
 
     // TODO Shouln't switch to stopped if just one axis is blocked but still moving in other axis
     if (y_motion_stopped_above) {
@@ -348,7 +352,7 @@ void handle_input(  struct GameState* game_state,
                         game_state->character.x_velocity_pixels_per_second += game_state->world_rules.x_air_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case CLIMBING:
-                        // TODO not implemented yet
+                        game_state->character.x_velocity_pixels_per_second = game_state->world_rules.x_climb_speed_pixels_per_second;
                         break;
                 }
                 break;
@@ -399,7 +403,7 @@ void handle_input(  struct GameState* game_state,
                         game_state->character.x_velocity_pixels_per_second -= game_state->world_rules.x_air_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case CLIMBING:
-                        // TODO not implemented yet
+                        game_state->character.x_velocity_pixels_per_second = -game_state->world_rules.x_climb_speed_pixels_per_second;
                         break;
                 }
                 break;
@@ -432,10 +436,13 @@ void handle_input(  struct GameState* game_state,
     if (state[SDL_SCANCODE_UP]) {
         switch (game_state->character.motion)
         {
+            case STOPPED:
             case WALKING:
             case JUMPING:
                 if (is_on_climable(game_state)) {
                     game_state->character.motion = CLIMBING;
+                    input_state->start_climb_pixel_x = game_state->character.x_bottom_left;
+                    input_state->start_climb_pixel_y = game_state->character.y_inverted_bottom_left;
                     // Setting x and y velocities to 0 should happen in do_movement now that motion is CLIMBING
                 }
                 break;
@@ -484,9 +491,21 @@ void handle_input(  struct GameState* game_state,
         }
     }
     else if (state[SDL_SCANCODE_DOWN]){
-        // printf("down arrow key is pressed, ignored for now\n");
-        // gravity_pixels_per_second -= 1;
-        // gravity_pixels_per_frame = (double)gravity_pixels_per_second / (double)1000000 * (double)micros_per_frame;
+        switch (game_state->character.motion)
+        {
+            case WALKING:
+            case JUMPING:
+                if (is_on_climable(game_state)) {
+                    game_state->character.motion = CLIMBING;
+                    // Setting x and y velocities to 0 should happen in do_movement now that motion is CLIMBING
+                }
+                break;
+            case CLIMBING:
+                game_state->character.y_velocity_pixels_per_second = -game_state->world_rules.y_climb_speed_pixels_per_second;
+                break;
+            default:
+                break;
+            }
     }
 
     if (state[SDL_SCANCODE_L]) {
@@ -517,6 +536,16 @@ void handle_input(  struct GameState* game_state,
         }
     } else {
         input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_2 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_3]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_3 - SDL_SCANCODE_1])) {
+            printf("3 key pressed down\n");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_3 - SDL_SCANCODE_1];
+            editor_state->block_type = BLOCK_TYPE_TOILET;
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_3 - SDL_SCANCODE_1];
     }
 
     int new_mouse_x;
@@ -552,6 +581,12 @@ void handle_input(  struct GameState* game_state,
                         mouse_block->type = BLOCK_TYPE_LADDER;
                         mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_LADDER].effects_flags;
                         mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_LADDER].sprite;
+                    }
+                    else if (editor_state->block_type == BLOCK_TYPE_TOILET) {
+                        printf("add toilet at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                        mouse_block->type = BLOCK_TYPE_TOILET;
+                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_TOILET].effects_flags;
+                        mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_TOILET].sprite;
                     }
                 }
                 update_ground_images(game_state);

@@ -132,5 +132,12 @@ int load_images(struct ImageInfo* r_image_array) {
     }
     flip_upside_down(r_image_array[IMAGE_INDEX_CAT_RIGHT].pixels, r_image_array[IMAGE_INDEX_CAT_RIGHT].width, r_image_array[IMAGE_INDEX_CAT_RIGHT].height);
 
+    load_image_result = load_bmp_image(GAME_PATH__IMAGE_PATH_TOILET_FULL, r_image_array + IMAGE_INDEX_TOILET);
+    if (load_image_result != 0) {
+        printf("Error loading GAME_PATH__IMAGE_PATH_TOILET_FULL: %d\n", load_image_result);
+        return load_image_result;
+    }
+    flip_upside_down(r_image_array[IMAGE_INDEX_TOILET].pixels, r_image_array[IMAGE_INDEX_TOILET].width, r_image_array[IMAGE_INDEX_TOILET].height);
+
     return 0;
 }

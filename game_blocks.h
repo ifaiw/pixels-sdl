@@ -3,10 +3,11 @@
 
 #include "game_structs.h"
 
-#define NUM_BLOCK_TYPES 3
+#define NUM_BLOCK_TYPES 4
 #define BLOCK_TYPE_EMPTY 0
 #define BLOCK_TYPE_GROUND 1
 #define BLOCK_TYPE_LADDER 2
+#define BLOCK_TYPE_TOILET 3
 
 #define EFFECT_FLAG_SOLID 0x00000001
 #define EFFECT_FLAG_CLIMABLE 0x00000010

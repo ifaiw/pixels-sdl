@@ -20,6 +20,8 @@ struct InputState {
     uint32_t mouse_button_state;
     int mouse_x;
     int mouse_y;
+    double start_climb_pixel_x;
+    double start_climb_pixel_y;
 };
 
 struct EditorState {
@@ -61,6 +63,8 @@ struct CharacterSprite {
     int stand_sprite_index;
     int first_walk_sprite_index;
     int num_walking_animation_frames;
+    int first_climb_sprite_index;
+    int num_climbing_animation_frames;
 };
 
 struct Character {
@@ -96,10 +100,12 @@ struct WorldRules {
     double y_jump_acceleration_pixels_per_second;
 
     double y_climb_speed_pixels_per_second;
+    double x_climb_speed_pixels_per_second;
 
     double microseconds_after_jump_start_check_jump_still_pressed;
 
     long micros_per_walking_animation_frame;
+    double pixels_per_climbing_animation_frame;
 };
 
 struct XY{

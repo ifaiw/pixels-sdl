@@ -15,4 +15,8 @@ void initialize_blocks(struct Sprite* sprite_array, struct Block* r_block_array)
     r_block_array[BLOCK_TYPE_LADDER].type = BLOCK_TYPE_LADDER;
     r_block_array[BLOCK_TYPE_LADDER].effects_flags = EFFECT_FLAG_CLIMABLE;
     r_block_array[BLOCK_TYPE_LADDER].sprite = sprite_array[SPRITE_TYPE_LADDER];
+
+    r_block_array[BLOCK_TYPE_TOILET].type = BLOCK_TYPE_TOILET;
+    r_block_array[BLOCK_TYPE_TOILET].effects_flags = 0;
+    r_block_array[BLOCK_TYPE_TOILET].sprite = sprite_array[SPRITE_TYPE_TOILET];
 }

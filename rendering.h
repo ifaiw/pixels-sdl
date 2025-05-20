@@ -59,6 +59,10 @@ inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite s
         }
     }
     else {
+        // TODO just for testing
+        if (sprite.sprite_index == SPRITE_TYPE_TOILET) {
+            printf("Draw a toilet\n");
+        }
         for (int y = 0; y < sprite.height; ++y) {
             uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);
             uint32_t* pixels_row_start = r_pixels + ((top_left_y + y) * pixels_width) + top_left_x;

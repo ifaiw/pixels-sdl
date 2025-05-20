@@ -95,7 +95,7 @@ void initialize_game_state() {
 
     update_ground_images(&game_state);
 
-    #ifdef CAT_CHARACTER
+    #ifdef CAT_CHARACTER // TODO no longer works now that I added climbing?
     game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_CAT_STAND_RIGHT;
     game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_CAT_WALK_RIGHT_1;
     game_state.character_sprite.num_walking_animation_frames = 5;
@@ -103,6 +103,8 @@ void initialize_game_state() {
     game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_MUSHROOM_STAND_RIGHT;
     game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1;
     game_state.character_sprite.num_walking_animation_frames = 7;
+    game_state.character_sprite.first_climb_sprite_index = SPRITE_TYPE_MUSHROOM_CLIMB_1;
+    game_state.character_sprite.num_walking_animation_frames = 1; // TODO change to 3
     #endif
 
     game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];
@@ -155,9 +157,11 @@ inline void initialize_input_state() {
 }
 
 // PRIVATE
-inline void update_sprites(struct GameState* game_state_param) {
+inline void update_sprites(struct GameState* game_state_param, struct InputState* input_state_param) {
     long microsecond_bucket;
     int walking_animation_frame_num;
+    double pixel_distance_bucket;
+    int climbing_animation_frame_num;
 
     switch (game_state_param->character.motion) {
         case STOPPED:
@@ -166,7 +170,13 @@ inline void update_sprites(struct GameState* game_state_param) {
             game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
         case CLIMBING:
-            // TODO need to implement climbing animation, for now just do walking frames
+            // Do 2 times y distance to make climbing up/down make the character animation move faster
+            pixel_distance_bucket = (2 * abs(game_state_param->character.y_inverted_bottom_left - input_state_param->start_climb_pixel_y) + abs(game_state_param->character.x_bottom_left - input_state_param->start_climb_pixel_x)) / game_state_param->world_rules.pixels_per_climbing_animation_frame;
+            // TODO casting to int here seems fishy
+            climbing_animation_frame_num = (int)round(pixel_distance_bucket) % game_state_param->character_sprite.num_climbing_animation_frames;
+            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_climb_sprite_index + climbing_animation_frame_num];
+            game_state_param->character.current_sprite.flip_left_to_right = false;
+            break;
         case WALKING:
             microsecond_bucket = game_state_param->current_time_in_micros / game_state_param->world_rules.micros_per_walking_animation_frame;
             walking_animation_frame_num = microsecond_bucket % game_state_param->character_sprite.num_walking_animation_frames;
@@ -491,7 +501,7 @@ void process_frame_and_blit(long frame_count, long current_time_in_micros, uint3
 
     do_movement(&game_state, game_state.world_rules.microseconds_per_frame);
 
-    update_sprites(&game_state);
+    update_sprites(&game_state, &input_state);
 
     // printf("character.x is now %f\n", game_state.character.x_bottom_left);
 

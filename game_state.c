@@ -37,11 +37,14 @@ void load_world_rules_from_file(struct WorldRules* r_world_rules) {
     r_world_rules->x_air_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_air_acceleration_pixels_per_second", &world_rules_file_dict));
 
 	r_world_rules->micros_per_walking_animation_frame = (long)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
+    // TODO need chars_to_decimal, returns double
+    r_world_rules->pixels_per_climbing_animation_frame = (double)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
 
     r_world_rules->y_jump_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_jump_acceleration_pixels_per_second", &world_rules_file_dict));
 	r_world_rules->microseconds_after_jump_start_check_jump_still_pressed = (double)chars_to_int(dict_get_value((char*)"microseconds_after_jump_start_check_jump_still_pressed", &world_rules_file_dict));
 
     r_world_rules->y_climb_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_climb_speed_pixels_per_second", &world_rules_file_dict));
+    r_world_rules->x_climb_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_climb_speed_pixels_per_second", &world_rules_file_dict));
 
     free(world_rules_file_dict.chars);
     free(world_rules_file_dict.key_indices);

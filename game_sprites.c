@@ -128,14 +128,22 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
     r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
 
     int mushroom_width = 26;
+    int mushroom_height = 32;
     // The gaps are not uniform, so hardcode starting indices  int mushroom_gap = 4;
     int mushroom_starting_x_values[7] = {34, 68, 98, 130, 162, 196, 226};
     for (int walk_index = 0; walk_index < 7; ++walk_index) {
-        r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].height = 32;
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].height = mushroom_height;
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].width = mushroom_width;
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].flip_left_to_right = false;
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + mushroom_starting_x_values[walk_index];
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
+    }
+    for (int climb_index = 0; climb_index < 3; ++climb_index) {
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].height = mushroom_height;
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].width = mushroom_width;
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].flip_left_to_right = false;
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + 96 + (climb_index * (mushroom_width + 4) + (96 * image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width));
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
     }
 
     int cat_width = 26;
@@ -157,17 +165,10 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
         r_sprite_array[sprite_index].sprite_index = sprite_index;
     }
 
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].height = SPRITE_HEIGHT;
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].width = SPRITE_WIDTH;
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].flip_left_to_right = false;
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels;
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
-
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].height = SPRITE_HEIGHT;
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].width = SPRITE_WIDTH;
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].flip_left_to_right = false;
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].pixels_start = image_array[IMAGE_INDEX_SOLIDS_1].pixels + 48;
-    // r_sprite_array[SPRITE_TYPE_GROUND_TEST2].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_SOLIDS_1].width;
-
+    r_sprite_array[SPRITE_TYPE_TOILET].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_TOILET].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_TOILET].flip_left_to_right = false;
+    r_sprite_array[SPRITE_TYPE_TOILET].pixels_start = image_array[IMAGE_INDEX_TOILET].pixels + 0 + 0 * image_array[IMAGE_INDEX_TOILET].width;
+    r_sprite_array[SPRITE_TYPE_TOILET].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_TOILET].width;
 
 }
