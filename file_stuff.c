@@ -1,4 +1,4 @@
-#include "text_file_reader.h"
+#include "file_stuff.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +40,32 @@ int read_file(const char* file_path, struct FileBytes* r_file_bytes) {
 
     r_file_bytes->bytes = buffer;
     r_file_bytes->num_bytes = length + 1;
+    return 0;
+}
+
+// IMPLEMENTS
+// fail_if_exists == "true" if not 0
+int write_file(const char* file_path, struct FileBytes* file_bytes, uint8_t fail_if_exists) {
+    FILE* file_ptr;
+
+    if (fail_if_exists != 0) {
+        file_ptr = fopen(file_path, "r");
+        if (file_ptr != NULL) {
+            printf("Error writing to file that already exists: %s\n", file_path);
+            return -1;
+        }
+        fclose(file_ptr);
+    }
+
+    file_ptr = fopen(file_path, "w");
+    if (file_ptr == NULL) {
+        printf("Error opening file to write to: %s\n", file_path);
+        return -2;
+    }
+
+    fwrite(file_bytes->bytes, sizeof(uint8_t), file_bytes->num_bytes, file_ptr);
+
+    fclose(file_ptr);
     return 0;
 }
 

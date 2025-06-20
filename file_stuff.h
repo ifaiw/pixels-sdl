@@ -1,5 +1,5 @@
-#ifndef _TEXT_FILE_READER__H
-#define _TEXT_FILE_READER__H
+#ifndef _FILE_STUFF__H
+#define _FILE_STUFF__H
 
 #include <inttypes.h>
 
@@ -21,6 +21,9 @@ struct TextKeyValueFileContents {
 // __FREE_REQUIRED for r_file_bytes.bytes
 int read_file(const char* file_path, struct FileBytes* r_file_bytes);
 
+// fail_if_exists == "true" if not 0
+int write_file(const char* file_path, struct FileBytes* file_bytes, uint8_t fail_if_exists);
+
 // __FREE_REQUIRED for r_file_contents.chars, r_file_contents.key_indices, r_file_contents.value_indices
 // Assumes that r_file_contents.chars and r_file_contents.num_bytes are already set
 // NOTE: This alters r_file_contents.chars, changing some whitespace to null bytes. This method does not allocate memory for
@@ -30,4 +33,6 @@ int convert_file_to_key_values(struct TextKeyValueFileContents* r_file_contents)
 
 char* dict_get_value(char* key, struct TextKeyValueFileContents* dict);
 
-#endif  // _TEXT_FILE_READER__H
+
+
+#endif  // _FILE_STUFF__H

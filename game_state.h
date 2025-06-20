@@ -7,11 +7,11 @@
 #include "game_structs.h"
 
 
-#define WIDTH_OF_SCREEN_IN_BLOCKS 25
-#define HEIGHT_OF_SCREEN_IN_BLOCKS 18
+#define WIDTH_OF_SCREEN_IN_BLOCKS 25U
+#define HEIGHT_OF_SCREEN_IN_BLOCKS 18U
 
-#define WIDTH_OF_WORLD_IN_SCREENS 4
-#define HEIGHT_OF_WORLD_IN_SCREENS 2
+#define WIDTH_OF_WORLD_IN_SCREENS 4U
+#define HEIGHT_OF_WORLD_IN_SCREENS 2U
 
 #define WIDTH_OF_WORLD_IN_BLOCKS WIDTH_OF_SCREEN_IN_BLOCKS * WIDTH_OF_WORLD_IN_SCREENS
 #define HEIGHT_OF_WORLD_IN_BLOCKS HEIGHT_OF_SCREEN_IN_BLOCKS * HEIGHT_OF_WORLD_IN_SCREENS
@@ -48,5 +48,9 @@ bool is_on_climable(struct GameState* game_state);
 void load_world_rules_from_file(struct WorldRules* r_world_rules);
 
 void update_ground_images(struct GameState* game_state);
+
+void populate_character_for_save_from_character(struct Character* character, struct CharacterForSave* r_character_for_save);
+
+void save_level_to_disk(struct GameState* game_state, const char* file_path);
 
 #endif  // _GAME_STATE__H

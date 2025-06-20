@@ -568,25 +568,25 @@ void handle_input(  struct GameState* game_state,
                     printf("remove ground or ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                     mouse_block->type = BLOCK_TYPE_EMPTY;
                     mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_EMPTY].effects_flags;
-                    mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite;
+                    mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite_index;
                 } else if (mouse_block->type == BLOCK_TYPE_EMPTY) {
                     if (editor_state->block_type == BLOCK_TYPE_GROUND) {
                         printf("add ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                         mouse_block->type = BLOCK_TYPE_GROUND;
                         mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_GROUND].effects_flags;
-                        mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_GROUND].sprite;
+                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_GROUND].sprite_index;
                     }
                     else if (editor_state->block_type == BLOCK_TYPE_LADDER) {
                         printf("add ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                         mouse_block->type = BLOCK_TYPE_LADDER;
                         mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_LADDER].effects_flags;
-                        mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_LADDER].sprite;
+                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_LADDER].sprite_index;
                     }
                     else if (editor_state->block_type == BLOCK_TYPE_TOILET) {
                         printf("add toilet at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                         mouse_block->type = BLOCK_TYPE_TOILET;
                         mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_TOILET].effects_flags;
-                        mouse_block->sprite = game_state->base_blocks[BLOCK_TYPE_TOILET].sprite;
+                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_TOILET].sprite_index;
                     }
                 }
                 update_ground_images(game_state);

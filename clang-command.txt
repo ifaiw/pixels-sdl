@@ -28,3 +28,6 @@ clang++ -o platformer.exe game_blocks.c game_images.c game_movement.c game_sprit
 
 # With CAT_CHARACTER flag set
 clang++ -o platformer.exe --define-macro CAT_CHARACTER game_blocks.c game_images.c game_movement.c game_sprites.c game_state.c image_bmp_loader.c main.cpp stuff_happens_platformer.c text_file_reader.c rendering.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
+
+# Change to file_stuff
+clang++ -o platformer.exe game_blocks.c game_images.c game_movement.c game_sprites.c game_state.c image_bmp_loader.c main.cpp stuff_happens_platformer.c file_stuff.c rendering.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks

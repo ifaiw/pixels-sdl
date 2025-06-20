@@ -3,9 +3,11 @@
 #include <math.h>
 // Just for printf
 #include <stdio.h>
+// Just for memcpy
+#include <string.h>
 
 #include "game_paths.h"
-#include "text_file_reader.h"
+#include "file_stuff.h"
 #include "utils.c"
 
 // IMPLEMENTS
@@ -38,7 +40,7 @@ void load_world_rules_from_file(struct WorldRules* r_world_rules) {
 
 	r_world_rules->micros_per_walking_animation_frame = (long)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
     // TODO need chars_to_decimal, returns double
-    r_world_rules->pixels_per_climbing_animation_frame = (double)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
+    r_world_rules->pixels_per_climbing_animation_frame = (double)chars_to_int(dict_get_value((char*)"pixels_per_climbing_animation_frame", &world_rules_file_dict));
 
     r_world_rules->y_jump_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_jump_acceleration_pixels_per_second", &world_rules_file_dict));
 	r_world_rules->microseconds_after_jump_start_check_jump_still_pressed = (double)chars_to_int(dict_get_value((char*)"microseconds_after_jump_start_check_jump_still_pressed", &world_rules_file_dict));
@@ -153,9 +155,52 @@ void update_ground_images(struct GameState* game_state) {
                 int new_sprite_index = SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES + surrounding_block_mask;
                 printf("Set Block %d,%d surrounding_block_mask=%d new_sprite_index=%d\n", block_x, block_y, surrounding_block_mask, new_sprite_index);
 
-                block->sprite = game_state->base_sprites[new_sprite_index];
-                printf("sprite_index of block->sprite is now %d\n", block->sprite.sprite_index);
+                block->sprite_index = new_sprite_index;
+                printf("sprite_index of block->sprite is now %d\n", block->sprite_index);
             }
         }
     }
 }
+
+// Implements
+void populate_character_for_save_from_character(struct Character* character, struct CharacterForSave* r_character_for_save) {
+    r_character_for_save->x_bottom_left = character->x_bottom_left;
+    r_character_for_save->y_inverted_bottom_left = character->y_inverted_bottom_left;
+    r_character_for_save->x_velocity_pixels_per_second = character->x_velocity_pixels_per_second;
+    r_character_for_save->y_velocity_pixels_per_second = character->y_velocity_pixels_per_second;
+    r_character_for_save->direction = character->direction;
+    r_character_for_save->motion = character->motion;
+}
+
+void save_level_to_disk(struct GameState* game_state, const char* file_path) {
+
+    struct LevelFileHeader header = {
+        .filetype_name = LEVEL_FILE_HEADER_FILETYPE_NAME,
+        .level_file_version = 1,
+        .level_width_in_blocks = WIDTH_OF_WORLD_IN_BLOCKS,
+        .level_height_in_blocks = HEIGHT_OF_WORLD_IN_BLOCKS
+    };
+    size_t header_size = sizeof(struct LevelFileHeader);
+
+    populate_character_for_save_from_character(&game_state->character, &header.character_info);
+
+    struct FileBytes level_file_bytes;
+    uint32_t num_blocks = header.level_width_in_blocks * header.level_height_in_blocks;
+    level_file_bytes.num_bytes = header_size + num_blocks * sizeof(struct Block);
+    level_file_bytes.bytes = (uint8_t*)malloc(level_file_bytes.num_bytes);
+
+    memcpy(level_file_bytes.bytes, &header, header_size);
+    memcpy(level_file_bytes.bytes + header_size, &game_state->world_blocks, num_blocks);
+    write_file(file_path, &level_file_bytes, 0);
+
+    free(level_file_bytes.bytes);
+}
+
+// Save level to disk
+/*
+File version
+player position
+level width, height
+level data
+
+*/

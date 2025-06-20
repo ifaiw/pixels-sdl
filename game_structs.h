@@ -32,7 +32,6 @@ struct Sprite {
     uint32_t* pixels_start;
     uint32_t height, width;
     uint32_t image_source_pitch_in_pixels;
-    bool flip_left_to_right;
     // TODO only used for testing?
     int sprite_index;
 };
@@ -44,7 +43,7 @@ struct Block {
     int block_y;
     uint16_t type;
     uint32_t effects_flags;
-    struct Sprite sprite;
+    int sprite_index;
 };
 
 enum CharacterMotion {
@@ -81,6 +80,15 @@ struct Character {
     bool is_on_ground;
 };
 
+struct CharacterForSave {
+    double x_bottom_left;
+    double y_inverted_bottom_left;
+    double x_velocity_pixels_per_second;
+    double y_velocity_pixels_per_second;
+    enum CharacterMotion motion;
+    enum CharacterDirection direction;
+};
+
 struct WorldRules {
     double frames_per_second;
     double microseconds_per_frame;
@@ -108,7 +116,7 @@ struct WorldRules {
     double pixels_per_climbing_animation_frame;
 };
 
-struct XY{
+struct XY {
     int x;
     int y;
 };
@@ -126,5 +134,16 @@ struct ViewState {
     int view_bottom_left_world_x;
     int view_bottom_left_world_y;
 };
+
+#define LEVEL_FILE_HEADER_FILETYPE_NAME "platformer-level-file\n"
+#pragma pack(1)
+struct LevelFileHeader {
+    const char filetype_name[23]; // LEVEL_FILE_HEADER_FILETYPE_NAME + null terminator
+    uint16_t level_file_version;
+    struct CharacterForSave character_info;
+    uint32_t level_width_in_blocks;
+    uint32_t level_height_in_blocks;
+};
+#pragma pack()
 
 #endif  // _GAME_STRUCTS__H

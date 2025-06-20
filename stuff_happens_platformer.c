@@ -12,7 +12,7 @@
 #include "game_state.h"
 #include "graphics_constants.h"
 #include "rendering.h"
-#include "text_file_reader.h"
+#include "file_stuff.h"
 #include "utils.c"
 
 #define INITIAL_FRAMES_TO_WAIT 180
@@ -104,7 +104,7 @@ void initialize_game_state() {
     game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1;
     game_state.character_sprite.num_walking_animation_frames = 7;
     game_state.character_sprite.first_climb_sprite_index = SPRITE_TYPE_MUSHROOM_CLIMB_1;
-    game_state.character_sprite.num_walking_animation_frames = 1; // TODO change to 3
+    game_state.character_sprite.num_climbing_animation_frames = 3;
     #endif
 
     game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];
@@ -167,15 +167,16 @@ inline void update_sprites(struct GameState* game_state_param, struct InputState
         case STOPPED:
             // printf("motion is STOPPED show sprite STAND\n");
             game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.stand_sprite_index];
-            game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
         case CLIMBING:
             // Do 2 times y distance to make climbing up/down make the character animation move faster
+            printf("climbing frame pixels_per_climbing_animation_frame=%f y_inverted_bottom_left=%f start_climb_pixel_y=%f x_bottom_left=%f start_climb_pixel_x=%f\n", game_state_param->world_rules.pixels_per_climbing_animation_frame, game_state_param->character.y_inverted_bottom_left, input_state_param->start_climb_pixel_y, game_state_param->character.x_bottom_left, input_state_param->start_climb_pixel_x);
             pixel_distance_bucket = (2 * abs(game_state_param->character.y_inverted_bottom_left - input_state_param->start_climb_pixel_y) + abs(game_state_param->character.x_bottom_left - input_state_param->start_climb_pixel_x)) / game_state_param->world_rules.pixels_per_climbing_animation_frame;
+
             // TODO casting to int here seems fishy
             climbing_animation_frame_num = (int)round(pixel_distance_bucket) % game_state_param->character_sprite.num_climbing_animation_frames;
+            printf("climbing frame pixel_distance_bucket=%f climbing_animation_frame_num=%d\n", pixel_distance_bucket, climbing_animation_frame_num);
             game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_climb_sprite_index + climbing_animation_frame_num];
-            game_state_param->character.current_sprite.flip_left_to_right = false;
             break;
         case WALKING:
             microsecond_bucket = game_state_param->current_time_in_micros / game_state_param->world_rules.micros_per_walking_animation_frame;
@@ -189,12 +190,10 @@ inline void update_sprites(struct GameState* game_state_param, struct InputState
             // printf("motion is WALKING show sprite WALK %d\n", walking_animation_frame_num);
             // printf("we're walking, current_time_in_micros=%ld microsecond_bucket=%ld walking_animation_frame_num=%d\n", game_state_param->current_time_in_micros, microsecond_bucket, walking_animation_frame_num);
             game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index + walking_animation_frame_num];
-            game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
         case JUMPING:
             // printf("motion is STOPPED show sprite WALK0\n");
             game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index];
-            game_state_param->character.current_sprite.flip_left_to_right = game_state_param->character.direction == LEFT;
             break;
     }
 }
@@ -226,6 +225,10 @@ int initialize(int width, int height, long micros_per_frame_param) {
     fflush(stdout);
     initialize_game_state();
     // printf("Done initialize_game_state\n");
+
+    //mattt TODO just for testing
+    save_level_to_disk(&game_state, GAME_PATH__LEVEL_FILES_FULL);
+    exit(0);
 
     initialize_input_state();
 
@@ -315,10 +318,15 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
             int top_left_test_y = view_state.view_area_offset_y + view_state.view_height - world_diff_y - BLOCK_HEIGHT_IN_PIXELS;
             // printf("Using block pixel x and y, top-left on screen should be %d,%d\n", top_left_test_x, top_left_test_y);
             // TODO just for testing
-            int sprite_index = game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + block_x_index].sprite.sprite_index;
+            int sprite_index = game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + block_x_index].sprite_index;
             printf("write block %d,%d [sprite_index=%d] at pixel top-left %d,%d\n", block_x_index, block_y_index, sprite_index, top_left_x, top_left_y);
             fflush(stdout);
-            write_sprite_aliased(top_left_x, top_left_y, game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + block_x_index].sprite, width, r_pixels);
+            write_sprite_aliased(   top_left_x,
+                                    top_left_y,
+                                    game_state.base_sprites[game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + block_x_index].sprite_index],
+                                    false,
+                                    width,
+                                    r_pixels);
         }
     }
 
@@ -330,7 +338,8 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
         // printf("ttt do drawing top-left left_block_x=%d top_block_y=%d\n", left_block_x, top_block_y);
         write_sprite_aliased_subsection(    view_state.view_area_offset_x + left_block_num_x_cols_visible - BLOCK_WIDTH_IN_PIXELS,
                                             view_state.view_area_offset_y - BLOCK_HEIGHT_IN_PIXELS + top_block_num_y_rows_visible,
-                                            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * top_block_y + left_block_x].sprite,
+                                            game_state.base_sprites[game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * top_block_y + left_block_x].sprite_index],
+                                            false, // flip_left_to_right
                                             BLOCK_WIDTH_IN_PIXELS - left_block_num_x_cols_visible,
                                             BLOCK_HEIGHT_IN_PIXELS - top_block_num_y_rows_visible,
                                             BLOCK_WIDTH_IN_PIXELS - 1,
@@ -343,15 +352,16 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
     if (right_block_x < 0 || top_block_y < 0 || right_block_x >= WIDTH_OF_WORLD_IN_BLOCKS || top_block_y >= HEIGHT_OF_WORLD_IN_BLOCKS) {
         // noop
     } else {
-        write_sprite_aliased_subsection(   view_state.view_area_offset_x + right_block_x_left_pixel_x - view_state.view_bottom_left_world_x,
-                                view_state.view_area_offset_y - BLOCK_HEIGHT_IN_PIXELS + top_block_num_y_rows_visible,
-                                game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * top_block_y + right_block_x].sprite,
-                                0,
-                                BLOCK_HEIGHT_IN_PIXELS - top_block_num_y_rows_visible,
-                                right_block_num_x_cols_visible,
-                                BLOCK_HEIGHT_IN_PIXELS - 1,
-                                width,
-                                r_pixels);
+    write_sprite_aliased_subsection(    view_state.view_area_offset_x + right_block_x_left_pixel_x - view_state.view_bottom_left_world_x,
+                                        view_state.view_area_offset_y - BLOCK_HEIGHT_IN_PIXELS + top_block_num_y_rows_visible,
+                                        game_state.base_sprites[game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * top_block_y + right_block_x].sprite_index],
+                                        false, // flip_left_to_right
+                                        0,
+                                        BLOCK_HEIGHT_IN_PIXELS - top_block_num_y_rows_visible,
+                                        right_block_num_x_cols_visible,
+                                        BLOCK_HEIGHT_IN_PIXELS - 1,
+                                        width,
+                                        r_pixels);
     }
 
     // TODO just for testing
@@ -363,7 +373,8 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
     } else {
         write_sprite_aliased_subsection(    view_state.view_area_offset_x + left_block_num_x_cols_visible - BLOCK_WIDTH_IN_PIXELS,
                                             view_state.view_area_offset_y + view_state.view_height - bottom_block_num_y_rows_visible,
-                                            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * bottom_block_y + left_block_x].sprite,
+                                            game_state.base_sprites[game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * bottom_block_y + left_block_x].sprite_index],
+                                            false, // flip_left_to_right
                                             BLOCK_WIDTH_IN_PIXELS - left_block_num_x_cols_visible,
                                             0,
                                             BLOCK_WIDTH_IN_PIXELS - 1,
@@ -378,7 +389,8 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
     } else {
         write_sprite_aliased_subsection(    view_state.view_area_offset_x + view_state.view_width - right_block_num_x_cols_visible,
                                             view_state.view_area_offset_y + view_state.view_height - bottom_block_num_y_rows_visible,
-                                            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * bottom_block_y + right_block_x].sprite,
+                                            game_state.base_sprites[game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * bottom_block_y + right_block_x].sprite_index],
+                                            false, // flip_left_to_right
                                             0,
                                             0,
                                             right_block_num_x_cols_visible,
@@ -403,7 +415,8 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
             // printf("Actually draw left col box at block_y=%d\n", block_y_index + bottom_block_y);
             write_sprite_aliased_subsection(    view_state.view_area_offset_x - BLOCK_WIDTH_IN_PIXELS + left_block_num_x_cols_visible,
                                                 view_state.view_area_offset_y + view_state.view_height - bottom_block_num_y_rows_visible - (block_y_index * BLOCK_HEIGHT_IN_PIXELS),
-                                                game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * (block_y_index + bottom_block_y) + left_block_x].sprite,
+                                                game_state.base_sprites[game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * (block_y_index + bottom_block_y) + left_block_x].sprite_index],
+                                                false, // flip_left_to_right
                                                 BLOCK_WIDTH_IN_PIXELS - left_block_num_x_cols_visible,
                                                 0,
                                                 BLOCK_WIDTH_IN_PIXELS - 1,
@@ -426,7 +439,8 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
             int world_block_index = WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + right_block_x;
             write_sprite_aliased_subsection(    view_state.view_area_offset_x + right_block_x_left_pixel_x - view_state.view_bottom_left_world_x,
                                                 view_state.view_area_offset_y + view_state.view_height - (game_state.world_blocks[world_block_index].world_pixel_y - view_state.view_bottom_left_world_y) - BLOCK_HEIGHT_IN_PIXELS,
-                                                game_state.world_blocks[world_block_index].sprite,
+                                                game_state.base_sprites[game_state.world_blocks[world_block_index].sprite_index],
+                                                false, // flip_left_to_right
                                                 0,
                                                 0,
                                                 right_block_num_x_cols_visible,
@@ -448,7 +462,8 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
             }
             write_sprite_aliased_subsection(   view_state.view_area_offset_x + left_block_num_x_cols_visible + ((block_x_index - left_block_x - 1) * BLOCK_WIDTH_IN_PIXELS),
                                     view_state.view_area_offset_y - BLOCK_HEIGHT_IN_PIXELS + top_block_num_y_rows_visible,
-                                    game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * top_block_y + block_x_index].sprite,
+                                    game_state.base_sprites[game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * top_block_y + block_x_index].sprite_index],
+                                    false, // flip_left_to_right
                                     0,
                                     BLOCK_HEIGHT_IN_PIXELS - top_block_num_y_rows_visible,
                                     BLOCK_WIDTH_IN_PIXELS - 1,
@@ -469,7 +484,8 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
             // printf("Get world block for bottom_block_y=%d left_block_x=%d block_x_index=%d\n", bottom_block_y, left_block_x, block_x_index);
             write_sprite_aliased_subsection(   view_state.view_area_offset_x + left_block_num_x_cols_visible + ((block_x_index - 1) * BLOCK_WIDTH_IN_PIXELS),
                                     view_state.view_area_offset_y + view_state.view_height - bottom_block_num_y_rows_visible,
-                                    game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * bottom_block_y + left_block_x + block_x_index].sprite,
+                                    game_state.base_sprites[game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * bottom_block_y + left_block_x + block_x_index].sprite_index],
+                                    false, // flip_left_to_right
                                     0,
                                     0,
                                     BLOCK_WIDTH_IN_PIXELS - 1,
@@ -486,7 +502,7 @@ inline void blit(uint32_t* r_pixels, int width, int height) {
                     +   view_state.view_area_offset_y
                     -   game_state.character.height;
     // printf("Draw character at %d,%d\n", char_left, char_top);
-    write_sprite_aliased(char_left, char_top, game_state.character.current_sprite, width, r_pixels);
+    write_sprite_aliased(char_left, char_top, game_state.character.current_sprite, game_state.character.direction == LEFT, width, r_pixels);
 }
 
 // IMPLEMENTS
