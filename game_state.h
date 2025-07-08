@@ -51,6 +51,10 @@ void update_ground_images(struct GameState* game_state);
 
 void populate_character_for_save_from_character(struct Character* character, struct CharacterForSave* r_character_for_save);
 
+void populate_character_from_character_for_save(struct CharacterForSave* character_for_save, struct Character* r_character);
+
+void load_level_from_disk(struct GameState* r_game_state, const char* file_path);
+
 void save_level_to_disk(struct GameState* game_state, const char* file_path);
 
 #endif  // _GAME_STATE__H

@@ -26,6 +26,8 @@ struct InputState {
 
 struct EditorState {
     uint16_t block_type;
+    bool save_on_num;
+    bool load_on_num;
 };
 
 struct Sprite {

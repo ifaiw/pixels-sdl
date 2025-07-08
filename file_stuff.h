@@ -33,6 +33,4 @@ int convert_file_to_key_values(struct TextKeyValueFileContents* r_file_contents)
 
 char* dict_get_value(char* key, struct TextKeyValueFileContents* dict);
 
-
-
 #endif  // _FILE_STUFF__H

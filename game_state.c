@@ -133,30 +133,30 @@ void update_ground_images(struct GameState* game_state) {
         for (int block_y = 0; block_y < HEIGHT_OF_WORLD_IN_BLOCKS; ++block_y) {
             struct Block* block = &(game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x]);
             if (block->type == BLOCK_TYPE_GROUND) {
-                printf("updating ground sprite for %d,%d\n", block_x, block_y);
+                // printf("updating ground sprite for %d,%d\n", block_x, block_y);
                 int surrounding_block_mask = 0;
                 if (block_x > 0 && game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x - 1].type != BLOCK_TYPE_GROUND) {
                     surrounding_block_mask += DIRECTION_MASK_LEFT;
-                    printf("not ground on left\n");
+                    // printf("not ground on left\n");
                 }
                 if (block_x < WIDTH_OF_WORLD_IN_BLOCKS - 1 && game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x + 1].type != BLOCK_TYPE_GROUND) {
                     surrounding_block_mask += DIRECTION_MASK_RIGHT;
-                    printf("not ground on right\n");
+                    // printf("not ground on right\n");
                 }
                 if (block_y > 0 && game_state->world_blocks[(block_y - 1) * WIDTH_OF_WORLD_IN_BLOCKS + block_x].type != BLOCK_TYPE_GROUND) {
                     surrounding_block_mask += DIRECTION_MASK_DOWN;
-                    printf("not ground below\n");
+                    // printf("not ground below\n");
                 }
                 if (block_y < HEIGHT_OF_WORLD_IN_BLOCKS - 1 && game_state->world_blocks[(block_y + 1) * WIDTH_OF_WORLD_IN_BLOCKS + block_x].type != BLOCK_TYPE_GROUND) {
                     surrounding_block_mask += DIRECTION_MASK_UP;
-                    printf("not ground above\n");
+                    // printf("not ground above\n");
                 }
 
                 int new_sprite_index = SPRITE_TYPE_GROUND_BLOCKED_ALL_SIDES + surrounding_block_mask;
-                printf("Set Block %d,%d surrounding_block_mask=%d new_sprite_index=%d\n", block_x, block_y, surrounding_block_mask, new_sprite_index);
+                // printf("Set Block %d,%d index=%d surrounding_block_mask=%d new_sprite_index=%d\n", block_x, block_y, (block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x),surrounding_block_mask, new_sprite_index);
 
                 block->sprite_index = new_sprite_index;
-                printf("sprite_index of block->sprite is now %d\n", block->sprite_index);
+                // printf("sprite_index of block->sprite is now %d\n", block->sprite_index);
             }
         }
     }
@@ -172,6 +172,17 @@ void populate_character_for_save_from_character(struct Character* character, str
     r_character_for_save->motion = character->motion;
 }
 
+// Implements
+void populate_character_from_character_for_save(struct CharacterForSave* character_for_save, struct Character* r_character) {
+
+    r_character->x_bottom_left = character_for_save->x_bottom_left;
+    r_character->y_inverted_bottom_left = character_for_save->y_inverted_bottom_left;
+    r_character->x_velocity_pixels_per_second = character_for_save->x_velocity_pixels_per_second;
+    r_character->y_velocity_pixels_per_second = character_for_save->y_velocity_pixels_per_second;
+    r_character->direction = character_for_save->direction;
+    r_character->motion = character_for_save->motion;
+}
+
 void save_level_to_disk(struct GameState* game_state, const char* file_path) {
 
     struct LevelFileHeader header = {
@@ -181,26 +192,61 @@ void save_level_to_disk(struct GameState* game_state, const char* file_path) {
         .level_height_in_blocks = HEIGHT_OF_WORLD_IN_BLOCKS
     };
     size_t header_size = sizeof(struct LevelFileHeader);
+    printf("on save, header_size is %zu\n", header_size);
 
     populate_character_for_save_from_character(&game_state->character, &header.character_info);
 
     struct FileBytes level_file_bytes;
     uint32_t num_blocks = header.level_width_in_blocks * header.level_height_in_blocks;
     level_file_bytes.num_bytes = header_size + num_blocks * sizeof(struct Block);
+    printf("on save, num_bytes is %lld\n", level_file_bytes.num_bytes);
     level_file_bytes.bytes = (uint8_t*)malloc(level_file_bytes.num_bytes);
 
     memcpy(level_file_bytes.bytes, &header, header_size);
-    memcpy(level_file_bytes.bytes + header_size, &game_state->world_blocks, num_blocks);
+    memcpy(level_file_bytes.bytes + header_size, game_state->world_blocks, num_blocks * sizeof(struct Block));
     write_file(file_path, &level_file_bytes, 0);
 
     free(level_file_bytes.bytes);
 }
 
-// Save level to disk
-/*
-File version
-player position
-level width, height
-level data
+void print_level_file_header(struct LevelFileHeader* header) {
+    printf("Level File Header\n");
+    printf("filetype name: %s\n", header->filetype_name);
+    printf("file version: %d\n", header->level_file_version);
+    printf("width: %d\n", header->level_width_in_blocks);
+    printf("height: %d\n", header->level_height_in_blocks);
+}
 
-*/
+void load_level_from_disk(struct GameState* r_game_state, const char* file_path) {
+
+    struct FileBytes level_file_bytes;
+    int result = read_file(file_path, &level_file_bytes);
+    if (result != 0) {
+        printf("Error reading file %s: %d\n", file_path, result);
+        exit(-1);
+    }
+
+    // TODO confirm header and version
+    // Maybe that means the header should only be filetype_name and version, not width or height?
+
+    struct LevelFileHeader header = {
+        .filetype_name = LEVEL_FILE_HEADER_FILETYPE_NAME,
+        .level_file_version = 1,
+        .level_width_in_blocks = WIDTH_OF_WORLD_IN_BLOCKS,
+        .level_height_in_blocks = HEIGHT_OF_WORLD_IN_BLOCKS
+    };
+    size_t header_size = sizeof(struct LevelFileHeader);
+    printf("on load, header_size is %zu\n", header_size);
+
+    memcpy(&header, level_file_bytes.bytes, header_size);
+    print_level_file_header(&header);
+    uint32_t num_blocks_in_level = header.level_height_in_blocks * header.level_width_in_blocks;
+    size_t bytes_for_level_blocks = sizeof(struct Block) * num_blocks_in_level;
+    printf("bytes_for_level_blocks is %zu\n", bytes_for_level_blocks);
+    // TODO sanity check we're not going past level_files_bytes.num_bytes?
+    memcpy(r_game_state->world_blocks, level_file_bytes.bytes + header_size, bytes_for_level_blocks);
+
+    populate_character_from_character_for_save(&header.character_info, &r_game_state->character);
+
+    free(level_file_bytes.bytes);
+}

@@ -175,10 +175,6 @@ int main(int argc, char* argv[]){
         }
     }
 
-    // We destroy our window. We are passing in the pointer
-    // that points to the memory allocated by the
-    // 'SDL_CreateWindow' function. Remember, this is
-    // a 'C-style' API, we don't have destructors.
     SDL_DestroyWindow(window);
 
     cleanup();

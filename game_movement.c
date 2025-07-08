@@ -5,6 +5,8 @@
 
 #include <SDL2/SDL.h>
 
+#include "game_editor.h"
+#include "game_paths.h"
 #include "game_state.h"
 
 
@@ -329,6 +331,18 @@ void handle_input(  struct GameState* game_state,
     double seconds_to_advance = microseconds_to_advance / (double)1000000;
 // Handle specific key presses from scancodes
     const Uint8* state = SDL_GetKeyboardState(NULL);
+
+    bool any_key_pressed = false;
+    for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
+        if (state[i]) {
+            any_key_pressed = true;
+            break;
+        }
+    }
+    printf("any_key_pressed %d\n", any_key_pressed);
+
+    struct EditorState previous_editor_state = *editor_state;
+
     if(state[SDL_SCANCODE_RIGHT] && !state[SDL_SCANCODE_LEFT]){
         // printf("right arrow key is pressed\n");
 
@@ -510,19 +524,64 @@ void handle_input(  struct GameState* game_state,
 
     if (state[SDL_SCANCODE_L]) {
         if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_L])) {
-            // printf("L key pressed down\n");
             input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_L];
-            load_world_rules_from_file(&game_state->world_rules);
         }
     } else {
-        input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_L];
+        if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_L]) {
+            input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_L];
+            editor_state->load_on_num = true;
+        } else {
+            if (any_key_pressed) {
+                editor_state->load_on_num = false;
+            }
+        }
+    }
+
+    if (state[SDL_SCANCODE_R]) {
+        if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_R])) {
+            input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_R];
+        }
+    } else {
+        if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_R]) {
+            input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_R];
+        }
+    }
+
+    if (state[SDL_SCANCODE_S]) {
+        printf("scancode s\n");
+        if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_S])) {
+            printf("s pressed down\n");
+            input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_S];
+        }
+    } else {
+        printf("no scancode s\n");
+        if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_S]) {
+            printf("s released, save_on_num to true\n");
+            input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_S];
+            editor_state->save_on_num = true;
+        } else {
+            if (any_key_pressed) {
+                printf("some key is pressed, set save_on_num to false\n");
+                editor_state->save_on_num = false;
+            }
+        }
     }
 
     if (state[SDL_SCANCODE_1]) {
         if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_1 - SDL_SCANCODE_1])) {
-            // printf("1 key pressed down\n");
+            printf("1 key pressed down. prev load_on_num %d prev save_on_num %d\n", previous_editor_state.load_on_num, previous_editor_state.save_on_num);
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_1 - SDL_SCANCODE_1];
-            editor_state->block_type = BLOCK_TYPE_GROUND;
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 1\n");
+                load_level(game_state, 1);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 1\n");
+                save_level(game_state, 1);
+            }
+            else {
+                editor_state->block_type = BLOCK_TYPE_GROUND;
+            }
         }
     } else {
         input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_1 - SDL_SCANCODE_1];
@@ -532,7 +591,17 @@ void handle_input(  struct GameState* game_state,
         if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_2 - SDL_SCANCODE_1])) {
             // printf("2 key pressed down\n");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_2 - SDL_SCANCODE_1];
-            editor_state->block_type = BLOCK_TYPE_LADDER;
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 2\n");
+                load_level(game_state, 2);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 2\n");
+                save_level(game_state, 2);
+            }
+            else {
+                editor_state->block_type = BLOCK_TYPE_LADDER;
+            }
         }
     } else {
         input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_2 - SDL_SCANCODE_1];
@@ -590,6 +659,9 @@ void handle_input(  struct GameState* game_state,
                     }
                 }
                 update_ground_images(game_state);
+
+                // autosave level
+                save_level(game_state, 10);
             } else {
                 // printf("No block at click\n");
             }
