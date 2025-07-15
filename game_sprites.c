@@ -117,10 +117,10 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + mushroom_starting_x_values[walk_index];
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
     }
-    for (int climb_index = 0; climb_index < 3; ++climb_index) {
+    for (int climb_index = 0; climb_index < 12; ++climb_index) {
         r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].height = mushroom_height;
         r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].width = mushroom_width;
-        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + 96 + (climb_index * (mushroom_width + 4) + (96 * image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width));
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + 98 + (climb_index * (mushroom_width + 4) + (96 * image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width));
         r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
     }
 

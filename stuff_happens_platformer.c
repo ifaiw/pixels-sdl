@@ -5,6 +5,7 @@
 #include "stuff_happens.h"
 
 #include "game_blocks.h"
+#include "game_editor.h"
 #include "game_images.h"
 #include "game_movement.h"
 #include "game_paths.h"
@@ -54,45 +55,8 @@ void initialize_game_state() {
     initialize_blocks(game_state.base_sprites, game_state.base_blocks);
     fflush(stdout);
 
-    struct Block base_block_for_spot;
-    for (int y = 0; y < HEIGHT_OF_WORLD_IN_BLOCKS; ++y) {
-        for (int x = 0; x < WIDTH_OF_WORLD_IN_BLOCKS; ++x) {
-            if (y < 6) {
-                // printf("world block at %d,%d is ground\n", x, y);
-                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (y == 6 && (x < 1 || x >= WIDTH_OF_WORLD_IN_BLOCKS - 1)) {
-                // printf("world block at %d,%d is ground\n", x, y);
-                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (y == 7 && (x % 5 == 0)) {
-                // printf("world block at %d,%d is ground\n", x, y);
-                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (y == 8 && (x % 3 == 0)) {
-                // printf("world block at %d,%d is ground\n", x, y);
-                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (x == 0) {
-                // printf("world block at %d,%d is ground\n", x, y);
-                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (x >= WIDTH_OF_SCREEN_IN_BLOCKS) {
-                // printf("world block at %d,%d is ground\n", x, y);
-                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else if (y >= 13) {
-                // printf("world block at %d,%d is ground\n", x, y);
-                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_GROUND];
-            } else {
-                base_block_for_spot = game_state.base_blocks[BLOCK_TYPE_EMPTY];
-            }
-            // printf("set block at %d,%d\n", x, y);
-            fflush(stdout);
-            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x] = base_block_for_spot;
-
-            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_x = x * BLOCK_WIDTH_IN_PIXELS;
-            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_y = y * BLOCK_HEIGHT_IN_PIXELS;
-            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].block_x = x;
-            game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].block_y = y;
-            // printf("Initialize world block x=%d y=%d world_pixel_x=%d world_pixel_y=%d\n", x, y, game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_x, game_state.world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_y);
-        }
-    }
-
+    // Level slot 10 is autosave
+    load_level(&game_state, 10);
     update_ground_images(&game_state);
 
     #ifdef CAT_CHARACTER // TODO no longer works now that I added climbing?
@@ -104,7 +68,7 @@ void initialize_game_state() {
     game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1;
     game_state.character_sprite.num_walking_animation_frames = 7;
     game_state.character_sprite.first_climb_sprite_index = SPRITE_TYPE_MUSHROOM_CLIMB_1;
-    game_state.character_sprite.num_climbing_animation_frames = 3;
+    game_state.character_sprite.num_climbing_animation_frames = 12;
     #endif
 
     game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];

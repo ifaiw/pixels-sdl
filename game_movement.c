@@ -540,6 +540,7 @@ void handle_input(  struct GameState* game_state,
     if (state[SDL_SCANCODE_R]) {
         if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_R])) {
             input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_R];
+            load_world_rules_from_file(&game_state->world_rules);
         }
     } else {
         if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_R]) {
@@ -609,12 +610,162 @@ void handle_input(  struct GameState* game_state,
 
     if (state[SDL_SCANCODE_3]) {
         if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_3 - SDL_SCANCODE_1])) {
-            printf("3 key pressed down\n");
+            // printf("3 key pressed down");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_3 - SDL_SCANCODE_1];
-            editor_state->block_type = BLOCK_TYPE_TOILET;
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 3");
+                load_level(game_state, 3);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 3");
+                save_level(game_state, 3);
+            }
+            else {
+                // Switch current editor block to something
+            }
         }
     } else {
         input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_3 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_4]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_4 - SDL_SCANCODE_1])) {
+            // printf("4 key pressed down");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_4 - SDL_SCANCODE_1];
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 4");
+                load_level(game_state, 4);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 4");
+                save_level(game_state, 4);
+            }
+            else {
+                // Switch current editor block to something
+            }
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_4 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_5]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_5 - SDL_SCANCODE_1])) {
+            // printf("5 key pressed down");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_5 - SDL_SCANCODE_1];
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 5");
+                load_level(game_state, 5);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 5");
+                save_level(game_state, 5);
+            }
+            else {
+                // Switch current editor block to something
+            }
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_5 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_6]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_6 - SDL_SCANCODE_1])) {
+            // printf("6 key pressed down");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_6 - SDL_SCANCODE_1];
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 6");
+                load_level(game_state, 6);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 6");
+                save_level(game_state, 6);
+            }
+            else {
+                // Switch current editor block to something
+            }
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_6 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_7]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_7 - SDL_SCANCODE_1])) {
+            // printf("7 key pressed down");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_7 - SDL_SCANCODE_1];
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 7");
+                load_level(game_state, 7);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 7");
+                save_level(game_state, 7);
+            }
+            else {
+                // Switch current editor block to something
+            }
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_7 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_8]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_8 - SDL_SCANCODE_1])) {
+            // printf("8 key pressed down");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_8 - SDL_SCANCODE_1];
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 8");
+                load_level(game_state, 8);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 8");
+                save_level(game_state, 8);
+            }
+            else {
+                // Switch current editor block to something
+            }
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_8 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_9]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_9 - SDL_SCANCODE_1])) {
+            // printf("9 key pressed down");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_9 - SDL_SCANCODE_1];
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 9");
+                load_level(game_state, 9);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 9");
+                save_level(game_state, 9);
+            }
+            else {
+                // Switch current editor block to something
+            }
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_9 - SDL_SCANCODE_1];
+    }
+
+    if (state[SDL_SCANCODE_0]) {
+        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_0 - SDL_SCANCODE_1])) {
+            // printf("0 key pressed down");
+            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_0 - SDL_SCANCODE_1];
+            if (previous_editor_state.load_on_num) {
+                printf("load level slot 0");
+                load_level(game_state, 0);
+            }
+            else if (previous_editor_state.save_on_num) {
+                printf("save level slot 0");
+                save_level(game_state, 0);
+            }
+            else {
+                // Switch current editor block to something
+            }
+        }
+    } else {
+        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_0 - SDL_SCANCODE_1];
     }
 
     int new_mouse_x;
