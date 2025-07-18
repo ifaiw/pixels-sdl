@@ -3,12 +3,13 @@
 #include <math.h>
 // Just for printf
 #include <stdio.h>
+#include <stdlib.h>
 // Just for memcpy
 #include <string.h>
 
 #include "game_paths.h"
 #include "file_stuff.h"
-#include "utils.c"
+#include "utils.h"
 
 // IMPLEMENTS
 void load_world_rules_from_file(struct WorldRules* r_world_rules) {

@@ -106,8 +106,8 @@ int convert_file_to_key_values(struct TextKeyValueFileContents* r_file_contents)
     //     default:
     // }
 
-    State state = WHITESPACE_VALUE;
-    CharCategory next_char;
+    enum State state = WHITESPACE_VALUE;
+    enum CharCategory next_char;
     uint16_t num_keys = 0;
     for (uint64_t i = 0; i < r_file_contents->num_chars; ++i) {
         switch(r_file_contents->chars[i]) {

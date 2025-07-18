@@ -7,7 +7,6 @@
 
 #include "game_editor.h"
 #include "game_paths.h"
-#include "game_state.h"
 
 
 // SDL_SCANCODE_A = 4

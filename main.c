@@ -1,14 +1,11 @@
 #include <assert.h>
+// For printing out uints
+#include <inttypes.h>
+#include <stdbool.h>
 #include <time.h>
 #include <unistd.h>
 
-// For printing out uints
-#include <inttypes.h>
-
-#include <iostream>
-
 #include <SDL2/SDL.h>
-
 
 // Our stuff
 #include "graphics_constants.h"

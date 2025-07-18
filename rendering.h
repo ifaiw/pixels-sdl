@@ -20,7 +20,18 @@
 //     }
 // }
 
-inline void write_sprite(int top_left_x, int top_left_y, struct Sprite sprite, int pixels_width, uint32_t* r_pixels) {
+static inline void flip_upside_down(uint32_t* pixels, int width, int height) {
+    int bottom = height - 1;
+    uint32_t swap_row[width];
+    for (int top = 0; top < bottom; ++top) {
+        memcpy(swap_row, pixels + bottom * width, width * 4);
+        memcpy(pixels + bottom * width, pixels + top * width, width * 4);
+        memcpy(pixels + top * width, swap_row, width * 4);
+        bottom--;
+    }
+}
+
+static inline void write_sprite(int top_left_x, int top_left_y, struct Sprite sprite, int pixels_width, uint32_t* r_pixels) {
     for (int y = 0; y < sprite.height; ++y) {
         int pixels_offset = (top_left_y + y) * pixels_width + top_left_x;
         int sprite_pixels_offset = y * sprite.image_source_pitch_in_pixels;
@@ -28,7 +39,7 @@ inline void write_sprite(int top_left_x, int top_left_y, struct Sprite sprite, i
     }
 }
 
-inline void write_image(int top_left_x, int top_left_y, struct ImageInfo image, int pixels_width, uint32_t* r_pixels) {
+static inline void write_image(int top_left_x, int top_left_y, struct ImageInfo image, int pixels_width, uint32_t* r_pixels) {
     printf("write_image called\n");
     for (int y = 0; y < image.height; ++y) {
         int pixels_offset = (top_left_y + y) * pixels_width + top_left_x;
@@ -38,7 +49,7 @@ inline void write_image(int top_left_x, int top_left_y, struct ImageInfo image, 
     }
 }
 
-inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite sprite, bool flip_left_to_right, int pixels_width, uint32_t* r_pixels) {
+static inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite sprite, bool flip_left_to_right, int pixels_width, uint32_t* r_pixels) {
     // TODO just for testing
     if (sprite.sprite_index >= NUM_SPRITE_TYPES) {
         printf("Invalid sprite index: %d\n", sprite.sprite_index);
@@ -76,7 +87,7 @@ inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite s
     }
 }
 
-inline void write_sprite_aliased_subsection(int screen_top_left_x, int screen_top_left_y, struct Sprite sprite, bool flip_left_to_right, int start_sprite_x, int start_sprite_y, int end_sprite_x, int end_sprite_y, int pixels_width, uint32_t* r_pixels) {
+static inline void write_sprite_aliased_subsection(int screen_top_left_x, int screen_top_left_y, struct Sprite sprite, bool flip_left_to_right, int start_sprite_x, int start_sprite_y, int end_sprite_x, int end_sprite_y, int pixels_width, uint32_t* r_pixels) {
     // TODO I don't think this flip_left_to_right branch has been tested
     // What does it mean to only draw part of a flipped image? E.g. If start_sprite_x=0 and end_sprite_x=halfwidth, does that draw the left half
     // of the original sprite but flipped on on the right side of the output area, or does that mean flip the image and then draw the left half
@@ -110,7 +121,7 @@ inline void write_sprite_aliased_subsection(int screen_top_left_x, int screen_to
     }
 }
 
-inline void draw_circle(
+static inline void draw_circle(
     uint32_t *pixels,
     int pixels_pitch_in_pixels,
     int circle_x,

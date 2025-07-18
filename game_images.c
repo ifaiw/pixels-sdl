@@ -1,6 +1,6 @@
 #include "game_images.h"
 
-#include <iostream>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -9,22 +9,11 @@
 #include "game_sprites.h"
 #include "graphics_constants.h"
 #include "image_bmp_loader.h"
+#include "rendering.h"
 
 
 // PRIVATE
-inline void flip_upside_down(uint32_t* pixels, int width, int height) {
-    int bottom = height - 1;
-    uint32_t swap_row[width];
-    for (int top = 0; top < bottom; ++top) {
-        memcpy(swap_row, pixels + bottom * width, width * 4);
-        memcpy(pixels + bottom * width, pixels + top * width, width * 4);
-        memcpy(pixels + top * width, swap_row, width * 4);
-        bottom--;
-    }
-}
-
-// PRIVATE
-inline void flip_right_left(uint32_t* pixels, int width, int height) {
+static inline void flip_right_left(uint32_t* pixels, int width, int height) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width / 2; ++x) {
             uint32_t swap_pixel = pixels[y * width + x];
@@ -35,7 +24,7 @@ inline void flip_right_left(uint32_t* pixels, int width, int height) {
 }
 
 // PRIVATE
-inline void scale_image_up(struct ImageInfo* current_image, uint8_t factor_increase, struct ImageInfo* r_scaled_image) {
+static inline void scale_image_up(struct ImageInfo* current_image, uint8_t factor_increase, struct ImageInfo* r_scaled_image) {
     r_scaled_image->height = current_image->height * factor_increase;
     r_scaled_image->width = current_image->width * factor_increase;
     r_scaled_image->pixels = (uint32_t*)malloc(r_scaled_image->height * r_scaled_image->width * 4);
@@ -61,7 +50,7 @@ inline void scale_image_up(struct ImageInfo* current_image, uint8_t factor_incre
 // This modifies r_current_image.pixels directly
 // All pixels that match old_pixel_colour ignoring alpha, are changed to new_pixel_colour, including the alpha value of new_pixel_colour
 // PRIVATE
-inline void swap_pixel_colour(struct ImageInfo* r_current_image, uint32_t old_pixel_colour, uint32_t new_pixel_colour) {
+static inline void swap_pixel_colour(struct ImageInfo* r_current_image, uint32_t old_pixel_colour, uint32_t new_pixel_colour) {
     old_pixel_colour = old_pixel_colour & NOT_ALPHA;
     for (int i = 0; i < r_current_image->width * r_current_image->height; ++i) {
         if ((r_current_image->pixels[i] & NOT_ALPHA) == old_pixel_colour) {

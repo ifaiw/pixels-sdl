@@ -1,12 +1,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-
 // included just to get memcpy
 #include <string.h>
+#include <unistd.h>
 
-#include "utils.c"
+#include "utils.h"
 
 #include "image_bmp_loader.h"
 
@@ -18,12 +17,12 @@ const uint8_t BITMAPFILEHEADER[] = {0x42, 0x4D};
 
 
 // PRIVATE
-inline void print_file_header(uint32_t file_size_from_header, uint32_t bitmap_data_start) {
+void print_file_header(uint32_t file_size_from_header, uint32_t bitmap_data_start) {
     printf("BitmapFileHeader:\n  file_size_from_header=%u\n  bitmap_data_start=%u\n\n", file_size_from_header, bitmap_data_start);
 }
 
 // PRIVATE
-inline void print_info_header(  uint32_t info_header_size,
+void print_info_header(  uint32_t info_header_size,
                                 uint32_t width,
                                 uint32_t height,
                                 uint16_t number_of_planes,

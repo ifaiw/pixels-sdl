@@ -9,7 +9,7 @@
 // __FREE_REQUIRED for returned value
 // Find first instance of `{ANY_TEXT}` placeholder in main. If no substrings to replace then NULL returned.
 // NOTE: main and to_replace_with must be null-terminated
-inline char* replace_once(const char* main, const char* to_replace_with) {
+char* replace_once(const char* main, const char* to_replace_with) {
     size_t left = 0;
     size_t right;
     size_t last;

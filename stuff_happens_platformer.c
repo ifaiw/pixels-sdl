@@ -14,7 +14,7 @@
 #include "game_state.h"
 #include "graphics_constants.h"
 #include "file_stuff.h"
-#include "utils.c"
+#include "utils.h"
 
 #define INITIAL_FRAMES_TO_WAIT 180
 
@@ -34,6 +34,34 @@ struct EditorState editor_state;
 
 struct CharacterSprite character_sprite;
 
+
+// PRIVATE
+void initialize_world_rules(double frames_per_second, struct WorldRules* world_rules) {
+    world_rules->frames_per_second = frames_per_second;
+    world_rules->microseconds_per_frame = (double)1000000/frames_per_second;
+
+    load_world_rules_from_file(world_rules);
+
+    // printf("from dict_get_value, world_rules.gravity_pixels_per_second is %f\n", world_rules.gravity_pixels_per_second);
+    // printf("from dict_get_value, world_rules.y_max_fall_speed_pixels_per_second is %f\n", world_rules.y_max_fall_speed_pixels_per_second);
+    // printf("from dict_get_value, world_rules.x_ground_acceleration_pixels_per_second is %f\n", world_rules.x_ground_acceleration_pixels_per_second);
+    // printf("from dict_get_value, world_rules.x_movement_max_speed_pixels_per_second is %f\n", world_rules.x_movement_max_speed_pixels_per_second);
+    // printf("from dict_get_value, world_rules.micros_per_walking_animation_frame is %ld\n", world_rules.micros_per_walking_animation_frame);
+    // printf("from dict_get_value, world_rules.y_jump_acceleration_pixels_per_second is %f\n", world_rules.y_jump_acceleration_pixels_per_second);
+    // printf("from dict_get_value, world_rules.microseconds_after_jump_start_check_jump_still_pressed is %f\n", world_rules.microseconds_after_jump_start_check_jump_still_pressed);
+}
+
+// PRIVATE
+void initialize_input_state() {
+    input_state.left_button_press_frame = -1;
+    input_state.right_button_press_frame = -1;
+    input_state.up_button_press_frame = -1;
+    input_state.down_button_press_frame = -1;
+
+    input_state.letter_keys_down_bitmask = 0;
+    input_state.number_keys_down_bitmask = 0;
+    input_state.mouse_button_state = 0;
+}
 
 // PRIVATE
 void initialize_game_state() {
@@ -85,78 +113,6 @@ void initialize_game_state() {
     // for (int i = 0; i < WORLD_BLOCKS_HEIGHT * WORLD_BLOCKS_WIDTH; ++i) {
     //     // printf("%d block type %u\n", i, game_state.world_blocks[i].type);
     // }
-}
-
-
-
-// PRIVATE
-inline void initialize_world_rules(double frames_per_second, struct WorldRules* world_rules) {
-    world_rules->frames_per_second = frames_per_second;
-    world_rules->microseconds_per_frame = (double)1000000/frames_per_second;
-
-    load_world_rules_from_file(world_rules);
-
-    // printf("from dict_get_value, world_rules.gravity_pixels_per_second is %f\n", world_rules.gravity_pixels_per_second);
-    // printf("from dict_get_value, world_rules.y_max_fall_speed_pixels_per_second is %f\n", world_rules.y_max_fall_speed_pixels_per_second);
-    // printf("from dict_get_value, world_rules.x_ground_acceleration_pixels_per_second is %f\n", world_rules.x_ground_acceleration_pixels_per_second);
-    // printf("from dict_get_value, world_rules.x_movement_max_speed_pixels_per_second is %f\n", world_rules.x_movement_max_speed_pixels_per_second);
-    // printf("from dict_get_value, world_rules.micros_per_walking_animation_frame is %ld\n", world_rules.micros_per_walking_animation_frame);
-    // printf("from dict_get_value, world_rules.y_jump_acceleration_pixels_per_second is %f\n", world_rules.y_jump_acceleration_pixels_per_second);
-    // printf("from dict_get_value, world_rules.microseconds_after_jump_start_check_jump_still_pressed is %f\n", world_rules.microseconds_after_jump_start_check_jump_still_pressed);
-}
-
-// PRIVATE
-inline void initialize_input_state() {
-    input_state.left_button_press_frame = -1;
-    input_state.right_button_press_frame = -1;
-    input_state.up_button_press_frame = -1;
-    input_state.down_button_press_frame = -1;
-
-    input_state.letter_keys_down_bitmask = 0;
-    input_state.number_keys_down_bitmask = 0;
-    input_state.mouse_button_state = 0;
-}
-
-// PRIVATE
-inline void update_sprites(struct GameState* game_state_param, struct InputState* input_state_param) {
-    long microsecond_bucket;
-    int walking_animation_frame_num;
-    double pixel_distance_bucket;
-    int climbing_animation_frame_num;
-
-    switch (game_state_param->character.motion) {
-        case STOPPED:
-            // printf("motion is STOPPED show sprite STAND\n");
-            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.stand_sprite_index];
-            break;
-        case CLIMBING:
-            // Do 2 times y distance to make climbing up/down make the character animation move faster
-            printf("climbing frame pixels_per_climbing_animation_frame=%f y_inverted_bottom_left=%f start_climb_pixel_y=%f x_bottom_left=%f start_climb_pixel_x=%f\n", game_state_param->world_rules.pixels_per_climbing_animation_frame, game_state_param->character.y_inverted_bottom_left, input_state_param->start_climb_pixel_y, game_state_param->character.x_bottom_left, input_state_param->start_climb_pixel_x);
-            pixel_distance_bucket = (2 * abs(game_state_param->character.y_inverted_bottom_left - input_state_param->start_climb_pixel_y) + abs(game_state_param->character.x_bottom_left - input_state_param->start_climb_pixel_x)) / game_state_param->world_rules.pixels_per_climbing_animation_frame;
-
-            // TODO casting to int here seems fishy
-            climbing_animation_frame_num = (int)round(pixel_distance_bucket) % game_state_param->character_sprite.num_climbing_animation_frames;
-            printf("climbing frame pixel_distance_bucket=%f climbing_animation_frame_num=%d\n", pixel_distance_bucket, climbing_animation_frame_num);
-            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_climb_sprite_index + climbing_animation_frame_num];
-            break;
-        case WALKING:
-            microsecond_bucket = game_state_param->current_time_in_micros / game_state_param->world_rules.micros_per_walking_animation_frame;
-            walking_animation_frame_num = microsecond_bucket % game_state_param->character_sprite.num_walking_animation_frames;
-            // TODO just for testing
-            if (walking_animation_frame_num != last_walking_frame && walking_animation_frame_num != last_walking_frame+1 && !(last_walking_frame == 6 && walking_animation_frame_num == 0)) {
-                // printf("skipped walk animation frame, from %d to %d\n", last_walking_frame, walking_animation_frame_num);
-            }
-            last_walking_frame = walking_animation_frame_num;
-
-            // printf("motion is WALKING show sprite WALK %d\n", walking_animation_frame_num);
-            // printf("we're walking, current_time_in_micros=%ld microsecond_bucket=%ld walking_animation_frame_num=%d\n", game_state_param->current_time_in_micros, microsecond_bucket, walking_animation_frame_num);
-            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index + walking_animation_frame_num];
-            break;
-        case JUMPING:
-            // printf("motion is STOPPED show sprite WALK0\n");
-            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index];
-            break;
-    }
 }
 
 // IMPLEMENTS

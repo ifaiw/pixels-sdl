@@ -1,12 +1,10 @@
-#ifndef _UTILS__C
-#define _UTILS__C
+#ifndef _UTILS__H
+#define _UTILS__H
 
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <time.h>
-
-#include "game_structs.h"
 
 #define LITTLE_ENDIAN_32(array_name, offset) array_name[offset] << 24 | array_name[offset + 1] << 16 | array_name[offset + 2] << 8 | array_name[offset + 3]
 #define BIG_ENDIAN_32(array_name, offset) array_name[offset] | array_name[offset + 1] << 8 | array_name[offset + 2] << 16 | array_name[offset + 3] << 24
@@ -18,13 +16,13 @@ enum Endianess {
     BIG_ENDIAN_ENDIANESS,
     LITTLE_ENDIAN_ENDIANESS
 };
-inline uint32_t get_uint32(uint8_t* array, int offset, enum Endianess endianess) {
+static inline uint32_t get_uint32(uint8_t* array, int offset, enum Endianess endianess) {
     if (endianess == BIG_ENDIAN_ENDIANESS) {
         return BIG_ENDIAN_32(array, offset);
     }
     return LITTLE_ENDIAN_32(array, offset);
 }
-inline uint16_t get_uint16(uint8_t* array, int offset, enum Endianess endianess) {
+static inline uint16_t get_uint16(uint8_t* array, int offset, enum Endianess endianess) {
     if (endianess == BIG_ENDIAN_ENDIANESS) {
         return BIG_ENDIAN_16(array, offset);
     }
@@ -75,19 +73,19 @@ inline uint16_t get_uint16(uint8_t* array, int offset, enum Endianess endianess)
 //     }
 // }
 
-inline long diff_time_in_nanos(struct timespec *t1, struct timespec *t2) {
+static inline long diff_time_in_nanos(struct timespec *t1, struct timespec *t2) {
     long diff_in_nanos_from_sec = (t2->tv_sec - t1->tv_sec) * (long)1000000000;
     long diff_in_nanos_from_nanos = t2->tv_nsec - t1->tv_nsec;
     return diff_in_nanos_from_sec + diff_in_nanos_from_nanos;
 }
 
-inline long diff_time_in_micros(struct timespec *t1, long t2_secs, long t2_nanos) {
+static inline long diff_time_in_micros(struct timespec *t1, long t2_secs, long t2_nanos) {
     long diff_in_micros_from_sec = (t2_secs - t1->tv_sec) * (long)1000000;
     long diff_in_micros_from_nanos = (t2_nanos - t1->tv_nsec) / (long)1000;
     return diff_in_micros_from_sec + diff_in_micros_from_nanos;
 }
 
-inline long micros_until_next_frame(struct timespec *initial, struct timespec *current, long next_frame_count, long nanos_per_frame) {
+static inline long micros_until_next_frame(struct timespec *initial, struct timespec *current, long next_frame_count, long nanos_per_frame) {
     long nanos_of_next_frame_since_initial = next_frame_count * nanos_per_frame;
     long seconds_of_next_frame_since_initial = nanos_of_next_frame_since_initial / (long)1000000000;
     long nanos_remainder = nanos_of_next_frame_since_initial - (seconds_of_next_frame_since_initial * (long)1000000000);
@@ -99,7 +97,7 @@ inline long micros_until_next_frame(struct timespec *initial, struct timespec *c
 }
 
 // TODO  does static on these functions actually do anything useful?
-inline int get_min(int a, int b) {
+static inline int get_min(int a, int b) {
     int c = a < b ? a : b;
     if (a < b) {
         return a;
@@ -108,7 +106,7 @@ inline int get_min(int a, int b) {
 }
 
 // Assumes chars is null-terminated
-inline int chars_to_int(char* chars) {
+static inline int chars_to_int(char* chars) {
     int total = 0;
     int flip = 1;
     int start = 0;
@@ -125,4 +123,4 @@ inline int chars_to_int(char* chars) {
     return total * flip;
 }
 
-#endif // _UTILS__C
+#endif // _UTILS__H

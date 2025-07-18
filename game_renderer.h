@@ -1,3 +1,6 @@
+#ifndef _GAME_RENDERER__H
+#define _GAME_RENDERER__H
+
 #include <stdint.h>
 #include <string.h>
 
@@ -5,7 +8,49 @@
 #include "game_structs.h"
 #include "rendering.h"
 
-inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct ViewState* view_state, int width, int height) {
+// PRIVATE
+static inline void update_sprites(struct GameState* game_state_param, struct InputState* input_state_param) {
+    long microsecond_bucket;
+    int walking_animation_frame_num;
+    double pixel_distance_bucket;
+    int climbing_animation_frame_num;
+
+    switch (game_state_param->character.motion) {
+        case STOPPED:
+            // printf("motion is STOPPED show sprite STAND\n");
+            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.stand_sprite_index];
+            break;
+        case CLIMBING:
+            // Do 2 times y distance to make climbing up/down make the character animation move faster
+            printf("climbing frame pixels_per_climbing_animation_frame=%f y_inverted_bottom_left=%f start_climb_pixel_y=%f x_bottom_left=%f start_climb_pixel_x=%f\n", game_state_param->world_rules.pixels_per_climbing_animation_frame, game_state_param->character.y_inverted_bottom_left, input_state_param->start_climb_pixel_y, game_state_param->character.x_bottom_left, input_state_param->start_climb_pixel_x);
+            pixel_distance_bucket = (2 * fabs(game_state_param->character.y_inverted_bottom_left - input_state_param->start_climb_pixel_y) + fabs(game_state_param->character.x_bottom_left - input_state_param->start_climb_pixel_x)) / game_state_param->world_rules.pixels_per_climbing_animation_frame;
+
+            // TODO casting to int here seems fishy
+            climbing_animation_frame_num = (int)round(pixel_distance_bucket) % game_state_param->character_sprite.num_climbing_animation_frames;
+            printf("climbing frame pixel_distance_bucket=%f climbing_animation_frame_num=%d\n", pixel_distance_bucket, climbing_animation_frame_num);
+            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_climb_sprite_index + climbing_animation_frame_num];
+            break;
+        case WALKING:
+            microsecond_bucket = game_state_param->current_time_in_micros / game_state_param->world_rules.micros_per_walking_animation_frame;
+            walking_animation_frame_num = microsecond_bucket % game_state_param->character_sprite.num_walking_animation_frames;
+            // TODO just for testing
+            // if (walking_animation_frame_num != last_walking_frame && walking_animation_frame_num != last_walking_frame+1 && !(last_walking_frame == 6 && walking_animation_frame_num == 0)) {
+            //     printf("skipped walk animation frame, from %d to %d\n", last_walking_frame, walking_animation_frame_num);
+            // }
+            // last_walking_frame = walking_animation_frame_num;
+
+            // printf("motion is WALKING show sprite WALK %d\n", walking_animation_frame_num);
+            // printf("we're walking, current_time_in_micros=%ld microsecond_bucket=%ld walking_animation_frame_num=%d\n", game_state_param->current_time_in_micros, microsecond_bucket, walking_animation_frame_num);
+            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index + walking_animation_frame_num];
+            break;
+        case JUMPING:
+            // printf("motion is STOPPED show sprite WALK0\n");
+            game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index];
+            break;
+    }
+}
+
+static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct ViewState* view_state, int width, int height) {
     // printf("top of stuff_happens_platformer.blit\n");
 
     memcpy(r_pixels, game_state->blank_pixels, width * height * 4);
@@ -282,3 +327,5 @@ inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct ViewSt
     // printf("Draw character at %d,%d\n", char_left, char_top);
     write_sprite_aliased(char_left, char_top, game_state->character.current_sprite, game_state->character.direction == LEFT, width, r_pixels);
 }
+
+#endif  // _GAME_RENDERER__H

@@ -1,6 +1,7 @@
 #ifndef _GAME_MOVEMENT__H
 #define _GAME_MOVEMENT__H
 
+#include "game_state.h"
 #include "game_structs.h"
 
 
