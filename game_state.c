@@ -12,6 +12,21 @@
 #include "utils.h"
 
 // IMPLEMENTS
+int16_t get_next_free_entity_index(struct GameState* game_state) {
+    int16_t i;
+    for (i = 0; i < game_state->num_current_entites; ++i) {
+        if ((game_state->entities[i].effects_flags & ENTITY_FLAG_IS_ACTIVE) == 0) {
+            return i;
+        }
+    }
+    if (game_state->num_current_entites == TOTAL_POSSIBLE_ENTITIES) {
+        printf("All possible entities in use!\n");
+        return -1;
+    }
+    return game_state->num_current_entites++;
+}
+
+// IMPLEMENTS
 void load_world_rules_from_file(struct WorldRules* r_world_rules) {
     struct FileBytes world_rules_file_bytes;
     int file_load_result = read_file(GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, &world_rules_file_bytes);

@@ -16,6 +16,8 @@
 #define WIDTH_OF_WORLD_IN_BLOCKS WIDTH_OF_SCREEN_IN_BLOCKS * WIDTH_OF_WORLD_IN_SCREENS
 #define HEIGHT_OF_WORLD_IN_BLOCKS HEIGHT_OF_SCREEN_IN_BLOCKS * HEIGHT_OF_WORLD_IN_SCREENS
 
+#define TOTAL_POSSIBLE_ENTITIES 128
+
 struct GameState {
     struct ImageInfo base_bmp_images[NUM_BMP_IMAGES];
     struct Sprite base_sprites[NUM_SPRITE_TYPES];
@@ -32,6 +34,9 @@ struct GameState {
     struct WorldRules world_rules;
 
     struct CharacterSprite character_sprite;
+
+    struct Entity entities[TOTAL_POSSIBLE_ENTITIES];
+    uint16_t num_current_entites;
 
     long current_frame;
     long current_time_in_micros;
@@ -58,5 +63,7 @@ void populate_character_from_character_for_save(struct CharacterForSave* charact
 void load_level_from_disk(struct GameState* r_game_state, const char* file_path);
 
 void save_level_to_disk(struct GameState* game_state, const char* file_path);
+
+int16_t get_next_free_entity_index(struct GameState* game_state);
 
 #endif  // _GAME_STATE__H

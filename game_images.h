@@ -14,6 +14,7 @@
 #define IMAGE_INDEX_CAT_RIGHT 4
 #define IMAGE_INDEX_SOLIDS_2 5
 #define IMAGE_INDEX_TOILET 6
+#define IMAGE_INDEX_WORM 7
 
 // Non-zero results indicates error
 int load_images(struct ImageInfo* r_image_array);

@@ -580,6 +580,7 @@ void handle_input(  struct GameState* game_state,
                 save_level(game_state, 1);
             }
             else {
+                editor_state->click_state = ADD_BLOCK;
                 editor_state->block_type = BLOCK_TYPE_GROUND;
             }
         }
@@ -600,6 +601,7 @@ void handle_input(  struct GameState* game_state,
                 save_level(game_state, 2);
             }
             else {
+                editor_state->click_state = ADD_BLOCK;
                 editor_state->block_type = BLOCK_TYPE_LADDER;
             }
         }
@@ -620,7 +622,8 @@ void handle_input(  struct GameState* game_state,
                 save_level(game_state, 3);
             }
             else {
-                // Switch current editor block to something
+                editor_state->click_state = ADD_ENTITY;
+                editor_state->entity_type = WORM;
             }
         }
     } else {
@@ -780,41 +783,9 @@ void handle_input(  struct GameState* game_state,
             int in_game_x = new_mouse_x - view_state->view_area_offset_x + view_state->view_bottom_left_world_x;
             int in_game_y_inverted = view_state->view_height - new_mouse_y + view_state->view_area_offset_y + view_state->view_bottom_left_world_y;
             // printf("mouse left-button click at %d,%d translated to ingame is %d,%d\n", new_mouse_x, new_mouse_y, in_game_x, in_game_y_inverted);
-            struct Block* mouse_block = get_world_block_for_location(in_game_x, in_game_y_inverted, game_state);
-            if (mouse_block != NULL) {
-                // printf("clicked block effects_flag is %d\n", mouse_block->effects_flags);
-                if (mouse_block->effects_flags & EFFECT_FLAG_SOLID || mouse_block->type == BLOCK_TYPE_LADDER) {
-                    printf("remove ground or ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                    mouse_block->type = BLOCK_TYPE_EMPTY;
-                    mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_EMPTY].effects_flags;
-                    mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite_index;
-                } else if (mouse_block->type == BLOCK_TYPE_EMPTY) {
-                    if (editor_state->block_type == BLOCK_TYPE_GROUND) {
-                        printf("add ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                        mouse_block->type = BLOCK_TYPE_GROUND;
-                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_GROUND].effects_flags;
-                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_GROUND].sprite_index;
-                    }
-                    else if (editor_state->block_type == BLOCK_TYPE_LADDER) {
-                        printf("add ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                        mouse_block->type = BLOCK_TYPE_LADDER;
-                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_LADDER].effects_flags;
-                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_LADDER].sprite_index;
-                    }
-                    else if (editor_state->block_type == BLOCK_TYPE_TOILET) {
-                        printf("add toilet at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                        mouse_block->type = BLOCK_TYPE_TOILET;
-                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_TOILET].effects_flags;
-                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_TOILET].sprite_index;
-                    }
-                }
-                update_ground_images(game_state);
 
-                // autosave level
-                save_level(game_state, 10);
-            } else {
-                // printf("No block at click\n");
-            }
+            mouse_click(in_game_x, in_game_y_inverted, editor_state, game_state);
+
         }
         input_state->mouse_button_state = new_mouse_button_state;
     }

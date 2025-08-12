@@ -24,12 +24,6 @@ struct InputState {
     double start_climb_pixel_y;
 };
 
-struct EditorState {
-    uint16_t block_type;
-    bool save_on_num;
-    bool load_on_num;
-};
-
 struct Sprite {
     uint32_t* pixels_start;
     uint32_t height, width;
@@ -92,8 +86,8 @@ struct CharacterForSave {
 };
 
 struct WorldRules {
-    double frames_per_second;
-    double microseconds_per_frame;
+    uint64_t frames_per_second;
+    uint64_t microseconds_per_frame;
     double gravity_pixels_per_second;
     double y_max_fall_speed_pixels_per_second;
     // TODO max x speed not needed?
@@ -112,9 +106,9 @@ struct WorldRules {
     double y_climb_speed_pixels_per_second;
     double x_climb_speed_pixels_per_second;
 
-    double microseconds_after_jump_start_check_jump_still_pressed;
+    uint32_t microseconds_after_jump_start_check_jump_still_pressed;
 
-    long micros_per_walking_animation_frame;
+    uint32_t micros_per_walking_animation_frame;
     double pixels_per_climbing_animation_frame;
 };
 
@@ -147,5 +141,46 @@ struct LevelFileHeader {
     uint32_t level_height_in_blocks;
 };
 #pragma pack()
+
+enum EntityType {
+    WORM
+};
+
+enum EntityState {
+    ENTITY_STOPPED,
+    ENTITY_MOVING,
+};
+
+#define ENTITY_FLAG_IS_ACTIVE 0x0001
+
+struct Entity {
+    enum EntityType type;
+    enum EntityState state;
+    double x_bottom_left;
+    double y_inverted_bottom_left;
+    double x_velocity_pixels_per_second;
+    double y_velocity_pixels_per_second;
+    double width;
+    double height;
+    int16_t z_index;
+    struct Sprite current_sprite; // TODO do we need this at all? Could we just use a sprite index?
+    enum CharacterDirection direction;
+    bool is_on_ground;
+    uint16_t effects_flags;
+    uint64_t animation_time_start_in_micros;
+};
+
+enum EditorClickState {
+    ADD_BLOCK,
+    ADD_ENTITY,
+};
+
+struct EditorState {
+    enum EditorClickState click_state;
+    uint16_t block_type;
+    enum EntityType entity_type;
+    bool save_on_num;
+    bool load_on_num;
+};
 
 #endif  // _GAME_STRUCTS__H
