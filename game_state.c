@@ -12,6 +12,21 @@
 #include "utils.h"
 
 // IMPLEMENTS
+int16_t get_next_free_entity_index(struct GameState* game_state) {
+    int16_t i;
+    for (i = 0; i < game_state->num_current_entites; ++i) {
+        if ((game_state->entities[i].effects_flags & ENTITY_FLAG_IS_ACTIVE) == 0) {
+            return i;
+        }
+    }
+    if (game_state->num_current_entites == TOTAL_POSSIBLE_ENTITIES) {
+        printf("All possible entities in use!\n");
+        return -1;
+    }
+    return game_state->num_current_entites++;
+}
+
+// IMPLEMENTS
 void load_world_rules_from_file(struct WorldRules* r_world_rules) {
     struct FileBytes world_rules_file_bytes;
     int file_load_result = read_file(GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, &world_rules_file_bytes);
@@ -39,7 +54,7 @@ void load_world_rules_from_file(struct WorldRules* r_world_rules) {
 	r_world_rules->x_movement_max_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_movement_max_speed_pixels_per_second", &world_rules_file_dict));
     r_world_rules->x_air_acceleration_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_air_acceleration_pixels_per_second", &world_rules_file_dict));
 
-	r_world_rules->micros_per_walking_animation_frame = (long)chars_to_int(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
+	r_world_rules->micros_per_walking_animation_frame = chars_to_uint32(dict_get_value((char*)"micros_per_walking_animation_frame", &world_rules_file_dict));
     // TODO need chars_to_decimal, returns double
     r_world_rules->pixels_per_climbing_animation_frame = (double)chars_to_int(dict_get_value((char*)"pixels_per_climbing_animation_frame", &world_rules_file_dict));
 
@@ -49,25 +64,29 @@ void load_world_rules_from_file(struct WorldRules* r_world_rules) {
     r_world_rules->y_climb_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"y_climb_speed_pixels_per_second", &world_rules_file_dict));
     r_world_rules->x_climb_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"x_climb_speed_pixels_per_second", &world_rules_file_dict));
 
+    r_world_rules->worm_micros_per_walking_animation_frame = chars_to_uint32(dict_get_value((char*)"worm_micros_per_walking_animation_frame", &world_rules_file_dict));
+    r_world_rules->worm_x_speed_pixels_per_second = (double)chars_to_int(dict_get_value((char*)"worm_x_speed_pixels_per_second", &world_rules_file_dict));
+
+
     free(world_rules_file_dict.chars);
     free(world_rules_file_dict.key_indices);
     free(world_rules_file_dict.value_indices);
 }
 
 // IMPLEMENTS
-struct Block* get_world_block_for_location(int x, int y, struct GameState* game_state) {
-    // printf("get_world_block_for_location x=%d y=%d\n", x, y);
+struct Block* get_world_block_for_world_pixel_xy(int pixel_x, int pixel_y, struct GameState* game_state) {
+    // printf("get_world_block_for_world_pixel_xy x=%d y=%d\n", x, y);
     // TODO is x or y outside the world bounds handled properly? Just force the world to have a rectangle of blocks all around the outmost edge?
-    if (x < 0 || y < 0) {
-        // printf("get_world_block_for_location x or y is less than 0 return null\n");
+    if (pixel_x < 0 || pixel_y < 0) {
+        // printf("get_world_block_for_world_pixel_xy x or y is less than 0 return null\n");
         return NULL;
     }
 
-    int block_x = x / BLOCK_WIDTH_IN_PIXELS;
-    int block_y = y / BLOCK_HEIGHT_IN_PIXELS;
-    // printf("get_world_block_for_location not null x=%d y=%d block_x=%d block_y=%d\n", x, y, block_x, block_y);
+    int block_x = pixel_x / BLOCK_WIDTH_IN_PIXELS;
+    int block_y = pixel_y / BLOCK_HEIGHT_IN_PIXELS;
+    // printf("get_world_block_for_world_pixel_xy not null x=%d y=%d block_x=%d block_y=%d\n", x, y, block_x, block_y);
     if (block_x >= WIDTH_OF_WORLD_IN_BLOCKS || block_y >= HEIGHT_OF_WORLD_IN_BLOCKS) {
-        // printf("get_world_block_for_location x or y is too high return null\n");
+        // printf("get_world_block_for_world_pixel_xy x or y is too high return null\n");
         return NULL;
     }
 
@@ -100,11 +119,11 @@ bool is_on_ground(struct GameState* game_state) {
 
     // printf("y_inverted_bottom_left=%f bottom_left_y_floor=%d just_below_pixel=%d\n", game_state->character.y_inverted_bottom_left, bottom_left_y_floor, just_below_pixel);
 
-    struct Block* bottom_left = get_world_block_for_location(bottom_left_x_floor, just_below_pixel, game_state);
+    struct Block* bottom_left = get_world_block_for_world_pixel_xy(bottom_left_x_floor, just_below_pixel, game_state);
     if (bottom_left->effects_flags & EFFECT_FLAG_SOLID) {
         return true;
     }
-    struct Block* bottom_right = get_world_block_for_location(right_pixel, just_below_pixel, game_state);
+    struct Block* bottom_right = get_world_block_for_world_pixel_xy(right_pixel, just_below_pixel, game_state);
     return bottom_right->effects_flags & EFFECT_FLAG_SOLID;
 }
 
@@ -115,11 +134,11 @@ bool is_on_climable(struct GameState* game_state) {
     int bottom_left_y_floor = floor(game_state->character.y_inverted_bottom_left);
     int right_pixel = bottom_left_x_floor + game_state->character.width;
 
-    struct Block* bottom_left = get_world_block_for_location(bottom_left_x_floor, bottom_left_y_floor, game_state);
+    struct Block* bottom_left = get_world_block_for_world_pixel_xy(bottom_left_x_floor, bottom_left_y_floor, game_state);
     if ((bottom_left->effects_flags & EFFECT_FLAG_CLIMABLE) == 0) {
         return false;
     }
-    struct Block* bottom_right = get_world_block_for_location(right_pixel, bottom_left_y_floor, game_state);
+    struct Block* bottom_right = get_world_block_for_world_pixel_xy(right_pixel, bottom_left_y_floor, game_state);
     // If character is straddling two different blocks then return false, even if both blocks are climable
     // Means that this method won't work for blocks that allow horizontal climbing, like lattice or web?
     if (bottom_left->block_x != bottom_right->block_x) {

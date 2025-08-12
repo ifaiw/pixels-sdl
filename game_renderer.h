@@ -9,8 +9,9 @@
 #include "rendering.h"
 
 // PRIVATE
+// TODO move this code into render/blit code?
 static inline void update_sprites(struct GameState* game_state_param, struct InputState* input_state_param) {
-    long microsecond_bucket;
+    uint64_t microsecond_bucket;
     int walking_animation_frame_num;
     double pixel_distance_bucket;
     int climbing_animation_frame_num;
@@ -26,13 +27,13 @@ static inline void update_sprites(struct GameState* game_state_param, struct Inp
             pixel_distance_bucket = (2 * fabs(game_state_param->character.y_inverted_bottom_left - input_state_param->start_climb_pixel_y) + fabs(game_state_param->character.x_bottom_left - input_state_param->start_climb_pixel_x)) / game_state_param->world_rules.pixels_per_climbing_animation_frame;
 
             // TODO casting to int here seems fishy
-            climbing_animation_frame_num = (int)round(pixel_distance_bucket) % game_state_param->character_sprite.num_climbing_animation_frames;
+            climbing_animation_frame_num = (int)round(pixel_distance_bucket) % SPRITE_NUMBER_OF_FRAMES_MUSHROOM_CLIMB;
             printf("climbing frame pixel_distance_bucket=%f climbing_animation_frame_num=%d\n", pixel_distance_bucket, climbing_animation_frame_num);
             game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_climb_sprite_index + climbing_animation_frame_num];
             break;
         case WALKING:
             microsecond_bucket = game_state_param->current_time_in_micros / game_state_param->world_rules.micros_per_walking_animation_frame;
-            walking_animation_frame_num = microsecond_bucket % game_state_param->character_sprite.num_walking_animation_frames;
+            walking_animation_frame_num = microsecond_bucket % SPRITE_NUMBER_OF_FRAMES_MUSHROOM_WALK;
             // TODO just for testing
             // if (walking_animation_frame_num != last_walking_frame && walking_animation_frame_num != last_walking_frame+1 && !(last_walking_frame == 6 && walking_animation_frame_num == 0)) {
             //     printf("skipped walk animation frame, from %d to %d\n", last_walking_frame, walking_animation_frame_num);
@@ -48,17 +49,51 @@ static inline void update_sprites(struct GameState* game_state_param, struct Inp
             game_state_param->character.current_sprite = game_state_param->base_sprites[game_state_param->character_sprite.first_walk_sprite_index];
             break;
     }
+
+// TODO Delete this code, updating sprites is handled in render code?
+//     for (struct Entity* entity = game_state_param->entities; entity != game_state_param->entities + game_state_param->num_current_entites; ++entity) {
+//         printf("Top of entity loop in update_sprites\n");
+//         if (!(entity->effects_flags & ENTITY_FLAG_IS_ACTIVE)) {
+//             printf("skip inactive entity\n");
+//             continue;
+//         }
+//         if (    entity->x_bottom_left + entity->width < view_state->view_bottom_left_world_x
+//             ||  entity->x_bottom_left > view_state->view_bottom_left_world_x + view_state->view_width
+//             ||  entity->y_inverted_bottom_left + entity->height < view_state->view_bottom_left_world_y
+//             ||  entity->y_inverted_bottom_left > view_state->view_bottom_left_world_y + view_state->view_height
+//         ) {
+//             printf("Skip entity not FULLY in view\n");
+//             continue;
+//         }
+//     }
+
 }
 
 static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct ViewState* view_state, int width, int height) {
     // printf("top of stuff_happens_platformer.blit\n");
 
+    // Clear pixel array to black
     memcpy(r_pixels, game_state->blank_pixels, width * height * 4);
 
+    // Update view_state based on character position
     view_state->view_bottom_left_world_x = game_state->character.x_bottom_left + (game_state->character.width / 2) - (view_state->view_width / 2);
     view_state->view_bottom_left_world_y = game_state->character.y_inverted_bottom_left + (game_state->character.height / 2) - (view_state->view_height / 2);
     int view_top_right_world_x = view_state->view_bottom_left_world_x + view_state->view_width;
     int view_top_right_world_y = view_state->view_bottom_left_world_y + view_state->view_height;
+
+
+
+    // TODO can delete
+    // for (uint16_t i = 0; i < game_state->num_current_entites; ++i) {
+    //     if (!(game_state->entities[i].effects_flags & ENTITY_FLAG_IS_ACTIVE) || game_state->entities[i].z_index != z_index) {
+    //         continue;
+    //     }
+    //     if (    game_state->entities[i].x_bottom_left + game_state->entities[i].width < view_state->view_bottom_left_world_x
+    //         ||  game_state->entities[i].x_bottom_left > view_state->view_bottom_left_world_x + view_state->view_width
+    //         ||  game_state->entities[i].y_inverted_bottom_left + game_state->entities[i].)
+    // }
+
+
 
     int left_block_x;
     if (view_state->view_bottom_left_world_x < 0) {
@@ -316,6 +351,47 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
         }
     }
 
+    // Render entities
+    // Currently the only z-index we use is 5
+    int16_t z_index = 5;
+    printf("Num entities is %d\n", game_state->num_current_entites);
+    for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
+        printf("Top of entity loop in render\n");
+        if (!(entity->effects_flags & ENTITY_FLAG_IS_ACTIVE) || entity->z_index != z_index) {
+            printf("skip inactive or entity zindex=%d not at zindex %d\n", entity->z_index, z_index);
+            continue;
+        }
+        if (    entity->x_bottom_left + entity->width < view_state->view_bottom_left_world_x
+            ||  entity->x_bottom_left > view_state->view_bottom_left_world_x + view_state->view_width
+            ||  entity->y_inverted_bottom_left + entity->height < view_state->view_bottom_left_world_y
+            ||  entity->y_inverted_bottom_left > view_state->view_bottom_left_world_y + view_state->view_height
+        ) {
+            printf("Skip entity not FULLY in view\n");
+            continue;
+        }
+
+        uint64_t micros_since_animation_start = game_state->current_time_in_micros - entity->animation_time_start_in_micros;
+        uint16_t frame_num_worm = (uint16_t)(micros_since_animation_start / game_state->world_rules.worm_micros_per_walking_animation_frame) % SPRITE_NUMBER_OF_FRAMES_WORM_WALK;
+        bool flip_entity_horizontal = false;
+        switch (entity->type) {
+            // entity->direction != RIGHT
+            // No entity type flips the sprite, yet
+            default:
+                break;
+        }
+
+        write_sprite_aliased(   round(entity->x_bottom_left) - view_state->view_bottom_left_world_x + view_state->view_area_offset_x,
+                                view_state->view_bottom_left_world_y
+                                +   view_state->view_height
+                                -   entity->y_inverted_bottom_left
+                                +   view_state->view_area_offset_y
+                                -   entity->height,
+                                game_state->base_sprites[entity->current_sprite.sprite_index + frame_num_worm],
+                                flip_entity_horizontal,
+                                width,
+                                r_pixels);
+    }
+
     // printf("Done drawing blocks, next draw char\n");
 
     int char_left = round(game_state->character.x_bottom_left) - view_state->view_bottom_left_world_x + view_state->view_area_offset_x;
@@ -326,6 +402,9 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
                     -   game_state->character.height;
     // printf("Draw character at %d,%d\n", char_left, char_top);
     write_sprite_aliased(char_left, char_top, game_state->character.current_sprite, game_state->character.direction == LEFT, width, r_pixels);
+
+    //TODO just for testing
+    // write_image(500, 200, game_state->base_bmp_images[IMAGE_INDEX_WORM], width, r_pixels);
 }
 
 #endif  // _GAME_RENDERER__H

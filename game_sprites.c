@@ -107,7 +107,7 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
     r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + 1;
     r_sprite_array[SPRITE_TYPE_MUSHROOM_STAND_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
 
-    int mushroom_width = 26;
+    int mushroom_width = 28;
     int mushroom_height = 32;
     // The gaps are not uniform, so hardcode starting indices  int mushroom_gap = 4;
     int mushroom_starting_x_values[7] = {34, 68, 98, 130, 162, 196, 226};
@@ -117,11 +117,23 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + mushroom_starting_x_values[walk_index];
         r_sprite_array[SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1 + walk_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
     }
+    // TODO Do we need to do something to better handle the climbing height being higher than the walking height?
+    // Should the height vary across different climbing frames?
+    int mushroom_climbing_height = 36;
     for (int climb_index = 0; climb_index < 12; ++climb_index) {
-        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].height = mushroom_height;
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].height = mushroom_climbing_height;
         r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].width = mushroom_width;
-        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + 98 + (climb_index * (mushroom_width + 4) + (96 * image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width));
+        r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].pixels_start = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].pixels + 98 + (climb_index * (mushroom_width + 2)) + (94 * image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width);
         r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
+    }
+
+    int worm_width = 22;
+    int worm_height = 12;
+    for (int i = 0; i < 6; ++i) {
+        r_sprite_array[SPRITE_TYPE_WORM_CRAWL_1 + i].height = worm_height;
+        r_sprite_array[SPRITE_TYPE_WORM_CRAWL_1 + i].width = worm_width;
+        r_sprite_array[SPRITE_TYPE_WORM_CRAWL_1 + i].pixels_start = image_array[IMAGE_INDEX_WORM].pixels + 2 + (i * (worm_width + 3));
+        r_sprite_array[SPRITE_TYPE_WORM_CRAWL_1 + i].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_WORM].width;
     }
 
     int cat_width = 26;

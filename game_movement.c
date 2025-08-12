@@ -162,8 +162,8 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     // MOVING RIGHT COLLISION CHECK
     if (new_character_x > game_state->character.x_bottom_left) {
         // Need to check block at feet height and block at head height
-        struct Block* new_block_feet = get_world_block_for_location(right_pixel_new, bottom_pixel_old, game_state);
-        struct Block* new_block_head = get_world_block_for_location(right_pixel_new, top_pixel_old, game_state);
+        struct Block* new_block_feet = get_world_block_for_world_pixel_xy(right_pixel_new, bottom_pixel_old, game_state);
+        struct Block* new_block_head = get_world_block_for_world_pixel_xy(right_pixel_new, top_pixel_old, game_state);
         // Need to handle the case where player is falling and new_character_y is currently below the top of the solid block below,
         // but the block above that block is not solid. We don't want to use the solid block below to check for left/right collision
         if (new_block_feet->effects_flags & EFFECT_FLAG_SOLID) {
@@ -189,8 +189,8 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     else if (new_character_x < game_state->character.x_bottom_left) {
         // printf("Moving left, get blocks for pixels %d,%d and %d,%d\n", left_pixel_new, bottom_pixel_old, left_pixel_new, top_pixel_old);
         // Need to check block at feet height and block at head height
-        struct Block* new_block_feet = get_world_block_for_location(left_pixel_new, bottom_pixel_old, game_state);
-        struct Block* new_block_head = get_world_block_for_location(left_pixel_new, top_pixel_old, game_state);
+        struct Block* new_block_feet = get_world_block_for_world_pixel_xy(left_pixel_new, bottom_pixel_old, game_state);
+        struct Block* new_block_head = get_world_block_for_world_pixel_xy(left_pixel_new, top_pixel_old, game_state);
         // printf("Feet and head blocks are %d,%d and %d,%d\n", new_block_feet->world_x, new_block_feet->world_y, new_block_head->world_x, new_block_head->world_y);
         if (new_block_feet->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("feet block is solid\n");
@@ -211,8 +211,8 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     // MOVING DOWN COLLISION CHECK
     if (new_character_y < game_state->character.y_inverted_bottom_left) {
         // printf("do_movement collision check moving-down\n");
-        struct Block* new_block_left = get_world_block_for_location(left_pixel_old, bottom_pixel_new, game_state);
-        struct Block* new_block_right = get_world_block_for_location(right_pixel_old, bottom_pixel_new, game_state);
+        struct Block* new_block_left = get_world_block_for_world_pixel_xy(left_pixel_old, bottom_pixel_new, game_state);
+        struct Block* new_block_right = get_world_block_for_world_pixel_xy(right_pixel_old, bottom_pixel_new, game_state);
         if (new_block_left->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("do_movement collision check moving-down TRUE left block is solid\n");
             struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
@@ -237,8 +237,8 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     // MOVING UP COLLISION CHECK
     else if (new_character_y > game_state->character.y_inverted_bottom_left) {
         // printf("do_movement collision check moving-up\n");
-        struct Block* new_block_left = get_world_block_for_location(left_pixel_old, top_pixel_new, game_state);
-        struct Block* new_block_right = get_world_block_for_location(right_pixel_old, top_pixel_new, game_state);
+        struct Block* new_block_left = get_world_block_for_world_pixel_xy(left_pixel_old, top_pixel_new, game_state);
+        struct Block* new_block_right = get_world_block_for_world_pixel_xy(right_pixel_old, top_pixel_new, game_state);
         if (new_block_left->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("do_movement collision check moving-up TRUE left block is solid\n");
             struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
@@ -317,6 +317,123 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     if (game_state->character.motion == CLIMBING) {
         game_state->character.x_velocity_pixels_per_second = 0;
         game_state->character.y_velocity_pixels_per_second = 0;
+    }
+
+    printf("Movement for entities\n");
+    for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
+        printf("top of entity loop in movement\n");
+        if (!(entity->effects_flags & ENTITY_FLAG_IS_ACTIVE)) {
+            printf("skip inactive entity\n");
+            continue;
+        }
+
+        if (entity->type == ENTITY_TYPE_WORM) {
+            double new_entity_x = entity->x_bottom_left + entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            double new_entity_y = entity->y_inverted_bottom_left + entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            int left = round(new_entity_x);
+            int right = round(new_entity_x + entity->width);
+            int bottom = round(new_entity_y);
+            int top = round(new_character_y) + entity->height;
+
+            // TODO just for testing
+            int curx = round(entity->x_bottom_left);
+            int cury = round(entity->y_inverted_bottom_left);
+            struct Block* curblock = get_world_block_for_world_pixel_xy(curx, cury, game_state);
+            printf("curblock is %d,%d\n", curblock->block_x, curblock->block_y);
+
+            // struct Block* below_left = get_world_block_for_world_pixel_xy(round(), bottom-1, game_state);
+            // struct Block* below_right = get_world_block_for_world_pixel_xy(right, bottom-1, game_state);
+            // bool stopped_bottom = (below_left->effects_flags & EFFECT_FLAG_SOLID) || (below_right->effects_flags & EFFECT_FLAG_SOLID);
+            // printf("stopped_bottom is %d\n");
+
+            bool stopped_bottom = true;
+
+            // Entity moving down
+            if (new_entity_y < entity->y_inverted_bottom_left) {
+                printf("entity trying to move down from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
+                // Handle case where entity is on the ground, which means right at the bottom of the block, so rounding the new y might
+                // make it the same as the currenty y, which would be the bottom of the block the entity is occupying, rather than the
+                // top of the block below
+                if (bottom == entity->y_inverted_bottom_left) {
+                    bottom = bottom - 1;
+                }
+
+                struct Block* new_bottom_left = get_world_block_for_world_pixel_xy(left, bottom, game_state);
+                struct Block* new_bottom_right = get_world_block_for_world_pixel_xy(right, bottom, game_state);
+                printf("for moving down left block %d,%d right block %d,%d\n", new_bottom_left->block_x, new_bottom_left->block_y, new_bottom_right->block_x, new_bottom_right->block_y);
+                if ((new_bottom_left->effects_flags & EFFECT_FLAG_SOLID) || (new_bottom_right->effects_flags & EFFECT_FLAG_SOLID)) {
+                    printf("Entity is blocked below\n");
+                    if (entity->state == ENTITY_STATE_FALLING) {
+                        printf("worm switch from falling to moving\n");
+                        entity->state = ENTITY_STATE_MOVING;
+                        if (entity->direction == LEFT) {
+                            entity->x_velocity_pixels_per_second = -game_state->world_rules.worm_x_speed_pixels_per_second;
+                        }
+                        else {
+                            entity->x_velocity_pixels_per_second = game_state->world_rules.worm_x_speed_pixels_per_second;
+                        }
+                        printf("worm switch to moving now entity x velocity is %f\n", entity->x_velocity_pixels_per_second);
+                    }
+
+                    new_entity_y = new_bottom_left->world_pixel_y + BLOCK_HEIGHT_IN_PIXELS;
+                    entity->y_velocity_pixels_per_second = 0;
+                    if (new_entity_y < entity->y_inverted_bottom_left) {
+                        printf("entity moved down at least a little bit\n");
+                        stopped_bottom = true;
+                    }
+                }
+                else {
+                    printf("Entity is not blocked below\n");
+                    stopped_bottom = false;
+                    entity->x_velocity_pixels_per_second = 0;
+                    entity->state = ENTITY_STATE_FALLING;
+                }
+
+                // Reset bottom after possibly setting it to bottom - 1 earlier
+                bottom = round(new_entity_y);
+            }
+
+            // Moving right
+            if (new_entity_x > entity->x_bottom_left) {
+                printf("entity trying to move right\n");
+                struct Block* block_right = get_world_block_for_world_pixel_xy(right, bottom, game_state);
+                struct Block* block_right_below = get_world_block_for_world_pixel_xy(right, bottom - 1, game_state);
+                printf("right block %d,%d effects=%d right below block %d,%d effects=%d\n", block_right->block_x, block_right->block_y, block_right->effects_flags, block_right_below->block_x, block_right_below->block_y, block_right_below->effects_flags);
+                if ((block_right->effects_flags & EFFECT_FLAG_SOLID) || !(block_right_below->effects_flags & EFFECT_FLAG_SOLID)) {
+                    printf("Can't move farther right, switch to moving left\n");
+                    new_entity_x = block_right->world_pixel_x - entity->width;
+                    entity->direction = LEFT;
+                    entity->x_velocity_pixels_per_second = -game_state->world_rules.worm_x_speed_pixels_per_second;
+                }
+            }
+
+            // Moving left
+            else if (new_entity_x < entity->x_bottom_left) {
+                printf("entity trying to move left\n");
+                struct Block* block_left = get_world_block_for_world_pixel_xy(left, bottom, game_state);
+                struct Block* block_left_below = get_world_block_for_world_pixel_xy(left, bottom - 1, game_state);
+                printf("left block %d,%d effects=%d left below block %d,%d effects=%d\n", block_left->block_x, block_left->block_y, block_left->effects_flags, block_left_below->block_x, block_left_below->block_y, block_left_below->effects_flags);
+                if ((block_left->effects_flags & EFFECT_FLAG_SOLID) || !(block_left_below->effects_flags & EFFECT_FLAG_SOLID)) {
+                    printf("Can't move farther left, switch to moving right\n");
+                    new_entity_x = block_left->world_pixel_x + BLOCK_WIDTH_IN_PIXELS;
+                    entity->direction = RIGHT;
+                    entity->x_velocity_pixels_per_second = game_state->world_rules.worm_x_speed_pixels_per_second;
+                }
+            }
+
+            entity->y_velocity_pixels_per_second -= game_state->world_rules.gravity_pixels_per_second;
+            printf("entity move from %f,%f to %f,%f new velocities %f,%f\n", entity->x_bottom_left, entity->y_inverted_bottom_left, new_entity_x, new_entity_y, entity->x_velocity_pixels_per_second, entity->y_velocity_pixels_per_second);
+
+            entity->x_bottom_left = new_entity_x;
+            entity->y_inverted_bottom_left = new_entity_y;
+
+            // if (stopped_bottom) {
+            //     entity->y_velocity_pixels_per_second = 0;
+            // }
+
+            // Check if on ground
+
+        }
     }
 }
 
@@ -554,7 +671,6 @@ void handle_input(  struct GameState* game_state,
             input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_S];
         }
     } else {
-        printf("no scancode s\n");
         if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_S]) {
             printf("s released, save_on_num to true\n");
             input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_S];
@@ -580,6 +696,7 @@ void handle_input(  struct GameState* game_state,
                 save_level(game_state, 1);
             }
             else {
+                editor_state->click_state = ADD_BLOCK;
                 editor_state->block_type = BLOCK_TYPE_GROUND;
             }
         }
@@ -600,6 +717,7 @@ void handle_input(  struct GameState* game_state,
                 save_level(game_state, 2);
             }
             else {
+                editor_state->click_state = ADD_BLOCK;
                 editor_state->block_type = BLOCK_TYPE_LADDER;
             }
         }
@@ -620,7 +738,8 @@ void handle_input(  struct GameState* game_state,
                 save_level(game_state, 3);
             }
             else {
-                // Switch current editor block to something
+                editor_state->click_state = ADD_ENTITY;
+                editor_state->entity_type = ENTITY_TYPE_WORM;
             }
         }
     } else {
@@ -780,41 +899,9 @@ void handle_input(  struct GameState* game_state,
             int in_game_x = new_mouse_x - view_state->view_area_offset_x + view_state->view_bottom_left_world_x;
             int in_game_y_inverted = view_state->view_height - new_mouse_y + view_state->view_area_offset_y + view_state->view_bottom_left_world_y;
             // printf("mouse left-button click at %d,%d translated to ingame is %d,%d\n", new_mouse_x, new_mouse_y, in_game_x, in_game_y_inverted);
-            struct Block* mouse_block = get_world_block_for_location(in_game_x, in_game_y_inverted, game_state);
-            if (mouse_block != NULL) {
-                // printf("clicked block effects_flag is %d\n", mouse_block->effects_flags);
-                if (mouse_block->effects_flags & EFFECT_FLAG_SOLID || mouse_block->type == BLOCK_TYPE_LADDER) {
-                    printf("remove ground or ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                    mouse_block->type = BLOCK_TYPE_EMPTY;
-                    mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_EMPTY].effects_flags;
-                    mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite_index;
-                } else if (mouse_block->type == BLOCK_TYPE_EMPTY) {
-                    if (editor_state->block_type == BLOCK_TYPE_GROUND) {
-                        printf("add ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                        mouse_block->type = BLOCK_TYPE_GROUND;
-                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_GROUND].effects_flags;
-                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_GROUND].sprite_index;
-                    }
-                    else if (editor_state->block_type == BLOCK_TYPE_LADDER) {
-                        printf("add ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                        mouse_block->type = BLOCK_TYPE_LADDER;
-                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_LADDER].effects_flags;
-                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_LADDER].sprite_index;
-                    }
-                    else if (editor_state->block_type == BLOCK_TYPE_TOILET) {
-                        printf("add toilet at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                        mouse_block->type = BLOCK_TYPE_TOILET;
-                        mouse_block->effects_flags = game_state->base_blocks[BLOCK_TYPE_TOILET].effects_flags;
-                        mouse_block->sprite_index = game_state->base_blocks[BLOCK_TYPE_TOILET].sprite_index;
-                    }
-                }
-                update_ground_images(game_state);
 
-                // autosave level
-                save_level(game_state, 10);
-            } else {
-                // printf("No block at click\n");
-            }
+            mouse_click(in_game_x, in_game_y_inverted, editor_state, game_state);
+
         }
         input_state->mouse_button_state = new_mouse_button_state;
     }

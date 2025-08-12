@@ -123,4 +123,30 @@ static inline int chars_to_int(char* chars) {
     return total * flip;
 }
 
+// Assumes chars is null-terminated
+static inline int chars_to_uint32(char* chars) {
+    uint32_t total = 0;
+
+    for (int i = 0; ; ++i) {
+        if (chars[i] == 0) {
+            break;
+        }
+        total = total * 10 + chars[i] - '0';
+    }
+    return total;
+}
+
+// Assumes chars is null-terminated
+static inline int chars_to_uint64(char* chars) {
+    uint64_t total = 0;
+
+    for (int i = 0; ; ++i) {
+        if (chars[i] == 0) {
+            break;
+        }
+        total = total * 10 + chars[i] - '0';
+    }
+    return total;
+}
+
 #endif // _UTILS__H

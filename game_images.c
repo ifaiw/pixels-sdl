@@ -24,7 +24,7 @@ static inline void flip_right_left(uint32_t* pixels, int width, int height) {
 }
 
 // PRIVATE
-static inline void scale_image_up(struct ImageInfo* current_image, uint8_t factor_increase, struct ImageInfo* r_scaled_image) {
+static inline void scale_image_up_integer_factor(struct ImageInfo* current_image, uint8_t factor_increase, struct ImageInfo* r_scaled_image) {
     r_scaled_image->height = current_image->height * factor_increase;
     r_scaled_image->width = current_image->width * factor_increase;
     r_scaled_image->pixels = (uint32_t*)malloc(r_scaled_image->height * r_scaled_image->width * 4);
@@ -44,6 +44,19 @@ static inline void scale_image_up(struct ImageInfo* current_image, uint8_t facto
                     r_scaled_image->width * 4);
         }
         scaled_y += factor_increase;
+    }
+}
+
+// PRIVATE
+static inline void scale_image_up(struct ImageInfo* current_image, double factor_increase, struct ImageInfo* r_scaled_image) {
+    r_scaled_image->height = (int)round(current_image->height * factor_increase);
+    r_scaled_image->width = (int)round(current_image->width * factor_increase);
+    r_scaled_image->pixels = (uint32_t*)malloc(r_scaled_image->height * r_scaled_image->width * 4);
+
+    for (uint32_t y = 0; y < r_scaled_image->height; ++y) {
+        for (uint32_t x = 0; x < r_scaled_image->width; ++x) {
+            r_scaled_image->pixels[y * r_scaled_image->width + x] = current_image->pixels[((int)round(y / factor_increase)) * current_image->width + (int)round(x / factor_increase)];
+        }
     }
 }
 
@@ -101,7 +114,7 @@ int load_images(struct ImageInfo* r_image_array) {
     }
     flip_upside_down(orcs_image_unscaled.pixels, orcs_image_unscaled.width, orcs_image_unscaled.height);
     // TODO not needed? flip_right_left(orcs_image_unscaled.pixels, orcs_image_unscaled.width, orcs_image_unscaled.height);
-    scale_image_up(&orcs_image_unscaled, 2, r_image_array + IMAGE_INDEX_ORC_1_RIGHT);
+    scale_image_up_integer_factor(&orcs_image_unscaled, 2, r_image_array + IMAGE_INDEX_ORC_1_RIGHT);
     free(orcs_image_unscaled.pixels);
 
     struct ImageInfo mushrooms_image_unscaled;
@@ -111,7 +124,7 @@ int load_images(struct ImageInfo* r_image_array) {
         return load_image_result;
     }
     flip_upside_down(mushrooms_image_unscaled.pixels, mushrooms_image_unscaled.width, mushrooms_image_unscaled.height);
-    scale_image_up(&mushrooms_image_unscaled, 2, r_image_array + IMAGE_INDEX_MUSHROOM_RIGHT);
+    scale_image_up_integer_factor(&mushrooms_image_unscaled, 2, r_image_array + IMAGE_INDEX_MUSHROOM_RIGHT);
     free(mushrooms_image_unscaled.pixels);
 
     load_image_result = load_bmp_image(GAME_PATH__IMAGE_PATH_CAT_RIGHT_FULL, r_image_array + IMAGE_INDEX_CAT_RIGHT);
@@ -127,6 +140,16 @@ int load_images(struct ImageInfo* r_image_array) {
         return load_image_result;
     }
     flip_upside_down(r_image_array[IMAGE_INDEX_TOILET].pixels, r_image_array[IMAGE_INDEX_TOILET].width, r_image_array[IMAGE_INDEX_TOILET].height);
+
+    struct ImageInfo worm_image_unscaled;
+    load_image_result = load_bmp_image(GAME_PATH__IMAGE_PATH_WORM_FULL, &worm_image_unscaled);
+    if (load_image_result != 0) {
+        printf("Error loading GAME_PATH__IMAGE_PATH_WORM_FULL: %d\n", load_image_result);
+        return load_image_result;
+    }
+    flip_upside_down(worm_image_unscaled.pixels, worm_image_unscaled.width, worm_image_unscaled.height);
+    scale_image_up(&worm_image_unscaled, 1.6, r_image_array + IMAGE_INDEX_WORM);
+    free(worm_image_unscaled.pixels);
 
     return 0;
 }

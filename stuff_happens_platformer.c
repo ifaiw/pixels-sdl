@@ -18,7 +18,7 @@
 
 #define INITIAL_FRAMES_TO_WAIT 180
 
-static long micros_per_frame;
+static uint64_t micros_per_frame;
 
 // block grid 25 x 18 is 1200 x 864
 
@@ -27,18 +27,18 @@ static bool still_running;
 // TODO just for testing
 int last_walking_frame;
 
-struct GameState game_state;
-struct ViewState view_state;
-struct InputState input_state;
-struct EditorState editor_state;
+static struct GameState game_state;
+static struct ViewState view_state;
+static struct InputState input_state;
+static struct EditorState editor_state;
 
-struct CharacterSprite character_sprite;
+static struct CharacterSprite character_sprite;
 
 
 // PRIVATE
-void initialize_world_rules(double frames_per_second, struct WorldRules* world_rules) {
+void initialize_world_rules(uint64_t frames_per_second, struct WorldRules* world_rules) {
     world_rules->frames_per_second = frames_per_second;
-    world_rules->microseconds_per_frame = (double)1000000/frames_per_second;
+    world_rules->microseconds_per_frame = 1000000/frames_per_second;
 
     load_world_rules_from_file(world_rules);
 
@@ -80,10 +80,6 @@ void initialize_game_state() {
     initialize_blocks(game_state.base_sprites, game_state.base_blocks);
     fflush(stdout);
 
-    // Level slot 10 is autosave
-    load_level(&game_state, 10);
-    update_ground_images(&game_state);
-
     #ifdef CAT_CHARACTER // TODO no longer works now that I added climbing?
     game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_CAT_STAND_RIGHT;
     game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_CAT_WALK_RIGHT_1;
@@ -106,6 +102,12 @@ void initialize_game_state() {
     game_state.character.motion = STOPPED;
     game_state.character.direction = LEFT;
 
+    game_state.num_current_entites = 0;
+
+    // Level slot 10 is autosave
+    load_level(&game_state, 10);
+    update_ground_images(&game_state);
+
     // printf("Initial character position is %f,%f\n", game_state.character.x_bottom_left, game_state.character.y_inverted_bottom_left);
 
     game_state.current_frame = -1;
@@ -115,13 +117,20 @@ void initialize_game_state() {
     // }
 }
 
+void initialize_editor() {
+    editor_state.block_type = BLOCK_TYPE_LADDER;
+    editor_state.click_state = ADD_BLOCK;
+}
+
 // IMPLEMENTS
-int initialize(int width, int height, long micros_per_frame_param) {
+int initialize(int width, int height, uint64_t micros_per_frame_param) {
     // printf("top of initialize\n");
     still_running = true;
     srand(time(NULL));
     micros_per_frame = micros_per_frame_param;
-    double frames_per_second = (double)1000000/(double)micros_per_frame;
+    uint64_t frames_per_second = 1000000/micros_per_frame;
+
+    printf("in initialize, micros_per_frame=%llu frames_per_second=%llu\n", micros_per_frame, frames_per_second);
 
     initialize_world_rules(frames_per_second, &game_state.world_rules);
 
@@ -154,14 +163,14 @@ int initialize(int width, int height, long micros_per_frame_param) {
         game_state.blank_pixels[i] = ALPHA;
     }
 
-    editor_state.block_type = BLOCK_TYPE_LADDER;
+    initialize_editor();
 
     // printf("bottom of initialize\n");
     return 0;
 }
 
 // IMPLEMENTS
-void process_frame_and_blit(long frame_count, long current_time_in_micros, uint32_t *pixels, int width, int height) {
+void process_frame_and_blit(uint64_t frame_count, uint64_t current_time_in_micros, uint32_t *pixels, int width, int height) {
     game_state.current_frame = frame_count;
     game_state.current_time_in_micros = current_time_in_micros;
 
