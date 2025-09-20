@@ -2,6 +2,102 @@
 
 #include "game_blocks.h"
 #include "game_images.h"
+#include "graphics_constants.h"
+
+// TODO maybe make version of this method that just takes one y value, uses it as near the y-middle of the sprites,
+// then searches up and down to find top and bottom horizontal lines that are blank to use as start y and max y
+// IMPLEMENTS
+int initialize_sprites_automatic(struct ImageInfo* image, int pixel_start_x, int pixel_start_y, int max_pixel_x, int max_pixel_y, uint16_t num_sprites_to_initialize, uint16_t first_sprite_index, struct Sprite* r_sprite_array) {
+    int pixel_starts[num_sprites_to_initialize];
+    int x_start[num_sprites_to_initialize];
+    int y_start[num_sprites_to_initialize];
+    int x_end[num_sprites_to_initialize];
+    int y_end[num_sprites_to_initialize];
+
+    for (int y_index = pixel_start_y; y_index <= max_pixel_y; ++y_index) {
+        if ((image->pixels[pixel_start_x + y_index * image->width] & ALPHA) > 0) {
+            printf("First column of pixels in initialize_sprites_automatic is not empty!\n");
+            return -1;
+        }
+    }
+
+    int sprite_index = 0;
+    int x_index = pixel_start_x + 1;
+    while (x_index <= max_pixel_x && sprite_index < num_sprites_to_initialize) {
+
+        // Find the left-most/first column of the next sprite
+        while (x_index <= max_pixel_x) {
+            bool found_pixel = false;
+            for (int y_index = pixel_start_y; y_index <= max_pixel_y; ++y_index) {
+                if ((image->pixels[x_index + y_index * image->width] & ALPHA) > 0) {
+                    y_start[sprite_index] = y_index;
+                    found_pixel = true;
+                    break;
+                }
+            }
+
+            x_index += 1;
+            if (found_pixel) {
+                x_start[sprite_index] = x_index - 1;
+                break;
+            }
+        }
+
+        // Find the right-most/last column of the current sprite
+        while (x_index <= max_pixel_x) {
+            bool found_pixel = false;
+            for (int y_index = pixel_start_y; y_index <= max_pixel_y; ++y_index) {
+                if ((image->pixels[x_index + y_index * image->width] & ALPHA) > 0) {
+                    found_pixel = true;
+                    if (y_index < y_start[sprite_index]) {
+                        y_start[sprite_index] = y_index;
+                    }
+                    break;
+                }
+            }
+
+            x_index += 1;
+            if (!found_pixel) {
+                x_end[sprite_index] = x_index - 1;
+                break;
+            }
+        }
+
+        sprite_index += 1;
+    }
+
+    if (x_index > max_pixel_x) {
+        printf("Did not find all expected sprites in initialize_sprites_automatic!\n");
+            return -2;
+    }
+
+    // Found the top y for all sprites above but still need to bottom y
+    sprite_index = 0;
+    for (int x_index = x_start[0]; x_index <= x_end[num_sprites_to_initialize - 1]; ++x_index) {
+        y_end[sprite_index] = y_start[sprite_index];
+        if (x_index > x_end[sprite_index]) {
+            sprite_index += 1;
+            x_index = x_start[sprite_index];
+            y_end[sprite_index] = y_start[sprite_index];
+        }
+
+        for (int y_index = max_pixel_y; y_index > y_end[sprite_index]; --y_index) {
+            if (((image->pixels[x_index + (y_index - 1) * image->width] & ALPHA) > 0) && (y_index - 1) > y_end[sprite_index]) {
+                y_end[sprite_index] = y_index - 1;
+            }
+        }
+    }
+
+    for (sprite_index = 0; sprite_index < num_sprites_to_initialize; ++sprite_index) {
+        (r_sprite_array + sprite_index)->sprite_index = first_sprite_index + sprite_index;
+        (r_sprite_array + sprite_index)->image_source_pitch_in_pixels = image->width;
+        (r_sprite_array + sprite_index)->pixels_start = x_start[sprite_index] + y_start[sprite_index] * image->width;
+        (r_sprite_array + sprite_index)->height = y_end[sprite_index] - y_start[sprite_index] + 1;
+        (r_sprite_array + sprite_index)->width = x_end[sprite_index] - x_start[sprite_index] + 1;
+    }
+
+    return 0;
+}
 
 // IMPLEMENTS
 void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_array) {
@@ -127,14 +223,17 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
         r_sprite_array[SPRITE_TYPE_MUSHROOM_CLIMB_1 + climb_index].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_MUSHROOM_RIGHT].width;
     }
 
-    int worm_width = 22;
-    int worm_height = 12;
-    for (int i = 0; i < 6; ++i) {
-        r_sprite_array[SPRITE_TYPE_WORM_CRAWL_1 + i].height = worm_height;
-        r_sprite_array[SPRITE_TYPE_WORM_CRAWL_1 + i].width = worm_width;
-        r_sprite_array[SPRITE_TYPE_WORM_CRAWL_1 + i].pixels_start = image_array[IMAGE_INDEX_WORM].pixels + 2 + (i * (worm_width + 3));
-        r_sprite_array[SPRITE_TYPE_WORM_CRAWL_1 + i].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_WORM].width;
-    }
+    initialize_sprites_automatic(image_array + IMAGE_INDEX_WORM, 53, 3, )
+
+    r_sprite_array[SPRITE_TYPE_WORM_PULL_FORWARD_1].height = 10;
+    r_sprite_array[SPRITE_TYPE_WORM_PULL_FORWARD_1].width = 22;
+    r_sprite_array[SPRITE_TYPE_WORM_PULL_FORWARD_1].pixels_start = image_array[IMAGE_INDEX_WORM].pixels + 53 + (3 * image_array[IMAGE_INDEX_WORM].width);
+    r_sprite_array[SPRITE_TYPE_WORM_PULL_FORWARD_1].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_WORM].width;
+
+    r_sprite_array[SPRITE_TYPE_WORM_PULL_FORWARD_1].height = 10;
+    r_sprite_array[SPRITE_TYPE_WORM_PULL_FORWARD_1].width = 22;
+    r_sprite_array[SPRITE_TYPE_WORM_PULL_FORWARD_1].pixels_start = image_array[IMAGE_INDEX_WORM].pixels + 53 + (3 * image_array[IMAGE_INDEX_WORM].width);
+    r_sprite_array[SPRITE_TYPE_WORM_PULL_FORWARD_1].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_WORM].width;
 
     int cat_width = 26;
     int cat_gap = 6;
