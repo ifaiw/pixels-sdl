@@ -81,7 +81,7 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
     }
     else {
         printf("add worm entity at %d,%d\n", in_game_x, in_game_y_inverted);
-        struct Sprite* entity_sprite = &r_game_state->base_sprites[SPRITE_TYPE_WORM_CRAWL_1];
+        struct Sprite* entity_sprite = &r_game_state->base_sprites[SPRITE_TYPE_WORM_PUSH_FORWARD_1];
 
         int left = in_game_x - entity_sprite->width / 2 - 1;
         int right = in_game_x + entity_sprite->width/ 2 + 1;
@@ -131,7 +131,7 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
         new_entity->y_velocity_pixels_per_second = -r_game_state->world_rules.gravity_pixels_per_second;
 
         new_entity->direction = RIGHT;
-        new_entity->current_sprite = r_game_state->base_sprites[SPRITE_TYPE_WORM_CRAWL_1];
+        new_entity->current_sprite = r_game_state->base_sprites[SPRITE_TYPE_WORM_PUSH_FORWARD_1];
         new_entity->height = entity_sprite->height;
         new_entity->width = entity_sprite->width;
         new_entity->x_bottom_left = in_game_x - new_entity->width / 2;

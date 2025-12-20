@@ -319,6 +319,8 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
         game_state->character.y_velocity_pixels_per_second = 0;
     }
 
+    // TODO Move this to rules, or somewhere else that makes more sense
+
     printf("Movement for entities\n");
     for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
         printf("top of entity loop in movement\n");
@@ -366,6 +368,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
                     if (entity->state == ENTITY_STATE_FALLING) {
                         printf("worm switch from falling to moving\n");
                         entity->state = ENTITY_STATE_MOVING;
+
                         if (entity->direction == LEFT) {
                             entity->x_velocity_pixels_per_second = -game_state->world_rules.worm_x_speed_pixels_per_second;
                         }

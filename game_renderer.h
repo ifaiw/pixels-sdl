@@ -70,7 +70,8 @@ static inline void update_sprites(struct GameState* game_state_param, struct Inp
 }
 
 static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct ViewState* view_state, int width, int height) {
-    // printf("top of stuff_happens_platformer.blit\n");
+    printf("top of stuff_happens_platformer.blit\n");
+    // printf("10 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
 
     // Clear pixel array to black
     memcpy(r_pixels, game_state->blank_pixels, width * height * 4);
@@ -80,20 +81,6 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
     view_state->view_bottom_left_world_y = game_state->character.y_inverted_bottom_left + (game_state->character.height / 2) - (view_state->view_height / 2);
     int view_top_right_world_x = view_state->view_bottom_left_world_x + view_state->view_width;
     int view_top_right_world_y = view_state->view_bottom_left_world_y + view_state->view_height;
-
-
-
-    // TODO can delete
-    // for (uint16_t i = 0; i < game_state->num_current_entites; ++i) {
-    //     if (!(game_state->entities[i].effects_flags & ENTITY_FLAG_IS_ACTIVE) || game_state->entities[i].z_index != z_index) {
-    //         continue;
-    //     }
-    //     if (    game_state->entities[i].x_bottom_left + game_state->entities[i].width < view_state->view_bottom_left_world_x
-    //         ||  game_state->entities[i].x_bottom_left > view_state->view_bottom_left_world_x + view_state->view_width
-    //         ||  game_state->entities[i].y_inverted_bottom_left + game_state->entities[i].)
-    // }
-
-
 
     int left_block_x;
     if (view_state->view_bottom_left_world_x < 0) {
@@ -155,7 +142,7 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
             // printf("Using block pixel x and y, top-left on screen should be %d,%d\n", top_left_test_x, top_left_test_y);
             // TODO just for testing
             int sprite_index = game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + block_x_index].sprite_index;
-            // printf("write block %d,%d [sprite_index=%d] at pixel top-left %d,%d\n", block_x_index, block_y_index, sprite_index, top_left_x, top_left_y);
+            printf("write block %d,%d [sprite_index=%d] at pixel top-left %d,%d\n", block_x_index, block_y_index, sprite_index, top_left_x, top_left_y);
             // fflush(stdout);
             write_sprite_aliased(   top_left_x,
                                     top_left_y,
@@ -369,9 +356,13 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
             printf("Skip entity not FULLY in view\n");
             continue;
         }
+        printf("entity loop calculate micros_since_animation_start\n");
 
         uint64_t micros_since_animation_start = game_state->current_time_in_micros - entity->animation_time_start_in_micros;
         uint16_t frame_num_worm = (uint16_t)(micros_since_animation_start / game_state->world_rules.worm_micros_per_walking_animation_frame) % SPRITE_NUMBER_OF_FRAMES_WORM_WALK;
+        struct Sprite current_sprite = game_state->base_sprites[entity->current_sprite.sprite_index + frame_num_worm];
+        entity->width = current_sprite.width;
+        entity->height = current_sprite.height;
         bool flip_entity_horizontal = false;
         switch (entity->type) {
             // entity->direction != RIGHT
@@ -380,13 +371,15 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
                 break;
         }
 
+        printf("Render entity sprite index is %d width %d height %d\n", entity->current_sprite.sprite_index + frame_num_worm, game_state->base_sprites[entity->current_sprite.sprite_index + frame_num_worm].width, game_state->base_sprites[entity->current_sprite.sprite_index + frame_num_worm].height);
+
         write_sprite_aliased(   round(entity->x_bottom_left) - view_state->view_bottom_left_world_x + view_state->view_area_offset_x,
                                 view_state->view_bottom_left_world_y
                                 +   view_state->view_height
                                 -   entity->y_inverted_bottom_left
                                 +   view_state->view_area_offset_y
                                 -   entity->height,
-                                game_state->base_sprites[entity->current_sprite.sprite_index + frame_num_worm],
+                                current_sprite,
                                 flip_entity_horizontal,
                                 width,
                                 r_pixels);

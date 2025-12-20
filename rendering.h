@@ -57,6 +57,8 @@ static inline void write_sprite_aliased(int top_left_x, int top_left_y, struct S
         exit(0);
     }
 
+    printf("write_sprite_aliased sprite.pixels_start is %p\n", sprite.pixels_start);
+
     if (flip_left_to_right) {
         for (int y = 0; y < sprite.height; ++y) {
             uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);
@@ -95,6 +97,7 @@ static inline void write_sprite_aliased_subsection(int screen_top_left_x, int sc
     // I think the latter?
     // Lets say we wanted to draw the character (original image faces right) moving off the left edge of the screen? We'd just want to draw
     // the right side of the flipped image on the right side of the area. So, the second of the two options described above.
+
     if (flip_left_to_right) {
         for (int y = start_sprite_y; y <= end_sprite_y; ++y) {
             uint32_t* sprite_row_start = sprite.pixels_start + start_sprite_x + (y * sprite.image_source_pitch_in_pixels);

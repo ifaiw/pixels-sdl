@@ -75,10 +75,41 @@ void initialize_game_state() {
     }
     fflush(stdout);
     // printf("initialize_game_state: initialize_sprites\n");
+    printf("base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
+    bool non_alpha_found = false;
+    for (int i = 0; i < BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS; ++i) {
+        if (game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels[i] != ALPHA) {
+            non_alpha_found = true;
+            break;
+        }
+    }
+    printf("non_alpha_found is %d\n", non_alpha_found);
     initialize_sprites(game_state.base_bmp_images, game_state.base_sprites);
+    printf("base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", game_state.base_sprites[SPRITE_TYPE_EMPTY].pixels_start);
+
+    printf("2 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
+    non_alpha_found = false;
+    for (int i = 0; i < BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS; ++i) {
+        if (game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels[i] != ALPHA) {
+            non_alpha_found = true;
+            break;
+        }
+    }
+    printf("2 non_alpha_found is %d\n", non_alpha_found);
+
     // printf("initialize_game_state: initialize_blocks\n");
     initialize_blocks(game_state.base_sprites, game_state.base_blocks);
     fflush(stdout);
+
+    printf("3 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
+    non_alpha_found = false;
+    for (int i = 0; i < BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS; ++i) {
+        if (game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels[i] != ALPHA) {
+            non_alpha_found = true;
+            break;
+        }
+    }
+    printf("3 non_alpha_found is %d\n", non_alpha_found);
 
     #ifdef CAT_CHARACTER // TODO no longer works now that I added climbing?
     game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_CAT_STAND_RIGHT;
@@ -106,7 +137,21 @@ void initialize_game_state() {
 
     // Level slot 10 is autosave
     load_level(&game_state, 10);
+    printf("4 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
+    non_alpha_found = false;
+    for (int i = 0; i < BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS; ++i) {
+        if (game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels[i] != ALPHA) {
+            non_alpha_found = true;
+            break;
+        }
+    }
+    printf("4 non_alpha_found is %d\n", non_alpha_found);
+    printf("2 base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", game_state.base_sprites[SPRITE_TYPE_EMPTY].pixels_start);
     update_ground_images(&game_state);
+
+    printf("3 base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", game_state.base_sprites[SPRITE_TYPE_EMPTY].pixels_start);
+
+    printf("5 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
 
     // printf("Initial character position is %f,%f\n", game_state.character.x_bottom_left, game_state.character.y_inverted_bottom_left);
 
@@ -150,7 +195,7 @@ int initialize(int width, int height, uint64_t micros_per_frame_param) {
     // printf("About to initialize_game_state\n");
     fflush(stdout);
     initialize_game_state();
-    // printf("Done initialize_game_state\n");
+    printf("Done initialize_game_state\n");
 
     initialize_input_state();
 
@@ -165,12 +210,23 @@ int initialize(int width, int height, uint64_t micros_per_frame_param) {
 
     initialize_editor();
 
+    printf("6 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
+    bool non_alpha_found = false;
+    for (int i = 0; i < BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS; ++i) {
+        if (game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels[i] != ALPHA) {
+            non_alpha_found = true;
+            break;
+        }
+    }
+    printf("6 non_alpha_found is %d\n", non_alpha_found);
+
     // printf("bottom of initialize\n");
     return 0;
 }
 
 // IMPLEMENTS
 void process_frame_and_blit(uint64_t frame_count, uint64_t current_time_in_micros, uint32_t *pixels, int width, int height) {
+    printf("4 base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", game_state.base_sprites[SPRITE_TYPE_EMPTY].pixels_start);
     game_state.current_frame = frame_count;
     game_state.current_time_in_micros = current_time_in_micros;
 
@@ -179,9 +235,33 @@ void process_frame_and_blit(uint64_t frame_count, uint64_t current_time_in_micro
     handle_input(&game_state, &view_state, &input_state, &editor_state, game_state.world_rules.microseconds_per_frame);
     // printf("character.x_velocity_pixels_per_second is now %f\n", game_state.character.x_velocity_pixels_per_second);
 
+    printf("7 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
+    bool non_alpha_found = false;
+    for (int i = 0; i < BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS; ++i) {
+        if (game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels[i] != ALPHA) {
+            non_alpha_found = true;
+            break;
+        }
+    }
+    printf("7 non_alpha_found is %d\n", non_alpha_found);
+
     do_movement(&game_state, game_state.world_rules.microseconds_per_frame);
 
+    printf("5 base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", game_state.base_sprites[SPRITE_TYPE_EMPTY].pixels_start);
+
+    printf("8 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
+
     update_sprites(&game_state, &input_state);
+
+    printf("9 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
+    non_alpha_found = false;
+    for (int i = 0; i < BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS; ++i) {
+        if (game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels[i] != ALPHA) {
+            non_alpha_found = true;
+            break;
+        }
+    }
+    printf("9 non_alpha_found is %d\n", non_alpha_found);
 
     // printf("character.x is now %f\n", game_state.character.x_bottom_left);
 

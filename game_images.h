@@ -16,6 +16,12 @@
 #define IMAGE_INDEX_TOILET 6
 #define IMAGE_INDEX_WORM 7
 
+#define SCALE_FACTOR_WORM 1.6
+#define DYNAMIC_UNSCALED_START_X_WORM 0
+#define DYNAMIC_UNSCALED_START_Y_WORM 0
+#define DYNAMIC_UNSCALED_END_X_WORM 95
+#define DYNAMIC_UNSCALED_END_Y_WORM 8
+
 // Non-zero results indicates error
 int load_images(struct ImageInfo* r_image_array);
 

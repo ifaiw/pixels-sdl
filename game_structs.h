@@ -176,6 +176,7 @@ struct Entity {
     bool is_on_ground;
     uint16_t effects_flags;
     uint64_t animation_time_start_in_micros;
+    uint64_t motion_time_start_in_micros;
 };
 
 enum EditorClickState {

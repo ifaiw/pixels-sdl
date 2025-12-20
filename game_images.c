@@ -148,7 +148,7 @@ int load_images(struct ImageInfo* r_image_array) {
         return load_image_result;
     }
     flip_upside_down(worm_image_unscaled.pixels, worm_image_unscaled.width, worm_image_unscaled.height);
-    scale_image_up(&worm_image_unscaled, 1.6, r_image_array + IMAGE_INDEX_WORM);
+    scale_image_up(&worm_image_unscaled, SCALE_FACTOR_WORM, r_image_array + IMAGE_INDEX_WORM);
     free(worm_image_unscaled.pixels);
 
     return 0;
