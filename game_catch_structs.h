@@ -4,13 +4,9 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
-#define MICROSECONDS_PER_SECOND 1000000
+#include "image_structs.h"
 
-struct ImageInfo {
-    int width;
-    int height;
-    uint32_t* pixels;
-};
+#define MICROSECONDS_PER_SECOND 1000000
 
 struct InputState {
     long left_button_press_frame;
@@ -24,14 +20,6 @@ struct InputState {
     int mouse_y;
     double start_climb_pixel_x;
     double start_climb_pixel_y;
-};
-
-struct Sprite {
-    uint32_t* pixels_start;
-    uint32_t height, width;
-    uint32_t image_source_pitch_in_pixels;
-    // TODO only used for testing?
-    int sprite_index;
 };
 
 struct Block {

@@ -9,6 +9,7 @@
 #include "game_catch_sprites.h"
 #include "game_catch_structs.h"
 #include "graphics_constants.h"
+#include "image_structs.h"
 
 // inline void copy_pixels(uint32_t* source_pixels, int source_pixels_width, uint32_t* r_dest_pixels, int dest_pixels_width, int source_top_left_x, int source_top_left_y, int source_bottom_right_x, int source_bottom_right_y, ) {
 //     printf("write_image called\n");
@@ -57,7 +58,7 @@ static inline void write_sprite_aliased(int top_left_x, int top_left_y, struct S
         exit(0);
     }
 
-    printf("write_sprite_aliased sprite.pixels_start is %p\n", sprite.pixels_start);
+    // printf("write_sprite_aliased sprite.pixels_start is %p\n", sprite.pixels_start);
 
     if (flip_left_to_right) {
         for (int y = 0; y < sprite.height; ++y) {

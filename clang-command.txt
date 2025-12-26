@@ -39,3 +39,5 @@ clang -o platformer.exe game_blocks.c game_editor.c game_images.c game_movement.
 
 clang -o platformer.exe game_blocks.c game_editor.c game_images.c game_movement.c game_sprites.c game_state.c image_bmp_loader.c main.c stuff_happens_platformer.c file_stuff.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks
 
+# rowan catch
+clang -o rowan-catch.exe game_catch_blocks.c game_catch_editor.c game_catch_images.c game_catch_movement.c game_catch_sprites.c game_catch_state.c image_bmp_loader.c main_catch.c stuff_happens_catch.c file_stuff.c -F/Library/Frameworks -framework SDL2 -I/Library/Frameworks/SDL2.framework/Versions/A -Wl,-rpath /Library/Frameworks

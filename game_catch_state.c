@@ -27,6 +27,11 @@ int16_t get_next_free_entity_index(struct GameState* game_state) {
 }
 
 // IMPLEMENTS
+void initialize_all_world_blocks_to_empty(struct GameState* game_state) {
+
+}
+
+// IMPLEMENTS
 void load_world_rules_from_file(struct WorldRules* r_world_rules) {
     struct FileBytes world_rules_file_bytes;
     int file_load_result = read_file(GAME_PATH__TEXT_PATH_WORLD_RULES_FULL, &world_rules_file_bytes);
@@ -111,20 +116,23 @@ struct XY get_bottom_left_world_pixel_for_block(struct Block* block) {
 
 // IMPLEMENTS
 bool is_on_ground(struct GameState* game_state) {
-    // printf("game_state.is_on_ground x_bottom_left=%f y_inverted_bottom_left=%f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left);
-    int bottom_left_x_floor = floor(game_state->character.x_bottom_left);
-    int bottom_left_y_floor = floor(game_state->character.y_inverted_bottom_left);
-    int right_pixel = bottom_left_x_floor + game_state->character.width;
-    int just_below_pixel = bottom_left_y_floor - 1;
+    printf("For now in catch game is_on_ground always returns true\n");
+    return true;
 
-    // printf("y_inverted_bottom_left=%f bottom_left_y_floor=%d just_below_pixel=%d\n", game_state->character.y_inverted_bottom_left, bottom_left_y_floor, just_below_pixel);
+    // // printf("game_state.is_on_ground x_bottom_left=%f y_inverted_bottom_left=%f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left);
+    // int bottom_left_x_floor = floor(game_state->character.x_bottom_left);
+    // int bottom_left_y_floor = floor(game_state->character.y_inverted_bottom_left);
+    // int right_pixel = bottom_left_x_floor + game_state->character.width;
+    // int just_below_pixel = bottom_left_y_floor - 1;
 
-    struct Block* bottom_left = get_world_block_for_world_pixel_xy(bottom_left_x_floor, just_below_pixel, game_state);
-    if (bottom_left->effects_flags & EFFECT_FLAG_SOLID) {
-        return true;
-    }
-    struct Block* bottom_right = get_world_block_for_world_pixel_xy(right_pixel, just_below_pixel, game_state);
-    return bottom_right->effects_flags & EFFECT_FLAG_SOLID;
+    // // printf("y_inverted_bottom_left=%f bottom_left_y_floor=%d just_below_pixel=%d\n", game_state->character.y_inverted_bottom_left, bottom_left_y_floor, just_below_pixel);
+
+    // struct Block* bottom_left = get_world_block_for_world_pixel_xy(bottom_left_x_floor, just_below_pixel, game_state);
+    // if (bottom_left->effects_flags & EFFECT_FLAG_SOLID) {
+    //     return true;
+    // }
+    // struct Block* bottom_right = get_world_block_for_world_pixel_xy(right_pixel, just_below_pixel, game_state);
+    // return bottom_right->effects_flags & EFFECT_FLAG_SOLID;
 }
 
 // IMPLEMENTS

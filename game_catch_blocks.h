@@ -1,7 +1,7 @@
 #ifndef _GAME_BLOCKS__H
 #define _GAME_BLOCKS__H
 
-#include "game_structs.h"
+#include "game_catch_structs.h"
 #include "image_structs.h"
 
 #define NUM_BLOCK_TYPES 4

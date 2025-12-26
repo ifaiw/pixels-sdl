@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "game_blocks.h"
+#include "game_catch_blocks.h"
 #include "game_catch_paths.h"
 #include "game_catch_sprites.h"
 #include "graphics_constants.h"
@@ -156,6 +156,7 @@ int load_images(struct ImageInfo* r_image_array) {
         printf("Error loading GAME_PATH_CATCH__IMAGE_PATH_ROWAN_CATCH_CUTOUT_SCALED_FULL: %d\n", load_image_result);
         return load_image_result;
     }
+    flip_upside_down(r_image_array[IMAGE_INDEX_ROWAN_CATCH].pixels, r_image_array[IMAGE_INDEX_ROWAN_CATCH].width, r_image_array[IMAGE_INDEX_ROWAN_CATCH].height);
 
     return 0;
 }

@@ -2,7 +2,7 @@
 #define _GAME_IMAGES__H
 
 
-#include "game_structs.h"
+#include "image_structs.h"
 
 #define NUM_BMP_IMAGES 9
 // "image" 0 is black pixels for empty space

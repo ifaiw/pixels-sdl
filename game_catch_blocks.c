@@ -1,4 +1,4 @@
-#include "game_blocks.h"
+#include "game_catch_blocks.h"
 
 #include "game_catch_sprites.h"
 

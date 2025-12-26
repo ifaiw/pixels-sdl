@@ -1,12 +1,12 @@
-#include "game_movement.h"
+#include "game_catch_movement.h"
 
 #include <inttypes.h>
 #include <stdbool.h>
 
 #include <SDL2/SDL.h>
 
-#include "game_editor.h"
-#include "game_paths.h"
+#include "game_catch_editor.h"
+#include "game_catch_paths.h"
 
 
 // SDL_SCANCODE_A = 4
@@ -128,15 +128,16 @@ struct Block* get_vertical_middle_block(struct GameState* game_state) {
 
 // IMPLEMENTS
 void do_movement(struct GameState* game_state, double microseconds_to_advance) {
-    // printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
+    printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
     double new_character_x = game_state->character.x_bottom_left + game_state->character.x_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
     double new_character_y = game_state->character.y_inverted_bottom_left + game_state->character.y_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
 
-    // printf("movement: old_x %f old_y %f new_x %f new_y %f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, new_character_x, new_character_y);
+    printf("movement: old_x %f old_y %f new_x %f new_y %f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, new_character_x, new_character_y);
     // TODO just for testing
     if (new_character_y < game_state->character.y_inverted_bottom_left) {
         // printf("At top of do_movement moving-down\n");
     }
+    printf("do_movement character width=%f height=%f\n", game_state->character.width, game_state->character.height);
 
     int old_character_x_floor = floor(game_state->character.x_bottom_left);
     int old_character_y_floor = floor(game_state->character.y_inverted_bottom_left);
@@ -161,6 +162,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
 
     // MOVING RIGHT COLLISION CHECK
     if (new_character_x > game_state->character.x_bottom_left) {
+        printf("do_movement Moving right, get blocks for pixels %d,%d and %d,%d\n", right_pixel_new, bottom_pixel_old, right_pixel_new, top_pixel_old);
         // Need to check block at feet height and block at head height
         struct Block* new_block_feet = get_world_block_for_world_pixel_xy(right_pixel_new, bottom_pixel_old, game_state);
         struct Block* new_block_head = get_world_block_for_world_pixel_xy(right_pixel_new, top_pixel_old, game_state);
@@ -171,6 +173,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
             // TODO not needed? x_collision_distance = block_bottom_left.x - new_character_x + game_state->character.width;
 
             new_character_x = block_bottom_left.x - game_state->character.width - 0.000001;
+            printf("Bottom block on right is solid, new_character_x to %f\n", new_character_x);
             x_motion_stopped = true;
         }
         if (new_block_head->effects_flags & EFFECT_FLAG_SOLID) {
@@ -187,16 +190,17 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     }
     // MOVING LEFT COLLISION CHECK
     else if (new_character_x < game_state->character.x_bottom_left) {
-        // printf("Moving left, get blocks for pixels %d,%d and %d,%d\n", left_pixel_new, bottom_pixel_old, left_pixel_new, top_pixel_old);
+        printf("Moving left, get blocks for pixels %d,%d and %d,%d\n", left_pixel_new, bottom_pixel_old, left_pixel_new, top_pixel_old);
         // Need to check block at feet height and block at head height
         struct Block* new_block_feet = get_world_block_for_world_pixel_xy(left_pixel_new, bottom_pixel_old, game_state);
         struct Block* new_block_head = get_world_block_for_world_pixel_xy(left_pixel_new, top_pixel_old, game_state);
         // printf("Feet and head blocks are %d,%d and %d,%d\n", new_block_feet->world_x, new_block_feet->world_y, new_block_head->world_x, new_block_head->world_y);
         if (new_block_feet->effects_flags & EFFECT_FLAG_SOLID) {
-            // printf("feet block is solid\n");
+            printf("feet block is solid\n");
             struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
-            // printf("bottom-left of block is %d,%d\n", block_bottom_left.x, block_bottom_left.y);
+            printf("bottom-left of block is %d,%d\n", block_bottom_left.x, block_bottom_left.y);
             new_character_x = block_bottom_left.x + BLOCK_WIDTH_IN_PIXELS;
+            printf("new_character_x is %f\n", new_character_x);
             x_motion_stopped = true;
         }
         else if (new_block_head->effects_flags & EFFECT_FLAG_SOLID) {
@@ -294,7 +298,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
         }
     }
 
-    // printf("In do_movement set x_bottom_left=%f y_inverted_bottom_left=%f\n", new_character_x, new_character_y);
+    printf("In do_movement set x_bottom_left=%f y_inverted_bottom_left=%f\n", new_character_x, new_character_y);
 
     game_state->character.x_bottom_left = new_character_x;
     game_state->character.y_inverted_bottom_left = new_character_y;
@@ -310,7 +314,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     }
     // TODO just for testing
     else {
-        // printf("on ground or climbing, DO NOT apply gravity\n");
+        printf("on ground or climbing, DO NOT apply gravity\n");
     }
 
     // Climbing stops x and y motion after movement applied

@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#include "game_structs.h"
+#include "image_structs.h"
 
 // Returns error code, 0 is success
 // Caller is responsible for deleting &pixels

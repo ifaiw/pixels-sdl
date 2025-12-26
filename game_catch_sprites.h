@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#include "game_structs.h"
+#include "image_structs.h"
 
 #define NUM_SPRITE_TYPES 61
 #define SPRITE_TYPE_EMPTY 0

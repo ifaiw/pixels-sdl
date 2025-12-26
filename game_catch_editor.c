@@ -1,7 +1,7 @@
-#include "game_editor.h"
+#include "game_catch_editor.h"
 
-#include "game_paths.h"
-#include "game_state.h"
+#include "game_catch_paths.h"
+#include "game_catch_state.h"
 #include "text_stuff.h"
 
 // Returns error code, 0 for success

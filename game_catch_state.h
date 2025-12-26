@@ -1,10 +1,11 @@
 #ifndef _GAME_STATE__H
 #define _GAME_STATE__H
 
-#include "game_blocks.h"
+#include "game_catch_blocks.h"
 #include "game_catch_images.h"
 #include "game_catch_sprites.h"
 #include "game_catch_structs.h"
+#include "image_structs.h"
 
 
 #define WIDTH_OF_SCREEN_IN_BLOCKS 25U
@@ -43,6 +44,8 @@ struct GameState {
 
     uint32_t* blank_pixels;
 };
+
+void initialize_all_world_blocks_to_empty(struct GameState* game_state);
 
 struct Block* get_world_block_for_world_pixel_xy(int pixel_x, int pixel_y, struct GameState* game_state);
 

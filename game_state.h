@@ -5,7 +5,7 @@
 #include "game_images.h"
 #include "game_sprites.h"
 #include "game_structs.h"
-
+#include "image_structs.h"
 
 #define WIDTH_OF_SCREEN_IN_BLOCKS 25U
 #define HEIGHT_OF_SCREEN_IN_BLOCKS 18U

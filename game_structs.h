@@ -6,12 +6,6 @@
 
 #define MICROSECONDS_PER_SECOND 1000000
 
-struct ImageInfo {
-    int width;
-    int height;
-    uint32_t* pixels;
-};
-
 struct InputState {
     long left_button_press_frame;
     long right_button_press_frame;

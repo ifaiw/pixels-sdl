@@ -4,10 +4,10 @@
 
 #include "stuff_happens.h"
 
-#include "game_blocks.h"
-#include "game_editor.h"
+#include "game_catch_blocks.h"
+#include "game_catch_editor.h"
 #include "game_catch_images.h"
-#include "game_movement.h"
+#include "game_catch_movement.h"
 #include "game_catch_paths.h"
 #include "game_catch_renderer.h"
 #include "game_catch_sprites.h"
@@ -85,15 +85,15 @@ void initialize_game_state() {
     game_state.character_sprite.num_walking_animation_frames = 5;
     #else
     game_state.character_sprite.stand_sprite_index = SPRITE_TYPE_ROWAN_CATCH;
-    game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_MUSHROOM_WALK_RIGHT_1;
+    game_state.character_sprite.first_walk_sprite_index = SPRITE_TYPE_ROWAN_CATCH;
     game_state.character_sprite.num_walking_animation_frames = 7;
-    game_state.character_sprite.first_climb_sprite_index = SPRITE_TYPE_MUSHROOM_CLIMB_1;
+    game_state.character_sprite.first_climb_sprite_index = SPRITE_TYPE_ROWAN_CATCH;
     game_state.character_sprite.num_climbing_animation_frames = 12;
     #endif
 
     game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];
     game_state.character.x_bottom_left = 680;
-    game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS * 7;
+    game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS * 1;
     game_state.character.width = game_state.character.current_sprite.width;
     game_state.character.height = game_state.character.current_sprite.height;
     game_state.character.x_velocity_pixels_per_second = 0;
@@ -103,8 +103,16 @@ void initialize_game_state() {
 
     game_state.num_current_entites = 0;
 
-    // Level slot 10 is autosave
-    load_level(&game_state, 10);
+    int right_block_x = 24;
+    game_state.world_blocks[0 + 1 * WIDTH_OF_WORLD_IN_BLOCKS].type = BLOCK_TYPE_GROUND;
+    game_state.world_blocks[0 + 1 * WIDTH_OF_WORLD_IN_BLOCKS].effects_flags |= EFFECT_FLAG_SOLID;
+    game_state.world_blocks[right_block_x + 1 * WIDTH_OF_WORLD_IN_BLOCKS].type = BLOCK_TYPE_GROUND;
+    game_state.world_blocks[right_block_x + 1 * WIDTH_OF_WORLD_IN_BLOCKS].effects_flags |= EFFECT_FLAG_SOLID;
+
+    for (int i = 0; i <= right_block_x; ++i) {
+        game_state.world_blocks[i].type = BLOCK_TYPE_GROUND;
+        game_state.world_blocks[i].effects_flags |= EFFECT_FLAG_SOLID;
+    }
 
     update_ground_images(&game_state);
 
@@ -112,7 +120,7 @@ void initialize_game_state() {
 
     printf("5 base_bmp_images[IMAGE_INDEX_BLANK].pixels is %p\n", game_state.base_bmp_images[IMAGE_INDEX_BLANK].pixels);
 
-    // printf("Initial character position is %f,%f\n", game_state.character.x_bottom_left, game_state.character.y_inverted_bottom_left);
+    printf("Initial character position is %f,%f\n", game_state.character.x_bottom_left, game_state.character.y_inverted_bottom_left);
 
     game_state.current_frame = -1;
 

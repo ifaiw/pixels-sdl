@@ -1,6 +1,6 @@
 #include "game_catch_sprites.h"
 
-#include "game_blocks.h"
+#include "game_catch_blocks.h"
 #include "game_catch_images.h"
 #include "graphics_constants.h"
 
@@ -32,7 +32,7 @@ int initialize_sprites_automatic(struct ImageInfo* image, int pixel_start_x, int
             bool found_pixel = false;
             for (int y_index = pixel_start_y; y_index <= max_pixel_y; ++y_index) {
                 if ((image->pixels[x_index + y_index * image->width] & ALPHA) > 0) {
-                    printf("i_s_auto found first x pixel %d of sprite index %d y_start set to %d\n", x_index, sprite_index, y_index);
+                    // printf("i_s_auto found first x pixel %d of sprite index %d y_start set to %d\n", x_index, sprite_index, y_index);
                     y_start[sprite_index] = y_index;
                     found_pixel = true;
                     break;
@@ -42,20 +42,20 @@ int initialize_sprites_automatic(struct ImageInfo* image, int pixel_start_x, int
             x_index += 1;
             if (found_pixel) {
                 x_start[sprite_index] = x_index - 1;
-                printf("i_s_auto sprite_index=%d set x_start[sprite_index] to %d\n", sprite_index, x_start[sprite_index]);
+                // printf("i_s_auto sprite_index=%d set x_start[sprite_index] to %d\n", sprite_index, x_start[sprite_index]);
                 break;
             }
         }
 
         // Find the right-most/last column of the current sprite
-        printf("i_s_auto sprite_index=%d Find right-most/last column of current sprite\n", sprite_index);
+        // printf("i_s_auto sprite_index=%d Find right-most/last column of current sprite\n", sprite_index);
         while (x_index <= max_pixel_x) {
             bool found_pixel = false;
             for (int y_index = pixel_start_y; y_index <= max_pixel_y; ++y_index) {
                 if ((image->pixels[x_index + y_index * image->width] & ALPHA) > 0) {
                     found_pixel = true;
                     if (y_index < y_start[sprite_index]) {
-                        printf("i_s_auto finding right-most x pixel of sprite_index=%d y_start set to %d\n", sprite_index, y_index);
+                        // printf("i_s_auto finding right-most x pixel of sprite_index=%d y_start set to %d\n", sprite_index, y_index);
                         y_start[sprite_index] = y_index;
                     }
                     break;
@@ -63,16 +63,16 @@ int initialize_sprites_automatic(struct ImageInfo* image, int pixel_start_x, int
             }
 
             x_index += 1;
-            printf("i_s_auto check if found right-most x for sprite %d found_pixel is %d\n", sprite_index, found_pixel);
+            // printf("i_s_auto check if found right-most x for sprite %d found_pixel is %d\n", sprite_index, found_pixel);
             if (!found_pixel) {
                 x_end[sprite_index] = x_index - 1;
-                printf("i_s_auto post find right-most x for sprite %d didn't find pixel so set x_end[sprite_index] to %d\n", sprite_index, x_end[sprite_index]);
+                // printf("i_s_auto post find right-most x for sprite %d didn't find pixel so set x_end[sprite_index] to %d\n", sprite_index, x_end[sprite_index]);
                 break;
             }
         }
 
         sprite_index += 1;
-        printf("i_s_auto sprite_index to %d\n", sprite_index);
+        // printf("i_s_auto sprite_index to %d\n", sprite_index);
     }
 
     if (sprite_index < num_sprites_to_initialize) {
@@ -86,27 +86,27 @@ int initialize_sprites_automatic(struct ImageInfo* image, int pixel_start_x, int
     sprite_index = 0;
     y_end[sprite_index] = y_start[sprite_index];
     for (int x_index = x_start[0]; x_index <= x_end[num_sprites_to_initialize - 1]; ++x_index) {
-        printf("i_s_auto sprite_index=%d x_index=%d y_end[sprite_index] starts at %d\n", sprite_index, x_index, y_end[sprite_index]);
+        // printf("i_s_auto sprite_index=%d x_index=%d y_end[sprite_index] starts at %d\n", sprite_index, x_index, y_end[sprite_index]);
         if (x_index > x_end[sprite_index]) {
             sprite_index += 1;
             x_index = x_start[sprite_index];
             y_end[sprite_index] = y_start[sprite_index];
-            printf("i_s_auto bumped sprite_index=%d x_index=%d y_end[sprite_index] starts at %d\n", sprite_index, x_index, y_end[sprite_index]);
+            // printf("i_s_auto bumped sprite_index=%d x_index=%d y_end[sprite_index] starts at %d\n", sprite_index, x_index, y_end[sprite_index]);
         }
 
         for (int y_index = max_pixel_y; y_index > y_end[sprite_index]; --y_index) {
-            printf("i_s_auto sprite_index=%d check y_index=%d pixel alpha is %u y_end[sprite_index]=%d\n", sprite_index, y_index, image->pixels[x_index + (y_index - 1) * image->width] & ALPHA, y_end[sprite_index]);
+            // printf("i_s_auto sprite_index=%d check y_index=%d pixel alpha is %u y_end[sprite_index]=%d\n", sprite_index, y_index, image->pixels[x_index + (y_index - 1) * image->width] & ALPHA, y_end[sprite_index]);
             if (((image->pixels[x_index + (y_index - 1) * image->width] & ALPHA) > 0) && (y_index - 1) > y_end[sprite_index]) {
                 y_end[sprite_index] = y_index - 1;
-                printf("i_s_auto sprite_index=%d y_start[sprite_index]=%d y_end[sprite_index] set to %d\n", sprite_index, y_start[sprite_index], y_end[sprite_index]);
+                // printf("i_s_auto sprite_index=%d y_start[sprite_index]=%d y_end[sprite_index] set to %d\n", sprite_index, y_start[sprite_index], y_end[sprite_index]);
             }
         }
-        printf("i_s_auto bottom of find bottom loop, sprite_index=%d y_end[sprite_index]=%d\n", sprite_index, y_end[sprite_index]);
+        // printf("i_s_auto bottom of find bottom loop, sprite_index=%d y_end[sprite_index]=%d\n", sprite_index, y_end[sprite_index]);
     }
 
     for (sprite_index = 0; sprite_index < num_sprites_to_initialize; ++sprite_index) {
-        printf("i_s_auto setting final sprite values sprite_index=%d y_start=%d y_end=%d\n", sprite_index, y_start[sprite_index], y_end[sprite_index]);
-        printf("i_s_auto For sprite_index=%d set sprite_index=%d height=%d width=%d\n", sprite_index, first_sprite_index + sprite_index, y_end[sprite_index] - y_start[sprite_index] + 1, x_end[sprite_index] - x_start[sprite_index] + 1);
+        // printf("i_s_auto setting final sprite values sprite_index=%d y_start=%d y_end=%d\n", sprite_index, y_start[sprite_index], y_end[sprite_index]);
+        // printf("i_s_auto For sprite_index=%d set sprite_index=%d height=%d width=%d\n", sprite_index, first_sprite_index + sprite_index, y_end[sprite_index] - y_start[sprite_index] + 1, x_end[sprite_index] - x_start[sprite_index] + 1);
 
         (r_sprite_array + first_sprite_index + sprite_index)->sprite_index = first_sprite_index + sprite_index;
         (r_sprite_array + first_sprite_index + sprite_index)->image_source_pitch_in_pixels = image->width;

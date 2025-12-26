@@ -33,7 +33,8 @@ static inline void update_sprites(struct GameState* game_state_param, struct Inp
             break;
         case WALKING:
             microsecond_bucket = game_state_param->current_time_in_micros / game_state_param->world_rules.micros_per_walking_animation_frame;
-            walking_animation_frame_num = microsecond_bucket % SPRITE_NUMBER_OF_FRAMES_MUSHROOM_WALK;
+            // For now the catching game just has the same "walking" frame as standing, though it does flip from left to right
+            walking_animation_frame_num = 0;
             // TODO just for testing
             // if (walking_animation_frame_num != last_walking_frame && walking_animation_frame_num != last_walking_frame+1 && !(last_walking_frame == 6 && walking_animation_frame_num == 0)) {
             //     printf("skipped walk animation frame, from %d to %d\n", last_walking_frame, walking_animation_frame_num);
@@ -77,8 +78,9 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
     memcpy(r_pixels, game_state->blank_pixels, width * height * 4);
 
     // Update view_state based on character position
-    view_state->view_bottom_left_world_x = game_state->character.x_bottom_left + (game_state->character.width / 2) - (view_state->view_width / 2);
-    view_state->view_bottom_left_world_y = game_state->character.y_inverted_bottom_left + (game_state->character.height / 2) - (view_state->view_height / 2);
+    // Catch game, don't update view_state location
+    // view_state->view_bottom_left_world_x = game_state->character.x_bottom_left + (game_state->character.width / 2) - (view_state->view_width / 2);
+    // view_state->view_bottom_left_world_y = game_state->character.y_inverted_bottom_left + (game_state->character.height / 2) - (view_state->view_height / 2);
     int view_top_right_world_x = view_state->view_bottom_left_world_x + view_state->view_width;
     int view_top_right_world_y = view_state->view_bottom_left_world_y + view_state->view_height;
 
@@ -142,7 +144,7 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
             // printf("Using block pixel x and y, top-left on screen should be %d,%d\n", top_left_test_x, top_left_test_y);
             // TODO just for testing
             int sprite_index = game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * block_y_index + block_x_index].sprite_index;
-            printf("write block %d,%d [sprite_index=%d] at pixel top-left %d,%d\n", block_x_index, block_y_index, sprite_index, top_left_x, top_left_y);
+            // printf("write block %d,%d [sprite_index=%d] at pixel top-left %d,%d\n", block_x_index, block_y_index, sprite_index, top_left_x, top_left_y);
             // fflush(stdout);
             write_sprite_aliased(   top_left_x,
                                     top_left_y,
@@ -385,7 +387,7 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
                                 r_pixels);
     }
 
-    // printf("Done drawing blocks, next draw char\n");
+    printf("Done drawing blocks, next draw char character.x_bottom_left=%f character.y_inverted_bottom_left=%f character.height=%f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, game_state->character.height);
 
     int char_left = round(game_state->character.x_bottom_left) - view_state->view_bottom_left_world_x + view_state->view_area_offset_x;
     int char_top =      view_state->view_bottom_left_world_y
@@ -393,11 +395,9 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
                     -   game_state->character.y_inverted_bottom_left
                     +   view_state->view_area_offset_y
                     -   game_state->character.height;
-    // printf("Draw character at %d,%d\n", char_left, char_top);
+    printf("Draw character at %d,%d\n", char_left, char_top);
     write_sprite_aliased(char_left, char_top, game_state->character.current_sprite, game_state->character.direction == LEFT, width, r_pixels);
 
-    //TODO just for testing
-    // write_image(500, 200, game_state->base_bmp_images[IMAGE_INDEX_WORM], width, r_pixels);
 }
 
 #endif  // _GAME_RENDERER__H
