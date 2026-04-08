@@ -5,7 +5,7 @@
 
 #include "image_structs.h"
 
-#define NUM_SPRITE_TYPES 61
+#define NUM_SPRITE_TYPES 62
 #define SPRITE_TYPE_EMPTY 0
 // 1 intentionally skipped
 #define SPRITE_TYPE_ORC_STAND_RIGHT 2
@@ -88,6 +88,7 @@
 #define SPRITE_NUMBER_OF_FRAMES_WORM_WALK 6
 
 #define SPRITE_TYPE_ROWAN_CATCH 60
+#define SPRITE_TYPE_HAMBURGER 61
 
 
 // Remember to update NUM_SPRITE_TYPES

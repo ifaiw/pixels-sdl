@@ -27,8 +27,18 @@ int16_t get_next_free_entity_index(struct GameState* game_state) {
 }
 
 // IMPLEMENTS
-void initialize_all_world_blocks_to_empty(struct GameState* game_state) {
-
+void initialize_all_world_blocks_to_empty(struct GameState* r_game_state) {
+    for (int x = 0; x < WIDTH_OF_WORLD_IN_BLOCKS; ++x) {
+        for (int y = 0; y < HEIGHT_OF_WORLD_IN_BLOCKS; ++y) {
+            r_game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].effects_flags = r_game_state->base_blocks[BLOCK_TYPE_EMPTY].effects_flags;
+            r_game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].sprite_index = r_game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite_index;
+            r_game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].type = r_game_state->base_blocks[BLOCK_TYPE_EMPTY].type;
+            r_game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_x = x * BLOCK_WIDTH_IN_PIXELS;
+            r_game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].world_pixel_y = y * BLOCK_HEIGHT_IN_PIXELS;
+            r_game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].block_x = x;
+            r_game_state->world_blocks[WIDTH_OF_WORLD_IN_BLOCKS * y + x].block_y = y;
+        }
+    }
 }
 
 // IMPLEMENTS

@@ -466,8 +466,16 @@ void handle_input(  struct GameState* game_state,
 
     struct EditorState previous_editor_state = *editor_state;
 
+
+
     if(state[SDL_SCANCODE_RIGHT] && !state[SDL_SCANCODE_LEFT]){
         // printf("right arrow key is pressed\n");
+
+        if (editor_state->arrow_move_view) {
+            view_state->view_bottom_left_world_x += 1;
+            printf("view_state->view_bottom_left_world_x is now %d\n", view_state->view_bottom_left_world_x);
+            return;
+        }
 
         if (input_state->right_button_press_frame == -1) {
             input_state->right_button_press_frame = game_state->current_frame;
@@ -521,6 +529,13 @@ void handle_input(  struct GameState* game_state,
 
     if (state[SDL_SCANCODE_LEFT] && !state[SDL_SCANCODE_RIGHT]){
         // printf("left arrow key is pressed\n");
+
+        if (editor_state->arrow_move_view) {
+            view_state->view_bottom_left_world_x -= 1;
+            printf("view_state->view_bottom_left_world_x is now %d\n", view_state->view_bottom_left_world_x);
+            return;
+        }
+
         if (input_state->left_button_press_frame == -1) {
             input_state->left_button_press_frame = game_state->current_frame;
         }
@@ -571,6 +586,12 @@ void handle_input(  struct GameState* game_state,
     }
 
     if (state[SDL_SCANCODE_UP]) {
+        if (editor_state->arrow_move_view) {
+            view_state->view_bottom_left_world_y += 1;
+            printf("view_state->view_bottom_left_world_y is now %d\n", view_state->view_bottom_left_world_y);
+            return;
+        }
+
         switch (game_state->character.motion)
         {
             case STOPPED:
@@ -627,7 +648,13 @@ void handle_input(  struct GameState* game_state,
             }
         }
     }
-    else if (state[SDL_SCANCODE_DOWN]){
+    else if (state[SDL_SCANCODE_DOWN]) {
+        if (editor_state->arrow_move_view) {
+            view_state->view_bottom_left_world_y -= 1;
+            printf("view_state->view_bottom_left_world_y is now %d\n", view_state->view_bottom_left_world_y);
+            return;
+        }
+
         switch (game_state->character.motion)
         {
             case WALKING:
@@ -657,6 +684,18 @@ void handle_input(  struct GameState* game_state,
             if (any_key_pressed) {
                 editor_state->load_on_num = false;
             }
+        }
+    }
+
+    if (state[SDL_SCANCODE_M]) {
+        if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_M])) {
+            input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_M];
+            editor_state->arrow_move_view = !editor_state->arrow_move_view;
+            printf("Swapped arrow keys, now do they move view offsets? %d\n", editor_state->arrow_move_view);
+        }
+    } else {
+        if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_M]) {
+            input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_M];
         }
     }
 

@@ -3,11 +3,10 @@
 
 #include <inttypes.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "game_catch_sprites.h"
-#include "game_catch_structs.h"
 #include "graphics_constants.h"
 #include "image_structs.h"
 
@@ -51,13 +50,6 @@ static inline void write_image(int top_left_x, int top_left_y, struct ImageInfo 
 }
 
 static inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite sprite, bool flip_left_to_right, int pixels_width, uint32_t* r_pixels) {
-    // TODO just for testing
-    if (sprite.sprite_index >= NUM_SPRITE_TYPES) {
-        printf("Invalid sprite index: %d\n", sprite.sprite_index);
-        fflush(stdout);
-        exit(0);
-    }
-
     // printf("write_sprite_aliased sprite.pixels_start is %p\n", sprite.pixels_start);
 
     if (flip_left_to_right) {
@@ -73,10 +65,6 @@ static inline void write_sprite_aliased(int top_left_x, int top_left_y, struct S
         }
     }
     else {
-        // TODO just for testing
-        if (sprite.sprite_index == SPRITE_TYPE_TOILET) {
-            printf("Draw a toilet\n");
-        }
         for (int y = 0; y < sprite.height; ++y) {
             uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);
             uint32_t* pixels_row_start = r_pixels + ((top_left_y + y) * pixels_width) + top_left_x;

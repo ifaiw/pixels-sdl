@@ -45,7 +45,8 @@ struct GameState {
     uint32_t* blank_pixels;
 };
 
-void initialize_all_world_blocks_to_empty(struct GameState* game_state);
+// Includes initializing each world block's location in the world
+void initialize_all_world_blocks_to_empty(struct GameState* r_game_state);
 
 struct Block* get_world_block_for_world_pixel_xy(int pixel_x, int pixel_y, struct GameState* game_state);
 

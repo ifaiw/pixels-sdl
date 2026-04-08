@@ -178,6 +178,7 @@ struct EditorState {
     enum EntityType entity_type;
     bool save_on_num;
     bool load_on_num;
+    bool arrow_move_view;
 };
 
 #endif  // _GAME_STRUCTS__H

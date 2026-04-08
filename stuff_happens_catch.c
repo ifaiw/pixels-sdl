@@ -92,7 +92,7 @@ void initialize_game_state() {
     #endif
 
     game_state.character.current_sprite = game_state.base_sprites[game_state.character_sprite.stand_sprite_index];
-    game_state.character.x_bottom_left = 680;
+    game_state.character.x_bottom_left = 740;
     game_state.character.y_inverted_bottom_left = BLOCK_HEIGHT_IN_PIXELS * 1;
     game_state.character.width = game_state.character.current_sprite.width;
     game_state.character.height = game_state.character.current_sprite.height;
@@ -101,9 +101,20 @@ void initialize_game_state() {
     game_state.character.motion = STOPPED;
     game_state.character.direction = LEFT;
 
-    game_state.num_current_entites = 0;
+    game_state.num_current_entites = 1;
 
-    int right_block_x = 24;
+    game_state.entities[0].current_sprite = game_state.base_sprites[SPRITE_TYPE_HAMBURGER];
+    game_state.entities[0].x_bottom_left = game_state.character.x_bottom_left + (game_state.character.current_sprite.width / 2) - (game_state.entities[0].current_sprite.width - 2);
+    game_state.entities[0].y_inverted_bottom_left = game_state.character.y_inverted_bottom_left + game_state.character.current_sprite.height;
+    game_state.entities[0].width = game_state.entities[0].current_sprite.width;
+    game_state.entities[0].height = game_state.entities[0].current_sprite.height;
+    game_state.entities[0].x_velocity_pixels_per_second = 0;
+    game_state.entities[0].y_velocity_pixels_per_second = 0;
+
+
+    initialize_all_world_blocks_to_empty(&game_state);
+
+    int right_block_x = 25;
     game_state.world_blocks[0 + 1 * WIDTH_OF_WORLD_IN_BLOCKS].type = BLOCK_TYPE_GROUND;
     game_state.world_blocks[0 + 1 * WIDTH_OF_WORLD_IN_BLOCKS].effects_flags |= EFFECT_FLAG_SOLID;
     game_state.world_blocks[right_block_x + 1 * WIDTH_OF_WORLD_IN_BLOCKS].type = BLOCK_TYPE_GROUND;
@@ -130,8 +141,12 @@ void initialize_game_state() {
 }
 
 void initialize_editor() {
+    editor_state.entity_type = ENTITY_TYPE_WORM;
     editor_state.block_type = BLOCK_TYPE_LADDER;
     editor_state.click_state = ADD_BLOCK;
+    editor_state.load_on_num = false;
+    editor_state.save_on_num = false;
+    editor_state.arrow_move_view = false;
 }
 
 // IMPLEMENTS
@@ -158,6 +173,9 @@ int initialize(int width, int height, uint64_t micros_per_frame_param) {
     view_state.view_height = blocks_area_height;
     view_state.view_area_offset_x = (width - blocks_area_width) / 2;
     view_state.view_area_offset_y = (height - blocks_area_height) / 2;
+
+    view_state.view_bottom_left_world_x = 24;
+    view_state.view_bottom_left_world_y = 32;
 
     // printf("About to initialize_game_state\n");
     fflush(stdout);
