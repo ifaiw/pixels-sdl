@@ -292,8 +292,8 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
     r_sprite_array[SPRITE_TYPE_ROWAN_CATCH].pixels_start = image_array[IMAGE_INDEX_ROWAN_CATCH].pixels;
     r_sprite_array[SPRITE_TYPE_ROWAN_CATCH].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_ROWAN_CATCH].width;
 
-    r_sprite_array[SPRITE_TYPE_HAMBURGER].height = image_array[SPRITE_TYPE_HAMBURGER].height;
-    r_sprite_array[SPRITE_TYPE_HAMBURGER].width = image_array[SPRITE_TYPE_HAMBURGER].width;
-    r_sprite_array[SPRITE_TYPE_HAMBURGER].pixels_start = image_array[SPRITE_TYPE_HAMBURGER].pixels;
-    r_sprite_array[SPRITE_TYPE_HAMBURGER].image_source_pitch_in_pixels = image_array[SPRITE_TYPE_HAMBURGER].width;
+    r_sprite_array[SPRITE_TYPE_HAMBURGER].height = image_array[IMAGE_INDEX_HAMBURGER].height;
+    r_sprite_array[SPRITE_TYPE_HAMBURGER].width = image_array[IMAGE_INDEX_HAMBURGER].width;
+    r_sprite_array[SPRITE_TYPE_HAMBURGER].pixels_start = image_array[IMAGE_INDEX_HAMBURGER].pixels;
+    r_sprite_array[SPRITE_TYPE_HAMBURGER].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_HAMBURGER].width;
 }

@@ -9,7 +9,7 @@
 #include "game_catch_sprites.h"
 #include "graphics_constants.h"
 #include "image_bmp_loader.h"
-#include "rendering_catch.h"
+#include "rendering.h"
 
 
 // PRIVATE
@@ -159,6 +159,7 @@ int load_images(struct ImageInfo* r_image_array) {
     flip_upside_down(r_image_array[IMAGE_INDEX_ROWAN_CATCH].pixels, r_image_array[IMAGE_INDEX_ROWAN_CATCH].width, r_image_array[IMAGE_INDEX_ROWAN_CATCH].height);
 
     load_image_result = load_bmp_image(GAME_PATH_CATCH__IMAGE_PATH_HAMBURGER_CUTOUT_SCALED_FULL, r_image_array + IMAGE_INDEX_HAMBURGER);
+    printf("load_images IMAGE_INDEX_HAMBURGER=%d width=%d height=%d", IMAGE_INDEX_HAMBURGER, r_image_array[IMAGE_INDEX_HAMBURGER].width, r_image_array[IMAGE_INDEX_HAMBURGER].height);
     if (load_image_result != 0) {
         printf("Error loading GAME_PATH_CATCH__IMAGE_PATH_HAMBURGER_CUTOUT_SCALED_FULL: %d\n", load_image_result);
         return load_image_result;

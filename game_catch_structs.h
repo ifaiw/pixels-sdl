@@ -136,7 +136,8 @@ struct LevelFileHeader {
 #pragma pack()
 
 enum EntityType {
-    ENTITY_TYPE_WORM
+    ENTITY_TYPE_WORM,
+    ENTITY_TYPE_HAMBURGER
 };
 
 enum EntityState {

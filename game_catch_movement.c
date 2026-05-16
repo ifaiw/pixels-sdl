@@ -328,12 +328,16 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     printf("Movement for entities\n");
     for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
         printf("top of entity loop in movement\n");
+        fflush(stdout);
         if (!(entity->effects_flags & ENTITY_FLAG_IS_ACTIVE)) {
             printf("skip inactive entity\n");
             continue;
         }
+        printf("entity is active\n");
+        fflush(stdout);
 
         if (entity->type == ENTITY_TYPE_WORM) {
+            printf("do movement for entity type worm\n");
             double new_entity_x = entity->x_bottom_left + entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
             double new_entity_y = entity->y_inverted_bottom_left + entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
             int left = round(new_entity_x);
@@ -441,7 +445,37 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
             // Check if on ground
 
         }
+
+        #define HAMBURGER_GRAVITY_PIXELS_PER_SECOND 26
+        else if (entity->type == ENTITY_TYPE_HAMBURGER) {
+            entity->x_bottom_left += entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            entity->y_inverted_bottom_left += entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+
+            // Moving down
+            if (entity->y_inverted_bottom_left <= game_state->floor_y) {
+                entity->y_inverted_bottom_left = game_state->floor_y;
+                entity->y_velocity_pixels_per_second = 0;
+            }
+            else {
+                entity->y_velocity_pixels_per_second -= HAMBURGER_GRAVITY_PIXELS_PER_SECOND / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            }
+
+            // Moving left
+            if (entity->x_bottom_left <= game_state->left_side_x) {
+                entity->x_bottom_left = game_state->left_side_x;
+                entity->x_velocity_pixels_per_second = 0;
+            }
+
+            // Moving right
+            if (entity->x_bottom_left + entity->width >= game_state->right_side_x) {
+                entity->x_bottom_left = game_state->right_side_x - entity->width;
+                entity->x_velocity_pixels_per_second = 0;
+            }
+        }
     }
+
+    printf("Bottom of do_movement\n");
+    fflush(stdout);
 }
 
 // IMPLEMENTS

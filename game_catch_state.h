@@ -43,6 +43,10 @@ struct GameState {
     long current_time_in_micros;
 
     uint32_t* blank_pixels;
+
+    int floor_y;
+    int left_side_x;
+    int right_side_x;
 };
 
 // Includes initializing each world block's location in the world

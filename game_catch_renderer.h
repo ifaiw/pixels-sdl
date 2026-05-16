@@ -6,7 +6,7 @@
 
 #include "game_catch_state.h"
 #include "game_catch_structs.h"
-#include "rendering_catch.h"
+#include "rendering.h"
 
 // PRIVATE
 // TODO move this code into render/blit code?
@@ -344,6 +344,7 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
     // Currently the only z-index we use is 5
     int16_t z_index = 5;
     printf("Num entities is %d\n", game_state->num_current_entites);
+    fflush(stdout);
     for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
         printf("Top of entity loop in render\n");
         if (!(entity->effects_flags & ENTITY_FLAG_IS_ACTIVE) || entity->z_index != z_index) {
@@ -356,13 +357,28 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
             ||  entity->y_inverted_bottom_left > view_state->view_bottom_left_world_y + view_state->view_height
         ) {
             printf("Skip entity not FULLY in view\n");
+            fflush(stdout);
             continue;
         }
         printf("entity loop calculate micros_since_animation_start\n");
+        fflush(stdout);
 
-        uint64_t micros_since_animation_start = game_state->current_time_in_micros - entity->animation_time_start_in_micros;
-        uint16_t frame_num_worm = (uint16_t)(micros_since_animation_start / game_state->world_rules.worm_micros_per_walking_animation_frame) % SPRITE_NUMBER_OF_FRAMES_WORM_WALK;
-        struct Sprite current_sprite = game_state->base_sprites[entity->current_sprite.sprite_index + frame_num_worm];
+        struct Sprite current_sprite;
+        uint64_t micros_since_animation_start;
+        uint16_t frame_num;
+
+        switch(entity->type) {
+            case ENTITY_TYPE_WORM:
+                micros_since_animation_start = game_state->current_time_in_micros - entity->animation_time_start_in_micros;
+                frame_num = ((uint16_t)(micros_since_animation_start / game_state->world_rules.worm_micros_per_walking_animation_frame)) % SPRITE_NUMBER_OF_FRAMES_WORM_WALK;
+                current_sprite = game_state->base_sprites[entity->current_sprite.sprite_index + frame_num];
+                break;
+            case ENTITY_TYPE_HAMBURGER:
+                current_sprite = game_state->base_sprites[entity->current_sprite.sprite_index];
+                break;
+            default:
+                printf("Unrecognized entity type %d\n", entity->type);
+        }
         entity->width = current_sprite.width;
         entity->height = current_sprite.height;
         bool flip_entity_horizontal = false;
@@ -373,7 +389,8 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
                 break;
         }
 
-        printf("Render entity sprite index is %d width %d height %d\n", entity->current_sprite.sprite_index + frame_num_worm, game_state->base_sprites[entity->current_sprite.sprite_index + frame_num_worm].width, game_state->base_sprites[entity->current_sprite.sprite_index + frame_num_worm].height);
+        printf("about to write_sprite_aliased. index for it is %d current_sprite.pixels_start=%p \n", entity->current_sprite.sprite_index, current_sprite.pixels_start);
+        fflush(stdout);
 
         write_sprite_aliased(   round(entity->x_bottom_left) - view_state->view_bottom_left_world_x + view_state->view_area_offset_x,
                                 view_state->view_bottom_left_world_y
@@ -385,9 +402,11 @@ static inline void blit(uint32_t* r_pixels, struct GameState* game_state, struct
                                 flip_entity_horizontal,
                                 width,
                                 r_pixels);
+        printf("done write_sprite_aliased\n");
+        fflush(stdout);
     }
 
-    printf("Done drawing blocks, next draw char character.x_bottom_left=%f character.y_inverted_bottom_left=%f character.height=%f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, game_state->character.height);
+    printf("Done drawing blocks and entities, next draw char character.x_bottom_left=%f character.y_inverted_bottom_left=%f character.height=%f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, game_state->character.height);
 
     int char_left = round(game_state->character.x_bottom_left) - view_state->view_bottom_left_world_x + view_state->view_area_offset_x;
     int char_top =      view_state->view_bottom_left_world_y

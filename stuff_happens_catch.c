@@ -110,6 +110,9 @@ void initialize_game_state() {
     game_state.entities[0].height = game_state.entities[0].current_sprite.height;
     game_state.entities[0].x_velocity_pixels_per_second = 0;
     game_state.entities[0].y_velocity_pixels_per_second = 0;
+    game_state.entities[0].effects_flags |= ENTITY_FLAG_IS_ACTIVE;
+    game_state.entities[0].type = ENTITY_TYPE_HAMBURGER;
+    game_state.entities[0].z_index = 5;
 
 
     initialize_all_world_blocks_to_empty(&game_state);
@@ -124,6 +127,10 @@ void initialize_game_state() {
         game_state.world_blocks[i].type = BLOCK_TYPE_GROUND;
         game_state.world_blocks[i].effects_flags |= EFFECT_FLAG_SOLID;
     }
+
+    game_state.floor_y = game_state.world_blocks[0].world_pixel_y + BLOCK_HEIGHT_IN_PIXELS;
+    game_state.left_side_x = game_state.world_blocks[0].world_pixel_x + BLOCK_WIDTH_IN_PIXELS;
+    game_state.right_side_x = game_state.world_blocks[right_block_x].world_pixel_x;
 
     update_ground_images(&game_state);
 
