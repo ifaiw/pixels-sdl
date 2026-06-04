@@ -61,6 +61,9 @@ void initialize_input_state() {
     input_state.letter_keys_down_bitmask = 0;
     input_state.number_keys_down_bitmask = 0;
     input_state.mouse_button_state = 0;
+
+    input_state.size_of_keyboard_state = SDL_NUM_SCANCODES * sizeof(uint8_t); // The sizeof uint8_t should just be 1
+    input_state.previous_key_state = (uint8_t*)malloc(input_state.size_of_keyboard_state);
 }
 
 // PRIVATE

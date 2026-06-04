@@ -4,7 +4,11 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+#include "image_structs.h"
+
 #define MICROSECONDS_PER_SECOND 1000000
+
+#define PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND 45
 
 struct InputState {
     long left_button_press_frame;
@@ -18,14 +22,11 @@ struct InputState {
     int mouse_y;
     double start_climb_pixel_x;
     double start_climb_pixel_y;
-};
 
-struct Sprite {
-    uint32_t* pixels_start;
-    uint32_t height, width;
-    uint32_t image_source_pitch_in_pixels;
-    // TODO only used for testing?
-    int sprite_index;
+    // Comes from SDL_GetKeyboardState(NULL), number of elements is SDL_NUM_SCANCODES
+    uint8_t* previous_key_state;
+    uint32_t size_of_keyboard_state; // Should get initialized to SDL_NUM_SCANCODES * sizeof(uint8_t) then never change
+    // The sizeof uint8_t should just be 1
 };
 
 struct Block {
@@ -42,6 +43,7 @@ enum CharacterMotion {
     WALKING,
     STOPPED,
     JUMPING,
+    JUMPING_2,
     CLIMBING,
 };
 
@@ -142,12 +144,15 @@ struct LevelFileHeader {
 #pragma pack()
 
 enum EntityType {
-    ENTITY_TYPE_WORM
+    ENTITY_TYPE_WORM,
+    ENTITY_TYPE_PLATFORM_1
 };
 
 enum EntityState {
     ENTITY_STATE_STOPPED,
     ENTITY_STATE_MOVING,
+    ENTITY_STATE_MOVING_UP,
+    ENTITY_STATE_MOVING_DOWN,
     ENTITY_STATE_FALLING,
     ENTITY_WORM_PUSHING_FORWARD,
     ENTITY_WORM_PULLING_FORWARD,

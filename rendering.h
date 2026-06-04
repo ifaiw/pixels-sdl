@@ -50,7 +50,7 @@ static inline void write_image(int top_left_x, int top_left_y, struct ImageInfo 
 }
 
 static inline void write_sprite_aliased(int top_left_x, int top_left_y, struct Sprite sprite, bool flip_left_to_right, int pixels_width, uint32_t* r_pixels) {
-    printf("write_sprite_aliased sprite.pixels_start is %p sprite.image_source_pitch_in_pixels=%d\n", sprite.pixels_start, sprite.image_source_pitch_in_pixels);
+    // printf("write_sprite_aliased sprite.pixels_start is %p sprite.image_source_pitch_in_pixels=%d\n", sprite.pixels_start, sprite.image_source_pitch_in_pixels);
 
     if (flip_left_to_right) {
         for (int y = 0; y < sprite.height; ++y) {
@@ -66,17 +66,17 @@ static inline void write_sprite_aliased(int top_left_x, int top_left_y, struct S
     }
     else {
         for (int y = 0; y < sprite.height; ++y) {
-            printf("write_sprite_aliased y=%d\n", y);
-            fflush(stdout);
+            // printf("write_sprite_aliased y=%d\n", y);
+            // fflush(stdout);
             uint32_t* sprite_row_start = sprite.pixels_start + (y * sprite.image_source_pitch_in_pixels);
             uint32_t* pixels_row_start = r_pixels + ((top_left_y + y) * pixels_width) + top_left_x;
-            printf("write_sprite_aliased sprite_row_start=%p pixels_row_start=%p\n", sprite_row_start, pixels_row_start);
-            fflush(stdout);
+            // printf("write_sprite_aliased sprite_row_start=%p pixels_row_start=%p\n", sprite_row_start, pixels_row_start);
+            // fflush(stdout);
             for (int pixel_index = 0; pixel_index < sprite.width; ++pixel_index) {
-                printf("sprite_row_start[pixel_index]=%d\n", sprite_row_start[pixel_index]);
-                fflush(stdout);
-                printf("pixels_row_start[pixel_index]=%d\n", pixels_row_start[pixel_index]);
-                fflush(stdout);
+                // printf("sprite_row_start[pixel_index]=%d\n", sprite_row_start[pixel_index]);
+                // fflush(stdout);
+                // printf("pixels_row_start[pixel_index]=%d\n", pixels_row_start[pixel_index]);
+                // fflush(stdout);
                 switch (sprite_row_start[pixel_index] & ALPHA) {
                     case ALPHA: pixels_row_start[pixel_index] = sprite_row_start[pixel_index];
                     default: break;

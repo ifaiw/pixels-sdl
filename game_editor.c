@@ -73,6 +73,12 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
                     mouse_block->effects_flags = r_game_state->base_blocks[BLOCK_TYPE_TOILET].effects_flags;
                     mouse_block->sprite_index = r_game_state->base_blocks[BLOCK_TYPE_TOILET].sprite_index;
                 }
+                else if (r_editor_state->block_type == BLOCK_TYPE_TOILET) {
+                    printf("add toilet at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                    mouse_block->type = BLOCK_TYPE_TOILET;
+                    mouse_block->effects_flags = r_game_state->base_blocks[BLOCK_TYPE_TOILET].effects_flags;
+                    mouse_block->sprite_index = r_game_state->base_blocks[BLOCK_TYPE_TOILET].sprite_index;
+                }
             }
             update_ground_images(r_game_state);
         } else {
@@ -80,66 +86,118 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
         }
     }
     else {
-        printf("add worm entity at %d,%d\n", in_game_x, in_game_y_inverted);
-        struct Sprite* entity_sprite = &r_game_state->base_sprites[SPRITE_TYPE_WORM_PUSH_FORWARD_1];
+        if (r_editor_state->entity_type == ENTITY_TYPE_WORM) {
+            printf("add worm entity at %d,%d\n", in_game_x, in_game_y_inverted);
+            struct Sprite* entity_sprite = &r_game_state->base_sprites[SPRITE_TYPE_WORM_PUSH_FORWARD_1];
 
-        int left = in_game_x - entity_sprite->width / 2 - 1;
-        int right = in_game_x + entity_sprite->width/ 2 + 1;
-        int top = in_game_y_inverted + entity_sprite->height / 2 + 1;
-        int bottom = in_game_y_inverted - entity_sprite->height / 2 - 1;
+            int left = in_game_x - entity_sprite->width / 2 - 1;
+            int right = in_game_x + entity_sprite->width/ 2 + 1;
+            int top = in_game_y_inverted + entity_sprite->height / 2 + 1;
+            int bottom = in_game_y_inverted - entity_sprite->height / 2 - 1;
 
-        //TODO just for debugging
-        // struct Block* block = get_world_block_for_world_pixel_xy(left, top, r_game_state);
-        // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
-        // block = get_world_block_for_world_pixel_xy(right, top, r_game_state);
-        // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
-        // block = get_world_block_for_world_pixel_xy(left, bottom, r_game_state);
-        // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
-        // block = get_world_block_for_world_pixel_xy(right, bottom, r_game_state);
-        // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
+            //TODO just for debugging
+            // struct Block* block = get_world_block_for_world_pixel_xy(left, top, r_game_state);
+            // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
+            // block = get_world_block_for_world_pixel_xy(right, top, r_game_state);
+            // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
+            // block = get_world_block_for_world_pixel_xy(left, bottom, r_game_state);
+            // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
+            // block = get_world_block_for_world_pixel_xy(right, bottom, r_game_state);
+            // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
 
-        uint32_t entity_fits_in_blocks = !(
-                (get_world_block_for_world_pixel_xy(left, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-            |   (get_world_block_for_world_pixel_xy(right, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-            |   (get_world_block_for_world_pixel_xy(left, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-            |   (get_world_block_for_world_pixel_xy(right, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-        );
-        if (!entity_fits_in_blocks) {
-            printf("Won't add entity because it doesn't fit\n");
-            return;
+            uint32_t entity_fits_in_blocks = !(
+                    (get_world_block_for_world_pixel_xy(left, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                |   (get_world_block_for_world_pixel_xy(right, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                |   (get_world_block_for_world_pixel_xy(left, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                |   (get_world_block_for_world_pixel_xy(right, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+            );
+            if (!entity_fits_in_blocks) {
+                printf("Won't add entity because it doesn't fit\n");
+                return;
+            }
+
+            uint16_t next_entity_index = get_next_free_entity_index(r_game_state);
+            struct Entity* new_entity = r_game_state->entities + next_entity_index;
+            new_entity->effects_flags = ENTITY_FLAG_IS_ACTIVE;
+
+            new_entity->type = ENTITY_TYPE_WORM;
+
+            new_entity->is_on_ground =
+                    (get_world_block_for_world_pixel_xy(left, bottom - 1, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                |   (get_world_block_for_world_pixel_xy(right, bottom - 1, r_game_state)->effects_flags & EFFECT_FLAG_SOLID);
+            if (new_entity->is_on_ground) {
+                new_entity->state = ENTITY_STATE_MOVING;
+                new_entity->x_velocity_pixels_per_second = r_game_state->world_rules.worm_x_speed_pixels_per_second;
+            }
+            else {
+                new_entity->state = ENTITY_STATE_FALLING;
+                new_entity->x_velocity_pixels_per_second = 0;
+            }
+
+            // Always start with gravity applied
+            new_entity->y_velocity_pixels_per_second = -r_game_state->world_rules.gravity_pixels_per_second;
+
+            new_entity->direction = RIGHT;
+            new_entity->current_sprite = r_game_state->base_sprites[SPRITE_TYPE_WORM_PUSH_FORWARD_1];
+            new_entity->height = entity_sprite->height;
+            new_entity->width = entity_sprite->width;
+            new_entity->x_bottom_left = in_game_x - new_entity->width / 2;
+            new_entity->y_inverted_bottom_left = in_game_y_inverted - new_entity->height / 2;
+            new_entity->y_velocity_pixels_per_second = 0;
+            new_entity->z_index = 5;
+            new_entity->animation_time_start_in_micros = r_game_state->current_time_in_micros;
+            //TODO set is_on_ground? remove it as an entity field?
         }
+        else if (r_editor_state->entity_type == ENTITY_TYPE_PLATFORM_1) {
+            struct Sprite* entity_sprite = &r_game_state->base_sprites[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN];
 
-        uint16_t next_entity_index = get_next_free_entity_index(r_game_state);
-        struct Entity* new_entity = r_game_state->entities + next_entity_index;
-        new_entity->effects_flags = ENTITY_FLAG_IS_ACTIVE;
+            int left = in_game_x - entity_sprite->width / 2 - 1;
+            int right = in_game_x + entity_sprite->width/ 2 + 1;
+            int top = in_game_y_inverted + entity_sprite->height / 2 + 1;
+            int bottom = in_game_y_inverted - entity_sprite->height / 2 - 1;
 
-        new_entity->type = ENTITY_TYPE_WORM;
+            //TODO just for debugging
+            // struct Block* block = get_world_block_for_world_pixel_xy(left, top, r_game_state);
+            // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
+            // block = get_world_block_for_world_pixel_xy(right, top, r_game_state);
+            // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
+            // block = get_world_block_for_world_pixel_xy(left, bottom, r_game_state);
+            // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
+            // block = get_world_block_for_world_pixel_xy(right, bottom, r_game_state);
+            // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
 
-        new_entity->is_on_ground =
-                (get_world_block_for_world_pixel_xy(left, bottom - 1, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-            |   (get_world_block_for_world_pixel_xy(right, bottom - 1, r_game_state)->effects_flags & EFFECT_FLAG_SOLID);
-        if (new_entity->is_on_ground) {
-            new_entity->state = ENTITY_STATE_MOVING;
-            new_entity->x_velocity_pixels_per_second = r_game_state->world_rules.worm_x_speed_pixels_per_second;
-        }
-        else {
-            new_entity->state = ENTITY_STATE_FALLING;
+            uint32_t entity_fits_in_blocks = !(
+                    (get_world_block_for_world_pixel_xy(left, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                |   (get_world_block_for_world_pixel_xy(right, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                |   (get_world_block_for_world_pixel_xy(left, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                |   (get_world_block_for_world_pixel_xy(right, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+            );
+            if (!entity_fits_in_blocks) {
+                printf("Won't add entity because it doesn't fit\n");
+                return;
+            }
+
+            uint16_t next_entity_index = get_next_free_entity_index(r_game_state);
+            struct Entity* new_entity = r_game_state->entities + next_entity_index;
+            new_entity->effects_flags = ENTITY_FLAG_IS_ACTIVE;
+
+            new_entity->type = ENTITY_TYPE_PLATFORM_1;
+
+            new_entity->state = ENTITY_STATE_MOVING_UP; // Pretty sure we're not using this currently for platform
             new_entity->x_velocity_pixels_per_second = 0;
+            new_entity->y_velocity_pixels_per_second = PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
+            // Direction doesn't matter for platform currently
+            new_entity->direction = RIGHT;
+
+            new_entity->current_sprite = r_game_state->base_sprites[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN];
+            new_entity->height = entity_sprite->height;
+            new_entity->width = entity_sprite->width;
+            new_entity->x_bottom_left = in_game_x - new_entity->width / 2;
+            new_entity->y_inverted_bottom_left = in_game_y_inverted - new_entity->height / 2;
+            new_entity->z_index = 5;
+            new_entity->animation_time_start_in_micros = r_game_state->current_time_in_micros;
+            //TODO set is_on_ground? remove it as an entity field?
         }
-
-        // Always start with gravity applied
-        new_entity->y_velocity_pixels_per_second = -r_game_state->world_rules.gravity_pixels_per_second;
-
-        new_entity->direction = RIGHT;
-        new_entity->current_sprite = r_game_state->base_sprites[SPRITE_TYPE_WORM_PUSH_FORWARD_1];
-        new_entity->height = entity_sprite->height;
-        new_entity->width = entity_sprite->width;
-        new_entity->x_bottom_left = in_game_x - new_entity->width / 2;
-        new_entity->y_inverted_bottom_left = in_game_y_inverted - new_entity->height / 2;
-        new_entity->y_velocity_pixels_per_second = 0;
-        new_entity->z_index = 5;
-        new_entity->animation_time_start_in_micros = r_game_state->current_time_in_micros;
-        //TODO set is_on_ground? remove it as an entity field?
 
     }
 

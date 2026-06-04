@@ -126,6 +126,38 @@ struct Block* get_vertical_middle_block(struct GameState* game_state) {
     return NULL;
 }
 
+// If left or right are inside a solid block then this returns negative (distance between y and top of solid block)
+// If neither left or right are inside a solid block then this returns positive (distance between y and top of block below)
+// Note that even if neither left nor right is inside a solid block, this method does not check if the blocks immediately
+// below are solid before returning the distance between y and the top of those blocks
+static inline double is_blocked_below(double x_left, double x_right, double y, struct GameState* game_state) {
+    struct Block* left_block = get_world_block_for_world_pixel_xy(x_left, y, game_state);
+    if (left_block->effects_flags & EFFECT_FLAG_SOLID) {
+        return y - left_block->world_pixel_y - BLOCK_HEIGHT_IN_PIXELS - 1;
+    }
+    struct Block* right_block = get_world_block_for_world_pixel_xy(x_right, y, game_state);
+    if (right_block->effects_flags & EFFECT_FLAG_SOLID) {
+        return y - right_block->world_pixel_y - BLOCK_HEIGHT_IN_PIXELS - 1;
+    }
+    return y - right_block->world_pixel_y + 1;
+}
+
+// If left or right are inside a solid block then this returns negative (distance between y and bottom of solid block)
+// If neither left or right are inside a solid block then this returns positive (distance between y and top of block above)
+// Note that even if neither left nor right is inside a solid block, this method does not check if the blocks immediately
+// above are solid before returning the distance between y and the bottom of those blocks
+static inline double is_blocked_above(double x_left, double x_right, double y, struct GameState* game_state) {
+    struct Block* left_block = get_world_block_for_world_pixel_xy(x_left, y, game_state);
+    if (left_block->effects_flags & EFFECT_FLAG_SOLID) {
+        return left_block->world_pixel_y - y;
+    }
+    struct Block* right_block = get_world_block_for_world_pixel_xy(x_right, y, game_state);
+    if (right_block->effects_flags & EFFECT_FLAG_SOLID) {
+        return right_block->world_pixel_y - y;
+    }
+    return right_block->world_pixel_y + BLOCK_HEIGHT_IN_PIXELS - y - 1;
+}
+
 // IMPLEMENTS
 void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     // printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
@@ -164,6 +196,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
         // Need to check block at feet height and block at head height
         struct Block* new_block_feet = get_world_block_for_world_pixel_xy(right_pixel_new, bottom_pixel_old, game_state);
         struct Block* new_block_head = get_world_block_for_world_pixel_xy(right_pixel_new, top_pixel_old, game_state);
+
         // Need to handle the case where player is falling and new_character_y is currently below the top of the solid block below,
         // but the block above that block is not solid. We don't want to use the solid block below to check for left/right collision
         if (new_block_feet->effects_flags & EFFECT_FLAG_SOLID) {
@@ -324,6 +357,8 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     printf("Movement for entities\n");
     for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
         printf("top of entity loop in movement\n");
+        printf("entity type is %d\n", entity->type);
+        fflush(stdout);
         if (!(entity->effects_flags & ENTITY_FLAG_IS_ACTIVE)) {
             printf("skip inactive entity\n");
             continue;
@@ -332,10 +367,11 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
         if (entity->type == ENTITY_TYPE_WORM) {
             double new_entity_x = entity->x_bottom_left + entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
             double new_entity_y = entity->y_inverted_bottom_left + entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            // TODO don't round here?
             int left = round(new_entity_x);
             int right = round(new_entity_x + entity->width);
             int bottom = round(new_entity_y);
-            int top = round(new_character_y) + entity->height;
+            int top = round(new_entity_y) + entity->height; // TODO not used?
 
             // TODO just for testing
             int curx = round(entity->x_bottom_left);
@@ -437,6 +473,51 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
             // Check if on ground
 
         }
+
+        // Platform movement
+        else if (entity->type == ENTITY_TYPE_PLATFORM_1) {
+            printf("Move platform\n");
+            double new_entity_x = entity->x_bottom_left + entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            double new_entity_y = entity->y_inverted_bottom_left + entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+
+            // Moving down
+            if (new_entity_y < entity->y_inverted_bottom_left) {
+                printf("platform1 trying to move down from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
+                // Handle case where entity is on the ground, which means right at the bottom of the block, so rounding the new y might
+                // make it the same as the currenty y, which would be the bottom of the block the entity is occupying, rather than the
+                // top of the block below
+                // TODO don't need?
+                // if (bottom == entity->y_inverted_bottom_left) {
+                //     bottom = bottom - 1;
+                // }
+
+                double check_below = is_blocked_below(new_entity_x, new_entity_x + entity->width, new_entity_y, game_state);
+                if (check_below < 0) {
+                    new_entity_y -= check_below;
+                    entity->y_velocity_pixels_per_second = PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
+                }
+                else {
+                    printf("PLatform1 is not blocked below\n");
+                }
+            }
+
+            // Moving up
+            else if (new_entity_y > entity->y_inverted_bottom_left) {
+                printf("platform1 trying to move up from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
+
+                double check_above = is_blocked_above(new_entity_x, new_entity_x + entity->width, new_entity_y + entity->height, game_state);
+                if (check_above < 0) {
+                    new_entity_y += check_above;
+                    entity->y_velocity_pixels_per_second = -PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
+                }
+                else {
+                    printf("PLatform1 is not blocked above\n");
+                }
+            }
+
+            entity->x_bottom_left = new_entity_x;
+            entity->y_inverted_bottom_left = new_entity_y;
+        }
     }
 }
 
@@ -449,7 +530,7 @@ void handle_input(  struct GameState* game_state,
 {
     double seconds_to_advance = microseconds_to_advance / (double)1000000;
 // Handle specific key presses from scancodes
-    const Uint8* state = SDL_GetKeyboardState(NULL);
+    const uint8_t* state = SDL_GetKeyboardState(NULL);
 
     bool any_key_pressed = false;
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
@@ -482,6 +563,7 @@ void handle_input(  struct GameState* game_state,
                         game_state->character.x_velocity_pixels_per_second += game_state->world_rules.x_ground_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case JUMPING:
+                    case JUMPING_2:
                         game_state->character.x_velocity_pixels_per_second += game_state->world_rules.x_air_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case CLIMBING:
@@ -533,6 +615,7 @@ void handle_input(  struct GameState* game_state,
                         game_state->character.x_velocity_pixels_per_second -= game_state->world_rules.x_ground_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case JUMPING:
+                    case JUMPING_2:
                         game_state->character.x_velocity_pixels_per_second -= game_state->world_rules.x_air_acceleration_pixels_per_second * seconds_to_advance;
                         break;
                     case CLIMBING:
@@ -590,21 +673,25 @@ void handle_input(  struct GameState* game_state,
     if(state[SDL_SCANCODE_SPACE]) {
         // printf("space key is pressed\n");
 
-        bool motion_allows_jump = false;
+        bool motion_allows_first_jump = false;
+        bool motion_allows_second_jump = false; // TODO allow double jump during fall that's not part of earlier jump
         switch(game_state->character.motion) {
             case STOPPED:
             case WALKING:
-                motion_allows_jump = true;
+                motion_allows_first_jump = true;
+                break;
+            case JUMPING:
+                motion_allows_second_jump = true;
                 break;
             default:
                 // printf("Jump not allowed because motion is %d\n", game_state->character.motion);
                 break;
         }
 
-        printf("up arrow pressed, y_velocity_pixels_per_second=%f is_jumping? %d motion=%d is_on_ground=%d\n", game_state->character.y_velocity_pixels_per_second, game_state->character.motion == JUMPING, game_state->character.motion, game_state->character.is_on_ground);
+        printf("space bar pressed, y_velocity_pixels_per_second=%f is_jumping? %d is_double_jumping? %d motion=%d is_on_ground=%d\n", game_state->character.y_velocity_pixels_per_second, game_state->character.motion == JUMPING, game_state->character.motion == JUMPING_2, game_state->character.motion, game_state->character.is_on_ground);
 
-        if (game_state->character.y_velocity_pixels_per_second == 0 && game_state->character.is_on_ground && motion_allows_jump) {
-            // printf("Start jump\n");
+        if (game_state->character.y_velocity_pixels_per_second == 0 && game_state->character.is_on_ground && motion_allows_first_jump) {
+            printf("Start first jump\n");
             // Start jump
             game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
             game_state->character.micros_when_jump_started = game_state->current_time_in_micros;
@@ -612,7 +699,7 @@ void handle_input(  struct GameState* game_state,
             printf("start jump, motion_change to JUMPING y_velocity_pixels_per_second is now %f\n", game_state->world_rules.y_jump_acceleration_pixels_per_second);
         }
         // Holding down the up arrow a little longer makes the character jump higher
-        else if (game_state->character.y_velocity_pixels_per_second > 0 && game_state->character.motion == JUMPING) {
+        else if (game_state->character.y_velocity_pixels_per_second > 0 && game_state->character.motion == JUMPING && input_state->previous_key_state[SDL_SCANCODE_SPACE]) {
             printf("up button still pressed, check if we can jump more\n");
             // TODO tidy?
             long micros_since_jump_start = game_state->current_time_in_micros - game_state->character.micros_when_jump_started;
@@ -620,6 +707,25 @@ void handle_input(  struct GameState* game_state,
             if (micros_since_jump_start < game_state->world_rules.microseconds_after_jump_start_check_jump_still_pressed) {
                 game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
                 printf("Jumping higher, y_velocity_pixels_per_second to %f\n", game_state->character.y_velocity_pixels_per_second);
+            }
+        }
+
+        // Or maybe it's a double-jump
+        else if (motion_allows_second_jump && !input_state->previous_key_state[SDL_SCANCODE_SPACE]) {
+            printf("start second jump\n");
+            game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
+            game_state->character.micros_when_jump_started = game_state->current_time_in_micros;
+            game_state->character.motion = JUMPING_2;
+        }
+        // Holding down the up arrow a little longer makes the character jump higher even for double jump
+        else if (game_state->character.y_velocity_pixels_per_second > 0 && game_state->character.motion == JUMPING_2 && input_state->previous_key_state[SDL_SCANCODE_SPACE]) {
+            printf("double jump up button still pressed, check if we can jump more\n");
+            // TODO tidy?
+            long micros_since_jump_start = game_state->current_time_in_micros - game_state->character.micros_when_jump_started;
+            printf("double jump micros_since_jump_start is %ld\n", micros_since_jump_start);
+            if (micros_since_jump_start < game_state->world_rules.microseconds_after_jump_start_check_jump_still_pressed) {
+                game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
+                printf("Double jumping higher, y_velocity_pixels_per_second to %f\n", game_state->character.y_velocity_pixels_per_second);
             }
         }
     }
@@ -686,25 +792,22 @@ void handle_input(  struct GameState* game_state,
         }
     }
 
-    if (state[SDL_SCANCODE_1]) {
-        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_1 - SDL_SCANCODE_1])) {
-            printf("1 key pressed down. prev load_on_num %d prev save_on_num %d\n", previous_editor_state.load_on_num, previous_editor_state.save_on_num);
-            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_1 - SDL_SCANCODE_1];
-            if (previous_editor_state.load_on_num) {
-                printf("load level slot 1\n");
-                load_level(game_state, 1);
-            }
-            else if (previous_editor_state.save_on_num) {
-                printf("save level slot 1\n");
-                save_level(game_state, 1);
-            }
-            else {
-                editor_state->click_state = ADD_BLOCK;
-                editor_state->block_type = BLOCK_TYPE_GROUND;
-            }
+    if (state[SDL_SCANCODE_1] && !input_state->previous_key_state[SDL_SCANCODE_1]) {
+        // TODO can switch all this number_keys_down_bitmask and letter_keys_down_bitmask checking to using previous_key_state?
+        printf("1 key pressed down. prev load_on_num %d prev save_on_num %d\n", previous_editor_state.load_on_num, previous_editor_state.save_on_num);
+        input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_1 - SDL_SCANCODE_1];
+        if (previous_editor_state.load_on_num) {
+            printf("load level slot 1\n");
+            load_level(game_state, 1);
         }
-    } else {
-        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_1 - SDL_SCANCODE_1];
+        else if (previous_editor_state.save_on_num) {
+            printf("save level slot 1\n");
+            save_level(game_state, 1);
+        }
+        else {
+            editor_state->click_state = ADD_BLOCK;
+            editor_state->block_type = BLOCK_TYPE_GROUND;
+        }
     }
 
     if (state[SDL_SCANCODE_2]) {
@@ -762,7 +865,8 @@ void handle_input(  struct GameState* game_state,
                 save_level(game_state, 4);
             }
             else {
-                // Switch current editor block to something
+                editor_state->click_state = ADD_ENTITY;
+                editor_state->entity_type = ENTITY_TYPE_PLATFORM_1;
             }
         }
     } else {
@@ -809,24 +913,20 @@ void handle_input(  struct GameState* game_state,
         input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_6 - SDL_SCANCODE_1];
     }
 
-    if (state[SDL_SCANCODE_7]) {
-        if (!(input_state->number_keys_down_bitmask & NUMBER_SCANCODE_MASKS[SDL_SCANCODE_7 - SDL_SCANCODE_1])) {
-            // printf("7 key pressed down");
-            input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_7 - SDL_SCANCODE_1];
-            if (previous_editor_state.load_on_num) {
-                printf("load level slot 7");
-                load_level(game_state, 7);
-            }
-            else if (previous_editor_state.save_on_num) {
-                printf("save level slot 7");
-                save_level(game_state, 7);
-            }
-            else {
-                // Switch current editor block to something
-            }
+    if (state[SDL_SCANCODE_7] && !input_state->previous_key_state[SDL_SCANCODE_7]) {
+        // printf("7 key pressed down");
+        input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_7 - SDL_SCANCODE_1];
+        if (previous_editor_state.load_on_num) {
+            printf("load level slot 7");
+            load_level(game_state, 7);
         }
-    } else {
-        input_state->number_keys_down_bitmask &= NUMBER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_7 - SDL_SCANCODE_1];
+        else if (previous_editor_state.save_on_num) {
+            printf("save level slot 7");
+            save_level(game_state, 7);
+        }
+        else {
+            // Switch current editor block to something
+        }
     }
 
     if (state[SDL_SCANCODE_8]) {
@@ -918,4 +1018,6 @@ void handle_input(  struct GameState* game_state,
         // printf("At max x speed left\n");
         game_state->character.x_velocity_pixels_per_second = -game_state->world_rules.x_movement_max_speed_pixels_per_second;
     }
+
+    memcpy(input_state->previous_key_state, state, input_state->size_of_keyboard_state);
 }
