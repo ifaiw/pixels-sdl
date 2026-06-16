@@ -2,11 +2,13 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include <SDL2/SDL.h>
 
 #include "game_editor.h"
 #include "game_paths.h"
+#include "structs.h"
 
 
 // SDL_SCANCODE_A = 4
@@ -126,6 +128,102 @@ struct Block* get_vertical_middle_block(struct GameState* game_state) {
     return NULL;
 }
 
+static inline struct Vec2 get_new_location_from_collision(struct Character* character_before_movement, struct Character character_after_initial_movement, struct Entity* entity) {
+    if (!is_overlapping(&character_after_initial_movement, entity)) {
+        struct Vec2 zeroes = {0, 0};
+        return zeroes;
+    }
+
+
+    double x_distance;
+    double y_distance;
+    double x_movement_without_collision;
+    double y_movement_without_collision;
+    double x_offset;
+    double y_offset;
+    if (character_after_initial_movement.x_velocity_pixels_per_second < 0) {
+        x_distance = character_before_movement->x_bottom_left - (entity->x_bottom_left + entity->width);
+        x_offset = entity->x_bottom_left + entity->width - character_after_initial_movement.x_bottom_left;
+    } else {
+        x_distance = entity->x_bottom_left - (character_before_movement->x_bottom_left + character_before_movement->width);
+    }
+
+    if (character_after_initial_movement.y_velocity_pixels_per_second < 0) {
+        y_distance = character_before_movement->y_inverted_bottom_left - (entity->y_inverted_bottom_left + entity->height);
+    } else {
+        y_distance = entity->y_inverted_bottom_left - (character_before_movement->y_inverted_bottom_left + character_before_movement->height);
+    }
+
+    struct Vec2 new_location;
+
+    // Figure out which side of the entity the char hits first, top/bottom or left/right
+    if (y_distance < x_distance) {
+        // TODO should this actually be the x location at which the character hit the top/bottom of the entity?
+        new_location.x = character_after_initial_movement.x_bottom_left;
+        // Stop on top of entity
+        if (character_after_initial_movement.y_velocity_pixels_per_second < 0) {
+            new_location.y = entity->y_inverted_bottom_left + entity->height;
+        }
+        // Stop against bottom of entity
+        else {
+            new_location.y = entity->y_inverted_bottom_left - character_after_initial_movement.height;
+        }
+    }
+    else {
+        // TODO should this actually be the y location at which the character hit the left/right of the entity?
+        new_location.y = character_after_initial_movement.y_inverted_bottom_left;
+        // Stop on right side of entity
+        if (character_after_initial_movement.x_velocity_pixels_per_second < 0) {
+            new_location.x = entity->x_bottom_left + entity->width;
+        }
+        // Stop on left side of entity
+        else {
+            new_location.x = entity->x_bottom_left - character_after_initial_movement.width;
+        }
+    }
+
+    return new_location;
+}
+
+#define NUM_ENTITY_POINTS 4
+static inline bool is_overlapping(struct Character* character, struct Entity* entity) {
+    double character_half_width = character->width / 2;
+    double character_half_height = character->height / 2;
+    double character_left_x = character->x_bottom_left - character_half_width;
+    double character_right_x = character->x_bottom_left + character->width + character_half_width;
+    double character_bottom_y = character->y_inverted_bottom_left - character_half_height;
+    double character_top_y = character->y_inverted_bottom_left + character->height + character_half_height;
+
+    double entity_middle_x = entity->x_bottom_left + 0.5 * entity->width;
+    double entity_middle_y = entity->y_inverted_bottom_left + 0.5 * entity->height;
+
+    return  entity_middle_x >= character_left_x && entity_middle_x < character_right_x
+        &&  entity_middle_y >= character_bottom_y && entity_middle_y < character_top_y;
+
+    // TODO can delete?
+    // printf("is_overlapping char xy is %f,%f, char width %f char height %f entity width %f entity height %f\n", character->x_bottom_left, character->y_inverted_bottom_left, character->width, character->height, entity->width, entity->height);
+    // double entity_points[NUM_ENTITY_POINTS][2] = {
+    //     {entity->x_bottom_left, entity->y_inverted_bottom_left},
+    //     {entity->x_bottom_left, entity->y_inverted_bottom_left + entity->height},
+    //     {entity->x_bottom_left + entity->width, entity->y_inverted_bottom_left},
+    //     {entity->x_bottom_left + entity->width, entity->y_inverted_bottom_left + entity->height}
+    // };
+
+    // for (int entity_point_index = 0; entity_point_index < NUM_ENTITY_POINTS; ++entity_point_index) {
+    //     printf("is_overlapping check %f,%f in %f %f %f %f\n", entity_points[entity_point_index][0], entity_points[entity_point_index][1], character->x_bottom_left, character->x_bottom_left + character->width, character->y_inverted_bottom_left, character->y_inverted_bottom_left + character->height);
+    //     if (    entity_points[entity_point_index][0] >= character->x_bottom_left
+    //         &&  entity_points[entity_point_index][0] < character->x_bottom_left + character->width
+    //         &&  entity_points[entity_point_index][1] >= character->y_inverted_bottom_left
+    //         &&  entity_points[entity_point_index][1] < character->y_inverted_bottom_left + character->height)
+    //     {
+    //         return true;
+    //     }
+    // }
+    // return false;
+}
+
+
+
 // If left or right are inside a solid block then this returns negative (distance between y and top of solid block)
 // If neither left or right are inside a solid block then this returns positive (distance between y and top of block below)
 // Note that even if neither left nor right is inside a solid block, this method does not check if the blocks immediately
@@ -143,32 +241,252 @@ static inline double is_blocked_below(double x_left, double x_right, double y, s
 }
 
 // If left or right are inside a solid block then this returns negative (distance between y and bottom of solid block)
-// If neither left or right are inside a solid block then this returns positive (distance between y and top of block above)
+// If neither left or right are inside a solid block then this returns positive
+// TODO the game doesn't currently care about the distance when the blocks aren't solid and the calculation was getting
+// messy so for now this just returns 1 if not blocked above, the comments below don't currently apply
+// (distance between y and bottom of block above)
 // Note that even if neither left nor right is inside a solid block, this method does not check if the blocks immediately
 // above are solid before returning the distance between y and the bottom of those blocks
 static inline double is_blocked_above(double x_left, double x_right, double y, struct GameState* game_state) {
+    printf("is_blocked_above xleft=%f xright=%f y=%f\n", x_left, x_right, y);
     struct Block* left_block = get_world_block_for_world_pixel_xy(x_left, y, game_state);
+    printf("left block is at world x=%d y=%d is solid? %d\n", left_block->block_x, left_block->block_y, (left_block->effects_flags & EFFECT_FLAG_SOLID));
     if (left_block->effects_flags & EFFECT_FLAG_SOLID) {
         return left_block->world_pixel_y - y;
     }
     struct Block* right_block = get_world_block_for_world_pixel_xy(x_right, y, game_state);
+    printf("right block is at world x=%d y=%d is solid? %d\n", right_block->block_x, right_block->block_y, (right_block->effects_flags & EFFECT_FLAG_SOLID));
     if (right_block->effects_flags & EFFECT_FLAG_SOLID) {
         return right_block->world_pixel_y - y;
     }
-    return right_block->world_pixel_y + BLOCK_HEIGHT_IN_PIXELS - y - 1;
+    // printf("right_block->world_pixel_y+BLOCK_HEIGHT_IN_PIXELS=%d y=%f return %f\n", (right_block->world_pixel_y + BLOCK_HEIGHT_IN_PIXELS), y, right_block->world_pixel_y + BLOCK_HEIGHT_IN_PIXELS - y - 1);
+
+    // return right_block->world_pixel_y + BLOCK_HEIGHT_IN_PIXELS - y - 1;
+
+    return 1;
 }
 
 // IMPLEMENTS
 void do_movement(struct GameState* game_state, double microseconds_to_advance) {
+
+    printf("Movement for entities\n");
+    for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
+        printf("top of entity loop in movement\n");
+        printf("entity type is %d\n", entity->type);
+        fflush(stdout);
+        if (!(entity->effects_flags & ENTITY_FLAG_IS_ACTIVE)) {
+            printf("skip inactive entity\n");
+            continue;
+        }
+
+        if (entity->type == ENTITY_TYPE_WORM) {
+            double new_entity_x = entity->x_bottom_left + entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            double new_entity_y = entity->y_inverted_bottom_left + entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            // TODO don't round here?
+            int left = round(new_entity_x);
+            int right = round(new_entity_x + entity->width);
+            int bottom = round(new_entity_y);
+            int top = round(new_entity_y) + entity->height; // TODO not used?
+
+            // TODO just for testing
+            int curx = round(entity->x_bottom_left);
+            int cury = round(entity->y_inverted_bottom_left);
+            struct Block* curblock = get_world_block_for_world_pixel_xy(curx, cury, game_state);
+            printf("curblock is %d,%d\n", curblock->block_x, curblock->block_y);
+
+            // struct Block* below_left = get_world_block_for_world_pixel_xy(round(), bottom-1, game_state);
+            // struct Block* below_right = get_world_block_for_world_pixel_xy(right, bottom-1, game_state);
+            // bool stopped_bottom = (below_left->effects_flags & EFFECT_FLAG_SOLID) || (below_right->effects_flags & EFFECT_FLAG_SOLID);
+            // printf("stopped_bottom is %d\n");
+
+            bool stopped_bottom = true;
+
+            // Entity moving down
+            if (new_entity_y < entity->y_inverted_bottom_left) {
+                printf("entity trying to move down from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
+                // Handle case where entity is on the ground, which means right at the bottom of the block, so rounding the new y might
+                // make it the same as the currenty y, which would be the bottom of the block the entity is occupying, rather than the
+                // top of the block below
+                if (bottom == entity->y_inverted_bottom_left) {
+                    bottom = bottom - 1;
+                }
+
+                struct Block* new_bottom_left = get_world_block_for_world_pixel_xy(left, bottom, game_state);
+                struct Block* new_bottom_right = get_world_block_for_world_pixel_xy(right, bottom, game_state);
+                printf("for moving down left block %d,%d right block %d,%d\n", new_bottom_left->block_x, new_bottom_left->block_y, new_bottom_right->block_x, new_bottom_right->block_y);
+                if ((new_bottom_left->effects_flags & EFFECT_FLAG_SOLID) || (new_bottom_right->effects_flags & EFFECT_FLAG_SOLID)) {
+                    printf("Entity is blocked below\n");
+                    if (entity->state == ENTITY_STATE_FALLING) {
+                        printf("worm switch from falling to moving\n");
+                        entity->state = ENTITY_STATE_MOVING;
+
+                        if (entity->direction == LEFT) {
+                            entity->x_velocity_pixels_per_second = -game_state->world_rules.worm_x_speed_pixels_per_second;
+                        }
+                        else {
+                            entity->x_velocity_pixels_per_second = game_state->world_rules.worm_x_speed_pixels_per_second;
+                        }
+                        printf("worm switch to moving now entity x velocity is %f\n", entity->x_velocity_pixels_per_second);
+                    }
+
+                    new_entity_y = new_bottom_left->world_pixel_y + BLOCK_HEIGHT_IN_PIXELS;
+                    entity->y_velocity_pixels_per_second = 0;
+                    if (new_entity_y < entity->y_inverted_bottom_left) {
+                        printf("entity moved down at least a little bit\n");
+                        stopped_bottom = true;
+                    }
+                }
+                else {
+                    printf("Entity is not blocked below\n");
+                    stopped_bottom = false;
+                    entity->x_velocity_pixels_per_second = 0;
+                    entity->state = ENTITY_STATE_FALLING;
+                }
+
+                // Reset bottom after possibly setting it to bottom - 1 earlier
+                bottom = round(new_entity_y);
+            }
+
+            // Moving right
+            if (new_entity_x > entity->x_bottom_left) {
+                printf("entity trying to move right\n");
+                struct Block* block_right = get_world_block_for_world_pixel_xy(right, bottom, game_state);
+                struct Block* block_right_below = get_world_block_for_world_pixel_xy(right, bottom - 1, game_state);
+                printf("right block %d,%d effects=%d right below block %d,%d effects=%d\n", block_right->block_x, block_right->block_y, block_right->effects_flags, block_right_below->block_x, block_right_below->block_y, block_right_below->effects_flags);
+                if ((block_right->effects_flags & EFFECT_FLAG_SOLID) || !(block_right_below->effects_flags & EFFECT_FLAG_SOLID)) {
+                    printf("Can't move farther right, switch to moving left\n");
+                    new_entity_x = block_right->world_pixel_x - entity->width;
+                    entity->direction = LEFT;
+                    entity->x_velocity_pixels_per_second = -game_state->world_rules.worm_x_speed_pixels_per_second;
+                }
+            }
+
+            // Moving left
+            else if (new_entity_x < entity->x_bottom_left) {
+                printf("entity trying to move left\n");
+                struct Block* block_left = get_world_block_for_world_pixel_xy(left, bottom, game_state);
+                struct Block* block_left_below = get_world_block_for_world_pixel_xy(left, bottom - 1, game_state);
+                printf("left block %d,%d effects=%d left below block %d,%d effects=%d\n", block_left->block_x, block_left->block_y, block_left->effects_flags, block_left_below->block_x, block_left_below->block_y, block_left_below->effects_flags);
+                if ((block_left->effects_flags & EFFECT_FLAG_SOLID) || !(block_left_below->effects_flags & EFFECT_FLAG_SOLID)) {
+                    printf("Can't move farther left, switch to moving right\n");
+                    new_entity_x = block_left->world_pixel_x + BLOCK_WIDTH_IN_PIXELS;
+                    entity->direction = RIGHT;
+                    entity->x_velocity_pixels_per_second = game_state->world_rules.worm_x_speed_pixels_per_second;
+                }
+            }
+
+            entity->y_velocity_pixels_per_second -= game_state->world_rules.gravity_pixels_per_second;
+            printf("entity move from %f,%f to %f,%f new velocities %f,%f\n", entity->x_bottom_left, entity->y_inverted_bottom_left, new_entity_x, new_entity_y, entity->x_velocity_pixels_per_second, entity->y_velocity_pixels_per_second);
+
+            entity->x_bottom_left = new_entity_x;
+            entity->y_inverted_bottom_left = new_entity_y;
+
+            // if (stopped_bottom) {
+            //     entity->y_velocity_pixels_per_second = 0;
+            // }
+
+            // Check if on ground
+
+        }
+
+        // Platform movement
+        else if (entity->type == ENTITY_TYPE_PLATFORM_1) {
+            printf("Move platform\n");
+            double new_entity_x = entity->x_bottom_left + entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+            double new_entity_y = entity->y_inverted_bottom_left + entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
+
+            // Moving down
+            if (new_entity_y < entity->y_inverted_bottom_left) {
+                printf("platform1 trying to move down from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
+                // Handle case where entity is on the ground, which means right at the bottom of the block, so rounding the new y might
+                // make it the same as the currenty y, which would be the bottom of the block the entity is occupying, rather than the
+                // top of the block below
+                // TODO don't need?
+                // if (bottom == entity->y_inverted_bottom_left) {
+                //     bottom = bottom - 1;
+                // }
+
+                double check_below = is_blocked_below(new_entity_x, new_entity_x + entity->width, new_entity_y, game_state);
+                if (check_below < 0) {
+                    new_entity_y -= check_below;
+                    entity->y_velocity_pixels_per_second = PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
+                }
+                else {
+                    printf("PLatform1 is not blocked below\n");
+                }
+
+                // Did the platform move down into the player
+                // TODO can delete?
+                // if (    new_entity_x >= game_state->character.x_bottom_left
+                //     &&  new_entity_x + entity->width < game_state->character.x_bottom_left + game_state->character.width
+                //     &&  new_entity_y < game_state->character.y_inverted_bottom_left + game_state->character.height
+                //     &&  new_entity_y >= game_state->character.y_inverted_bottom_left)
+                // {
+                //     // Player being moved down by platform
+                //     game_state->character.y_velocity_pixels_per_second = 0;
+                //     game_state->character.y_inverted_bottom_left = new_entity_y - game_state->character.height;
+                // }
+            }
+
+            // Moving up
+            else if (new_entity_y > entity->y_inverted_bottom_left) {
+                printf("platform1 trying to move up from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
+
+                double check_above = is_blocked_above(new_entity_x, new_entity_x + entity->width, new_entity_y + entity->height - 1, game_state);
+                if (check_above < 0) {
+                    new_entity_y += check_above;
+                    entity->y_velocity_pixels_per_second = -PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
+                }
+                else {
+                    printf("PLatform1 is not blocked above\n");
+                }
+
+                // Did the platform move up into the player
+                // TODO can delete?
+                // if (    new_entity_x >= game_state->character.x_bottom_left
+                //     &&  new_entity_x + entity->width < game_state->character.x_bottom_left + game_state->character.width
+                //     &&  new_entity_y + entity->height >= game_state->character.y_inverted_bottom_left
+                //     &&  new_entity_y + entity->height <= game_state->character.y_inverted_bottom_left + game_state->character.height)
+                // {
+                //     printf("plaftorm move player up, player y start at %f\n", game_state->character.y_inverted_bottom_left);
+                //     // Player being moved up by platform
+                //     game_state->character.motion = STOPPED;
+                //     game_state->character.y_inverted_bottom_left = new_entity_y + entity->height;
+                //     printf("plaftorm did move player up to %f\n", game_state->character.y_inverted_bottom_left);
+                //     game_state->character.y_velocity_pixels_per_second = 0;
+                //     game_state->character.is_on_ground = true; // TODO find a better way to handle this
+                // }
+            }
+
+            bool collided_with_player = is_overlapping(&game_state->character, entity);
+            printf("platform overlapping with character? %d\n", collided_with_player);
+            if (collided_with_player) {
+                // Check platform direction into player
+                if (new_entity_y > entity->y_inverted_bottom_left) {
+                    game_state->character.y_inverted_bottom_left = new_entity_y + entity->height;
+                    if (game_state->character.y_velocity_pixels_per_second < 0) {
+                        game_state->character.y_velocity_pixels_per_second = 0;
+                    }
+                    game_state->character.motion = STOPPED;
+                }
+                else if (new_entity_y < entity->y_inverted_bottom_left) {
+                    game_state->character.y_inverted_bottom_left = new_entity_y - game_state->character.height;
+                    if (game_state->character.y_velocity_pixels_per_second > 0) {
+                        game_state->character.y_velocity_pixels_per_second = 0;
+                    }
+                }
+            }
+
+            entity->x_bottom_left = new_entity_x;
+            entity->y_inverted_bottom_left = new_entity_y;
+        }
+    }
+
     // printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
     double new_character_x = game_state->character.x_bottom_left + game_state->character.x_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
     double new_character_y = game_state->character.y_inverted_bottom_left + game_state->character.y_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
 
-    // printf("movement: old_x %f old_y %f new_x %f new_y %f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, new_character_x, new_character_y);
-    // TODO just for testing
-    if (new_character_y < game_state->character.y_inverted_bottom_left) {
-        // printf("At top of do_movement moving-down\n");
-    }
+
 
     int old_character_x_floor = floor(game_state->character.x_bottom_left);
     int old_character_y_floor = floor(game_state->character.y_inverted_bottom_left);
@@ -183,6 +501,19 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
     int left_pixel_new = new_character_x_floor;
     int bottom_pixel_new = new_character_y_floor;
     int top_pixel_new = new_character_y_floor + game_state->character.height;
+
+    struct Character character_after_initial_movement;
+    character_after_initial_movement.x_bottom_left = new_character_x;
+    character_after_initial_movement.y_inverted_bottom_left = new_character_y
+        new_character_y
+    };
+    struct Vec2 new_spot_for_character;
+
+    for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
+        if (entity->effects_flags & ENTITY_FLAG_IS_ACTIVE && entity->effects_flags & ENTITY_FLAG_COLLIDES_WITH_PLAYER) {
+            get_new_location_from_collision();
+        }
+    }
 
     bool x_motion_stopped = false;
     bool y_motion_stopped_above = false;
@@ -354,171 +685,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
 
     // TODO Move this to rules, or somewhere else that makes more sense
 
-    printf("Movement for entities\n");
-    for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
-        printf("top of entity loop in movement\n");
-        printf("entity type is %d\n", entity->type);
-        fflush(stdout);
-        if (!(entity->effects_flags & ENTITY_FLAG_IS_ACTIVE)) {
-            printf("skip inactive entity\n");
-            continue;
-        }
 
-        if (entity->type == ENTITY_TYPE_WORM) {
-            double new_entity_x = entity->x_bottom_left + entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
-            double new_entity_y = entity->y_inverted_bottom_left + entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
-            // TODO don't round here?
-            int left = round(new_entity_x);
-            int right = round(new_entity_x + entity->width);
-            int bottom = round(new_entity_y);
-            int top = round(new_entity_y) + entity->height; // TODO not used?
-
-            // TODO just for testing
-            int curx = round(entity->x_bottom_left);
-            int cury = round(entity->y_inverted_bottom_left);
-            struct Block* curblock = get_world_block_for_world_pixel_xy(curx, cury, game_state);
-            printf("curblock is %d,%d\n", curblock->block_x, curblock->block_y);
-
-            // struct Block* below_left = get_world_block_for_world_pixel_xy(round(), bottom-1, game_state);
-            // struct Block* below_right = get_world_block_for_world_pixel_xy(right, bottom-1, game_state);
-            // bool stopped_bottom = (below_left->effects_flags & EFFECT_FLAG_SOLID) || (below_right->effects_flags & EFFECT_FLAG_SOLID);
-            // printf("stopped_bottom is %d\n");
-
-            bool stopped_bottom = true;
-
-            // Entity moving down
-            if (new_entity_y < entity->y_inverted_bottom_left) {
-                printf("entity trying to move down from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
-                // Handle case where entity is on the ground, which means right at the bottom of the block, so rounding the new y might
-                // make it the same as the currenty y, which would be the bottom of the block the entity is occupying, rather than the
-                // top of the block below
-                if (bottom == entity->y_inverted_bottom_left) {
-                    bottom = bottom - 1;
-                }
-
-                struct Block* new_bottom_left = get_world_block_for_world_pixel_xy(left, bottom, game_state);
-                struct Block* new_bottom_right = get_world_block_for_world_pixel_xy(right, bottom, game_state);
-                printf("for moving down left block %d,%d right block %d,%d\n", new_bottom_left->block_x, new_bottom_left->block_y, new_bottom_right->block_x, new_bottom_right->block_y);
-                if ((new_bottom_left->effects_flags & EFFECT_FLAG_SOLID) || (new_bottom_right->effects_flags & EFFECT_FLAG_SOLID)) {
-                    printf("Entity is blocked below\n");
-                    if (entity->state == ENTITY_STATE_FALLING) {
-                        printf("worm switch from falling to moving\n");
-                        entity->state = ENTITY_STATE_MOVING;
-
-                        if (entity->direction == LEFT) {
-                            entity->x_velocity_pixels_per_second = -game_state->world_rules.worm_x_speed_pixels_per_second;
-                        }
-                        else {
-                            entity->x_velocity_pixels_per_second = game_state->world_rules.worm_x_speed_pixels_per_second;
-                        }
-                        printf("worm switch to moving now entity x velocity is %f\n", entity->x_velocity_pixels_per_second);
-                    }
-
-                    new_entity_y = new_bottom_left->world_pixel_y + BLOCK_HEIGHT_IN_PIXELS;
-                    entity->y_velocity_pixels_per_second = 0;
-                    if (new_entity_y < entity->y_inverted_bottom_left) {
-                        printf("entity moved down at least a little bit\n");
-                        stopped_bottom = true;
-                    }
-                }
-                else {
-                    printf("Entity is not blocked below\n");
-                    stopped_bottom = false;
-                    entity->x_velocity_pixels_per_second = 0;
-                    entity->state = ENTITY_STATE_FALLING;
-                }
-
-                // Reset bottom after possibly setting it to bottom - 1 earlier
-                bottom = round(new_entity_y);
-            }
-
-            // Moving right
-            if (new_entity_x > entity->x_bottom_left) {
-                printf("entity trying to move right\n");
-                struct Block* block_right = get_world_block_for_world_pixel_xy(right, bottom, game_state);
-                struct Block* block_right_below = get_world_block_for_world_pixel_xy(right, bottom - 1, game_state);
-                printf("right block %d,%d effects=%d right below block %d,%d effects=%d\n", block_right->block_x, block_right->block_y, block_right->effects_flags, block_right_below->block_x, block_right_below->block_y, block_right_below->effects_flags);
-                if ((block_right->effects_flags & EFFECT_FLAG_SOLID) || !(block_right_below->effects_flags & EFFECT_FLAG_SOLID)) {
-                    printf("Can't move farther right, switch to moving left\n");
-                    new_entity_x = block_right->world_pixel_x - entity->width;
-                    entity->direction = LEFT;
-                    entity->x_velocity_pixels_per_second = -game_state->world_rules.worm_x_speed_pixels_per_second;
-                }
-            }
-
-            // Moving left
-            else if (new_entity_x < entity->x_bottom_left) {
-                printf("entity trying to move left\n");
-                struct Block* block_left = get_world_block_for_world_pixel_xy(left, bottom, game_state);
-                struct Block* block_left_below = get_world_block_for_world_pixel_xy(left, bottom - 1, game_state);
-                printf("left block %d,%d effects=%d left below block %d,%d effects=%d\n", block_left->block_x, block_left->block_y, block_left->effects_flags, block_left_below->block_x, block_left_below->block_y, block_left_below->effects_flags);
-                if ((block_left->effects_flags & EFFECT_FLAG_SOLID) || !(block_left_below->effects_flags & EFFECT_FLAG_SOLID)) {
-                    printf("Can't move farther left, switch to moving right\n");
-                    new_entity_x = block_left->world_pixel_x + BLOCK_WIDTH_IN_PIXELS;
-                    entity->direction = RIGHT;
-                    entity->x_velocity_pixels_per_second = game_state->world_rules.worm_x_speed_pixels_per_second;
-                }
-            }
-
-            entity->y_velocity_pixels_per_second -= game_state->world_rules.gravity_pixels_per_second;
-            printf("entity move from %f,%f to %f,%f new velocities %f,%f\n", entity->x_bottom_left, entity->y_inverted_bottom_left, new_entity_x, new_entity_y, entity->x_velocity_pixels_per_second, entity->y_velocity_pixels_per_second);
-
-            entity->x_bottom_left = new_entity_x;
-            entity->y_inverted_bottom_left = new_entity_y;
-
-            // if (stopped_bottom) {
-            //     entity->y_velocity_pixels_per_second = 0;
-            // }
-
-            // Check if on ground
-
-        }
-
-        // Platform movement
-        else if (entity->type == ENTITY_TYPE_PLATFORM_1) {
-            printf("Move platform\n");
-            double new_entity_x = entity->x_bottom_left + entity->x_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
-            double new_entity_y = entity->y_inverted_bottom_left + entity->y_velocity_pixels_per_second / MICROSECONDS_PER_SECOND * microseconds_to_advance;
-
-            // Moving down
-            if (new_entity_y < entity->y_inverted_bottom_left) {
-                printf("platform1 trying to move down from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
-                // Handle case where entity is on the ground, which means right at the bottom of the block, so rounding the new y might
-                // make it the same as the currenty y, which would be the bottom of the block the entity is occupying, rather than the
-                // top of the block below
-                // TODO don't need?
-                // if (bottom == entity->y_inverted_bottom_left) {
-                //     bottom = bottom - 1;
-                // }
-
-                double check_below = is_blocked_below(new_entity_x, new_entity_x + entity->width, new_entity_y, game_state);
-                if (check_below < 0) {
-                    new_entity_y -= check_below;
-                    entity->y_velocity_pixels_per_second = PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
-                }
-                else {
-                    printf("PLatform1 is not blocked below\n");
-                }
-            }
-
-            // Moving up
-            else if (new_entity_y > entity->y_inverted_bottom_left) {
-                printf("platform1 trying to move up from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
-
-                double check_above = is_blocked_above(new_entity_x, new_entity_x + entity->width, new_entity_y + entity->height, game_state);
-                if (check_above < 0) {
-                    new_entity_y += check_above;
-                    entity->y_velocity_pixels_per_second = -PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
-                }
-                else {
-                    printf("PLatform1 is not blocked above\n");
-                }
-            }
-
-            entity->x_bottom_left = new_entity_x;
-            entity->y_inverted_bottom_left = new_entity_y;
-        }
-    }
 }
 
 // IMPLEMENTS
