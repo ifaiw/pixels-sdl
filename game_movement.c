@@ -128,62 +128,6 @@ struct Block* get_vertical_middle_block(struct GameState* game_state) {
     return NULL;
 }
 
-static inline struct Vec2 get_new_location_from_collision(struct Character* character_before_movement, struct Character character_after_initial_movement, struct Entity* entity) {
-    if (!is_overlapping(&character_after_initial_movement, entity)) {
-        struct Vec2 zeroes = {0, 0};
-        return zeroes;
-    }
-
-
-    double x_distance;
-    double y_distance;
-    double x_movement_without_collision;
-    double y_movement_without_collision;
-    double x_offset;
-    double y_offset;
-    if (character_after_initial_movement.x_velocity_pixels_per_second < 0) {
-        x_distance = character_before_movement->x_bottom_left - (entity->x_bottom_left + entity->width);
-        x_offset = entity->x_bottom_left + entity->width - character_after_initial_movement.x_bottom_left;
-    } else {
-        x_distance = entity->x_bottom_left - (character_before_movement->x_bottom_left + character_before_movement->width);
-    }
-
-    if (character_after_initial_movement.y_velocity_pixels_per_second < 0) {
-        y_distance = character_before_movement->y_inverted_bottom_left - (entity->y_inverted_bottom_left + entity->height);
-    } else {
-        y_distance = entity->y_inverted_bottom_left - (character_before_movement->y_inverted_bottom_left + character_before_movement->height);
-    }
-
-    struct Vec2 new_location;
-
-    // Figure out which side of the entity the char hits first, top/bottom or left/right
-    if (y_distance < x_distance) {
-        // TODO should this actually be the x location at which the character hit the top/bottom of the entity?
-        new_location.x = character_after_initial_movement.x_bottom_left;
-        // Stop on top of entity
-        if (character_after_initial_movement.y_velocity_pixels_per_second < 0) {
-            new_location.y = entity->y_inverted_bottom_left + entity->height;
-        }
-        // Stop against bottom of entity
-        else {
-            new_location.y = entity->y_inverted_bottom_left - character_after_initial_movement.height;
-        }
-    }
-    else {
-        // TODO should this actually be the y location at which the character hit the left/right of the entity?
-        new_location.y = character_after_initial_movement.y_inverted_bottom_left;
-        // Stop on right side of entity
-        if (character_after_initial_movement.x_velocity_pixels_per_second < 0) {
-            new_location.x = entity->x_bottom_left + entity->width;
-        }
-        // Stop on left side of entity
-        else {
-            new_location.x = entity->x_bottom_left - character_after_initial_movement.width;
-        }
-    }
-
-    return new_location;
-}
 
 #define NUM_ENTITY_POINTS 4
 static inline bool is_overlapping(struct Character* character, struct Entity* entity) {
@@ -196,6 +140,8 @@ static inline bool is_overlapping(struct Character* character, struct Entity* en
 
     double entity_middle_x = entity->x_bottom_left + 0.5 * entity->width;
     double entity_middle_y = entity->y_inverted_bottom_left + 0.5 * entity->height;
+
+    printf("is_overlapping entity middle x %f y %f character leftx %f rightx %f bottomy %f topy %f\n", entity_middle_x, entity_middle_y, character_left_x, character_right_x, character_bottom_y, character_top_y);
 
     return  entity_middle_x >= character_left_x && entity_middle_x < character_right_x
         &&  entity_middle_y >= character_bottom_y && entity_middle_y < character_top_y;
@@ -222,6 +168,108 @@ static inline bool is_overlapping(struct Character* character, struct Entity* en
     // return false;
 }
 
+
+static inline struct Vec2 get_new_location_from_collision(struct Character* character_before_movement, struct Character character_after_initial_movement, struct Entity* entity) {
+    if (!is_overlapping(&character_after_initial_movement, entity)) {
+        printf("get_new_location_from_collision no overlap, return same_spot\n");
+        struct Vec2 same_spot = {character_after_initial_movement.x_bottom_left, character_after_initial_movement.y_inverted_bottom_left};
+        return same_spot;
+    }
+
+    printf("get_new_location_from_collision x_velocity %f y_velocity %f\n", character_after_initial_movement.x_velocity_pixels_per_second, character_after_initial_movement.y_velocity_pixels_per_second);
+    printf("get_new_location_from_collision character_before_movement x %f y %f w %f h %f  entity x %f y %f w %f h %f\n", character_before_movement->x_bottom_left, character_before_movement->y_inverted_bottom_left, character_before_movement->width, character_before_movement->height, entity->x_bottom_left, entity->y_inverted_bottom_left, entity->width, entity->height);
+
+    double x_distance;
+    double y_distance;
+    double x_movement_without_collision;
+    double y_movement_without_collision;
+    double x_offset;
+    double y_offset;
+
+    // Need to figure out which side of the entity character hits first
+    // First, check if the user already overlaps horizontally or vertically (but not vice-versa) with the entity before moving; if
+    // so then we know for sure (I think?) that they're hitting on the other axis first.
+    // NOTE this assumes that the user didn't overlap with the entity in both axes before moving; I'm not sure what to do
+    // in that case.
+    // TODO Still want this check?
+    if (is_overlapping(character_before_movement, entity)) {
+        printf("get_new_location_from_collision OVERLAPPING character_before_movement and entity, shouldnt happen, we don't know what to do with this yet\n");
+        exit(-1);
+    }
+
+    bool already_x = false;
+    bool already_y = false;
+    if (    (character_before_movement->x_bottom_left >= entity->x_bottom_left && character_before_movement->x_bottom_left < entity->x_bottom_left + entity->width)
+        ||  (character_before_movement->x_bottom_left + character_before_movement->width >= entity->x_bottom_left && character_before_movement->x_bottom_left + character_before_movement->width < character_before_movement->x_bottom_left + character_before_movement->width)
+        // If the character is wider than the entity, check if character left is left of entity and character right is right of entity
+        // Make the math a little shorter by just checking if character is "around" the left entity side, the above two checks should make that enough
+        ||  (character_before_movement->x_bottom_left <= entity->x_bottom_left && character_before_movement->x_bottom_left + character_before_movement->width > entity->x_bottom_left)
+    ) {
+        already_x = true;
+    }
+    if (    (character_before_movement->y_inverted_bottom_left >= entity->y_inverted_bottom_left && character_before_movement->y_inverted_bottom_left < entity->y_inverted_bottom_left + entity->height)
+        ||  (character_before_movement->y_inverted_bottom_left + character_before_movement->height >= entity->y_inverted_bottom_left && character_before_movement->y_inverted_bottom_left + character_before_movement->height < entity->y_inverted_bottom_left + entity->height)
+        // If the character is taller than the entity, check if character bottom is below entity and character top is above entity
+        // Make the math a little shorter by just checking if character is "around" the bottom entity side, the above two checks should make that enough
+        ||  (character_before_movement->y_inverted_bottom_left <= entity->y_inverted_bottom_left && character_before_movement->y_inverted_bottom_left + character_before_movement->height > entity->y_inverted_bottom_left)
+    ) {
+        already_y = true;
+    }
+    // TODO Still want this check?
+    if (already_x && already_y) {
+        printf("get_new_location_from_collision already_x && already_y, shouldnt happen, we don't know what to do with this yet\n");
+        exit(-1);
+    }
+
+    if (character_after_initial_movement.x_velocity_pixels_per_second < 0) {
+        x_distance = character_before_movement->x_bottom_left - (entity->x_bottom_left + entity->width);
+        x_offset = entity->x_bottom_left + entity->width - character_after_initial_movement.x_bottom_left;
+    } else {
+        x_distance = entity->x_bottom_left - (character_before_movement->x_bottom_left + character_before_movement->width);
+    }
+
+    if (character_after_initial_movement.y_velocity_pixels_per_second < 0) {
+        y_distance = character_before_movement->y_inverted_bottom_left - (entity->y_inverted_bottom_left + entity->height);
+    } else {
+        y_distance = entity->y_inverted_bottom_left - (character_before_movement->y_inverted_bottom_left + character_before_movement->height);
+    }
+
+    printf("get_new_location_from_collision already_x %d already_y %d x_distance %f y_distance %f\n", already_x, already_y, x_distance, y_distance);
+
+    struct Vec2 new_location;
+
+    // Figure out which side of the entity the char hits first, top/bottom or left/right
+    if (already_x || y_distance < x_distance) {
+        // TODO should this actually be the x location at which the character hit the top/bottom of the entity?
+        new_location.x = character_after_initial_movement.x_bottom_left;
+        // Stop on top of entity
+        if (character_after_initial_movement.y_velocity_pixels_per_second < 0) {
+            printf("get_new_location_from_collision stop against entity top\n");
+            new_location.y = entity->y_inverted_bottom_left + entity->height;
+        }
+        // Stop against bottom of entity
+        else {
+            printf("get_new_location_from_collision stop against entity bottom\n");
+            new_location.y = entity->y_inverted_bottom_left - character_after_initial_movement.height;
+        }
+    }
+    else {
+        // TODO should this actually be the y location at which the character hit the left/right of the entity?
+        new_location.y = character_after_initial_movement.y_inverted_bottom_left;
+        // Stop on right side of entity
+        if (character_after_initial_movement.x_velocity_pixels_per_second < 0) {
+            printf("get_new_location_from_collision stop against entity right\n");
+            new_location.x = entity->x_bottom_left + entity->width;
+        }
+        // Stop on left side of entity
+        else {
+            printf("get_new_location_from_collision stop against entity left\n");
+            new_location.x = entity->x_bottom_left - character_after_initial_movement.width;
+        }
+    }
+
+    return new_location;
+}
 
 
 // If left or right are inside a solid block then this returns negative (distance between y and top of solid block)
@@ -459,11 +507,12 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
             }
 
             bool collided_with_player = is_overlapping(&game_state->character, entity);
-            printf("platform overlapping with character? %d\n", collided_with_player);
+            printf("do_movement platform movement, platform overlapping with character? %d\n", collided_with_player);
             if (collided_with_player) {
                 // Check platform direction into player
                 if (new_entity_y > entity->y_inverted_bottom_left) {
                     game_state->character.y_inverted_bottom_left = new_entity_y + entity->height;
+                    printf("do_movement platform entity moves player up to y %f\n", game_state->character.y_inverted_bottom_left);
                     if (game_state->character.y_velocity_pixels_per_second < 0) {
                         game_state->character.y_velocity_pixels_per_second = 0;
                     }
@@ -471,6 +520,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
                 }
                 else if (new_entity_y < entity->y_inverted_bottom_left) {
                     game_state->character.y_inverted_bottom_left = new_entity_y - game_state->character.height;
+                    printf("do_movement platform entity moves player down to y %f\n", game_state->character.y_inverted_bottom_left);
                     if (game_state->character.y_velocity_pixels_per_second > 0) {
                         game_state->character.y_velocity_pixels_per_second = 0;
                     }
@@ -479,13 +529,15 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
 
             entity->x_bottom_left = new_entity_x;
             entity->y_inverted_bottom_left = new_entity_y;
+
+            printf("do_movement platform entity moves to x %f y %f\n", entity->x_bottom_left, entity->y_inverted_bottom_left);
         }
     }
 
-    // printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
+    printf("do_movement x_velocity is %f y_velocity is %f frame_time_in_micros as double: %f\n", game_state->character.x_velocity_pixels_per_second, game_state->character.y_velocity_pixels_per_second, microseconds_to_advance);
     double new_character_x = game_state->character.x_bottom_left + game_state->character.x_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
     double new_character_y = game_state->character.y_inverted_bottom_left + game_state->character.y_velocity_pixels_per_second / (double)1000000 * microseconds_to_advance;
-
+    printf("do_movement character try to go from %f,%f to %f,%f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, new_character_x, new_character_y);
 
 
     int old_character_x_floor = floor(game_state->character.x_bottom_left);
@@ -504,16 +556,69 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
 
     struct Character character_after_initial_movement;
     character_after_initial_movement.x_bottom_left = new_character_x;
-    character_after_initial_movement.y_inverted_bottom_left = new_character_y
-        new_character_y
-    };
-    struct Vec2 new_spot_for_character;
+    character_after_initial_movement.y_inverted_bottom_left = new_character_y;
+    character_after_initial_movement.x_velocity_pixels_per_second = game_state->character.x_velocity_pixels_per_second;
+    character_after_initial_movement.y_velocity_pixels_per_second = game_state->character.y_velocity_pixels_per_second;
+    character_after_initial_movement.height = game_state->character.height;
+    character_after_initial_movement.width = game_state->character.width;
+    // TODO delete? struct Vec2 new_spot_for_character = {game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left};
+    struct Vec2 new_spot_for_character = {new_character_x, new_character_y};
 
     for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
         if (entity->effects_flags & ENTITY_FLAG_IS_ACTIVE && entity->effects_flags & ENTITY_FLAG_COLLIDES_WITH_PLAYER) {
-            get_new_location_from_collision();
+            //printf("collisions entity is active and can collide with player\n");
+            struct Vec2 new_spot_after_entity = get_new_location_from_collision(&game_state->character, character_after_initial_movement, entity);
+            // printf("collisions new_spot_after_entity x=%f y=%f character_after_initial_movement x=%f y=%f\n", new_spot_after_entity.x, new_spot_after_entity.y, character_after_initial_movement.x_bottom_left, character_after_initial_movement.y_inverted_bottom_left);
+            if (new_spot_after_entity.x != character_after_initial_movement.x_bottom_left || new_spot_after_entity.y != character_after_initial_movement.y_inverted_bottom_left) {
+                printf("collisions entity moved char new_spot_after_entity x=%f y=%f character_after_initial_movement x=%f y=%f\n", new_spot_after_entity.x, new_spot_after_entity.y, character_after_initial_movement.x_bottom_left, character_after_initial_movement.y_inverted_bottom_left);
+            }
+            if (fabs(new_spot_after_entity.x - game_state->character.x_bottom_left) < fabs(new_spot_for_character.x - game_state->character.x_bottom_left)) {
+                new_spot_for_character.x = new_spot_after_entity.x;
+            }
+            if (fabs(new_spot_after_entity.y - game_state->character.y_inverted_bottom_left) < fabs(new_spot_for_character.y - game_state->character.y_inverted_bottom_left)) {
+                new_spot_for_character.y = new_spot_after_entity.y;
+            }
         }
     }
+    printf("collisions after entities loop new_spot_for_character x=%f y=%f\n", new_spot_for_character.x, new_spot_for_character.y);
+    // Character got bumped to the left by entities
+    if (new_spot_for_character.x < new_character_x) {
+        // If character was moving right then they got stopped
+        if (game_state->character.x_velocity_pixels_per_second > 0) {
+            game_state->character.x_velocity_pixels_per_second = 0;
+            game_state->character.motion = STOPPED;
+        }
+    }
+    // Character got bumped to the right by entities
+    if (new_spot_for_character.x > new_character_x) {
+        // If character was moving left then they got stopped
+        if (game_state->character.x_velocity_pixels_per_second < 0) {
+            game_state->character.x_velocity_pixels_per_second = 0;
+            game_state->character.motion = STOPPED;
+        }
+    }
+
+    // Character got bumped up by entities
+    if (new_spot_for_character.y > new_character_y) {
+        // If character was moving down then they got stopped
+        if (game_state->character.y_velocity_pixels_per_second < 0) {
+            game_state->character.y_velocity_pixels_per_second = 0;
+            game_state->character.motion = STOPPED;
+        }
+    }
+
+    // Character got bumped down by entities
+    if (new_spot_for_character.y < new_character_y) {
+        // If character was moving up then they got stopped
+        if (game_state->character.y_velocity_pixels_per_second > 0) {
+            game_state->character.y_velocity_pixels_per_second = 0;
+        }
+    }
+
+    new_character_x = new_spot_for_character.x;
+    new_character_y = new_spot_for_character.y;
+
+    printf("collisions new_character_x new_character_y just got set to x=%f y=%f\n", new_spot_for_character.x, new_spot_for_character.y);
 
     bool x_motion_stopped = false;
     bool y_motion_stopped_above = false;
@@ -658,7 +763,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
         }
     }
 
-    // printf("In do_movement set x_bottom_left=%f y_inverted_bottom_left=%f\n", new_character_x, new_character_y);
+    printf("In do_movement set x_bottom_left=%f y_inverted_bottom_left=%f\n", new_character_x, new_character_y);
 
     game_state->character.x_bottom_left = new_character_x;
     game_state->character.y_inverted_bottom_left = new_character_y;

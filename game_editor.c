@@ -199,7 +199,7 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
 
                 uint16_t next_entity_index = get_next_free_entity_index(r_game_state);
                 struct Entity* new_entity = r_game_state->entities + next_entity_index;
-                new_entity->effects_flags = ENTITY_FLAG_IS_ACTIVE;
+                new_entity->effects_flags = ENTITY_FLAG_IS_ACTIVE | ENTITY_FLAG_COLLIDES_WITH_PLAYER;
 
                 new_entity->type = ENTITY_TYPE_PLATFORM_1;
 
