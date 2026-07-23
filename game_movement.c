@@ -128,45 +128,69 @@ struct Block* get_vertical_middle_block(struct GameState* game_state) {
     return NULL;
 }
 
-
-#define NUM_ENTITY_POINTS 4
-static inline bool is_overlapping(struct Character* character, struct Entity* entity) {
-    double character_half_width = character->width / 2;
-    double character_half_height = character->height / 2;
-    double character_left_x = character->x_bottom_left - character_half_width;
-    double character_right_x = character->x_bottom_left + character->width + character_half_width;
-    double character_bottom_y = character->y_inverted_bottom_left - character_half_height;
-    double character_top_y = character->y_inverted_bottom_left + character->height + character_half_height;
-
-    double entity_middle_x = entity->x_bottom_left + 0.5 * entity->width;
-    double entity_middle_y = entity->y_inverted_bottom_left + 0.5 * entity->height;
-
-    printf("is_overlapping entity middle x %f y %f character leftx %f rightx %f bottomy %f topy %f\n", entity_middle_x, entity_middle_y, character_left_x, character_right_x, character_bottom_y, character_top_y);
-
-    return  entity_middle_x >= character_left_x && entity_middle_x < character_right_x
-        &&  entity_middle_y >= character_bottom_y && entity_middle_y < character_top_y;
-
-    // TODO can delete?
-    // printf("is_overlapping char xy is %f,%f, char width %f char height %f entity width %f entity height %f\n", character->x_bottom_left, character->y_inverted_bottom_left, character->width, character->height, entity->width, entity->height);
-    // double entity_points[NUM_ENTITY_POINTS][2] = {
-    //     {entity->x_bottom_left, entity->y_inverted_bottom_left},
-    //     {entity->x_bottom_left, entity->y_inverted_bottom_left + entity->height},
-    //     {entity->x_bottom_left + entity->width, entity->y_inverted_bottom_left},
-    //     {entity->x_bottom_left + entity->width, entity->y_inverted_bottom_left + entity->height}
-    // };
-
-    // for (int entity_point_index = 0; entity_point_index < NUM_ENTITY_POINTS; ++entity_point_index) {
-    //     printf("is_overlapping check %f,%f in %f %f %f %f\n", entity_points[entity_point_index][0], entity_points[entity_point_index][1], character->x_bottom_left, character->x_bottom_left + character->width, character->y_inverted_bottom_left, character->y_inverted_bottom_left + character->height);
-    //     if (    entity_points[entity_point_index][0] >= character->x_bottom_left
-    //         &&  entity_points[entity_point_index][0] < character->x_bottom_left + character->width
-    //         &&  entity_points[entity_point_index][1] >= character->y_inverted_bottom_left
-    //         &&  entity_points[entity_point_index][1] < character->y_inverted_bottom_left + character->height)
-    //     {
-    //         return true;
-    //     }
-    // }
-    // return false;
+static inline bool is_overlapping_x(struct Character* character, struct Entity* entity) {
+    return !(   character->x_bottom_left + character->width <= entity->x_bottom_left
+             || character->x_bottom_left >= entity->x_bottom_left + entity->width
+            );
 }
+
+static inline bool is_overlapping_y(struct Character* character, struct Entity* entity) {
+    return !(   character->y_inverted_bottom_left + character->height <= entity->y_inverted_bottom_left
+             || character->y_inverted_bottom_left >= entity->y_inverted_bottom_left + entity->height
+            );
+}
+
+static inline bool is_overlapping(struct Character* character, struct Entity* entity) {
+    return !(   character->x_bottom_left + character->width <= entity->x_bottom_left
+             || character->x_bottom_left >= entity->x_bottom_left + entity->width
+             || character->y_inverted_bottom_left + character->height <= entity->y_inverted_bottom_left
+             || character->y_inverted_bottom_left >= entity->y_inverted_bottom_left + entity->height
+            );
+}
+
+// TODO don't need NUM_ENTITY_POINTS anymore?
+#define NUM_ENTITY_POINTS 4
+// static inline bool is_overlapping(struct Character* character, struct Entity* entity) {
+//     double character_half_width = character->width / 2;
+//     double character_half_height = character->height / 2;
+//     double character_left_x = character->x_bottom_left - character_half_width;
+//     double character_right_x = character->x_bottom_left + character->width + character_half_width;
+//     double character_bottom_y = character->y_inverted_bottom_left - character_half_height;
+//     double character_top_y = character->y_inverted_bottom_left + character->height + character_half_height;
+
+//     double entity_middle_x = entity->x_bottom_left + 0.5 * entity->width;
+//     double entity_middle_y = entity->y_inverted_bottom_left + 0.5 * entity->height;
+
+//     // TODO just for testing
+//     int to_return = entity_middle_x >= character_left_x && entity_middle_x < character_right_x
+//         &&  entity_middle_y >= character_bottom_y && entity_middle_y < character_top_y;
+//     printf("is_overlapping to_return %d entity middle x %f y %f character leftx %f rightx %f bottomy %f topy %f\n", to_return, entity_middle_x, entity_middle_y, character_left_x, character_right_x, character_bottom_y, character_top_y);
+//     return to_return;
+
+//     return  entity_middle_x >= character_left_x && entity_middle_x < character_right_x
+//         &&  entity_middle_y >= character_bottom_y && entity_middle_y < character_top_y;
+
+//     // TODO can delete?
+//     // printf("is_overlapping char xy is %f,%f, char width %f char height %f entity width %f entity height %f\n", character->x_bottom_left, character->y_inverted_bottom_left, character->width, character->height, entity->width, entity->height);
+//     // double entity_points[NUM_ENTITY_POINTS][2] = {
+//     //     {entity->x_bottom_left, entity->y_inverted_bottom_left},
+//     //     {entity->x_bottom_left, entity->y_inverted_bottom_left + entity->height},
+//     //     {entity->x_bottom_left + entity->width, entity->y_inverted_bottom_left},
+//     //     {entity->x_bottom_left + entity->width, entity->y_inverted_bottom_left + entity->height}
+//     // };
+
+//     // for (int entity_point_index = 0; entity_point_index < NUM_ENTITY_POINTS; ++entity_point_index) {
+//     //     printf("is_overlapping check %f,%f in %f %f %f %f\n", entity_points[entity_point_index][0], entity_points[entity_point_index][1], character->x_bottom_left, character->x_bottom_left + character->width, character->y_inverted_bottom_left, character->y_inverted_bottom_left + character->height);
+//     //     if (    entity_points[entity_point_index][0] >= character->x_bottom_left
+//     //         &&  entity_points[entity_point_index][0] < character->x_bottom_left + character->width
+//     //         &&  entity_points[entity_point_index][1] >= character->y_inverted_bottom_left
+//     //         &&  entity_points[entity_point_index][1] < character->y_inverted_bottom_left + character->height)
+//     //     {
+//     //         return true;
+//     //     }
+//     // }
+//     // return false;
+// }
 
 
 static inline struct Vec2 get_new_location_from_collision(struct Character* character_before_movement, struct Character character_after_initial_movement, struct Entity* entity) {
@@ -197,24 +221,8 @@ static inline struct Vec2 get_new_location_from_collision(struct Character* char
         exit(-1);
     }
 
-    bool already_x = false;
-    bool already_y = false;
-    if (    (character_before_movement->x_bottom_left >= entity->x_bottom_left && character_before_movement->x_bottom_left < entity->x_bottom_left + entity->width)
-        ||  (character_before_movement->x_bottom_left + character_before_movement->width >= entity->x_bottom_left && character_before_movement->x_bottom_left + character_before_movement->width < character_before_movement->x_bottom_left + character_before_movement->width)
-        // If the character is wider than the entity, check if character left is left of entity and character right is right of entity
-        // Make the math a little shorter by just checking if character is "around" the left entity side, the above two checks should make that enough
-        ||  (character_before_movement->x_bottom_left <= entity->x_bottom_left && character_before_movement->x_bottom_left + character_before_movement->width > entity->x_bottom_left)
-    ) {
-        already_x = true;
-    }
-    if (    (character_before_movement->y_inverted_bottom_left >= entity->y_inverted_bottom_left && character_before_movement->y_inverted_bottom_left < entity->y_inverted_bottom_left + entity->height)
-        ||  (character_before_movement->y_inverted_bottom_left + character_before_movement->height >= entity->y_inverted_bottom_left && character_before_movement->y_inverted_bottom_left + character_before_movement->height < entity->y_inverted_bottom_left + entity->height)
-        // If the character is taller than the entity, check if character bottom is below entity and character top is above entity
-        // Make the math a little shorter by just checking if character is "around" the bottom entity side, the above two checks should make that enough
-        ||  (character_before_movement->y_inverted_bottom_left <= entity->y_inverted_bottom_left && character_before_movement->y_inverted_bottom_left + character_before_movement->height > entity->y_inverted_bottom_left)
-    ) {
-        already_y = true;
-    }
+    bool already_x = is_overlapping_x(character_before_movement, entity);
+    bool already_y = is_overlapping_y(character_before_movement, entity);
     // TODO Still want this check?
     if (already_x && already_y) {
         printf("get_new_location_from_collision already_x && already_y, shouldnt happen, we don't know what to do with this yet\n");
@@ -239,7 +247,7 @@ static inline struct Vec2 get_new_location_from_collision(struct Character* char
     struct Vec2 new_location;
 
     // Figure out which side of the entity the char hits first, top/bottom or left/right
-    if (already_x || y_distance < x_distance) {
+    if (already_x || (!already_y && y_distance < x_distance)) {
         // TODO should this actually be the x location at which the character hit the top/bottom of the entity?
         new_location.x = character_after_initial_movement.x_bottom_left;
         // Stop on top of entity
@@ -315,7 +323,9 @@ static inline double is_blocked_above(double x_left, double x_right, double y, s
 }
 
 // IMPLEMENTS
-void do_movement(struct GameState* game_state, double microseconds_to_advance) {
+void do_movement(struct GameState* game_state, struct InputState* input_state, double microseconds_to_advance) {
+
+    const uint8_t* input_state_now = SDL_GetKeyboardState(NULL);
 
     printf("Movement for entities\n");
     for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
@@ -506,19 +516,29 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
                 // }
             }
 
+            // TODO change to allow for entity collision with player (or other entity?) to affect where platform ends up
+            double movement_diff_x = new_entity_x - entity->x_bottom_left;
+            double movement_diff_y = new_entity_y - entity->y_inverted_bottom_left;
+            entity->x_bottom_left = new_entity_x;
+            entity->y_inverted_bottom_left = new_entity_y;
+
             bool collided_with_player = is_overlapping(&game_state->character, entity);
-            printf("do_movement platform movement, platform overlapping with character? %d\n", collided_with_player);
+            printf("do_movement platform, platform overlapping with character x=%f y=%f width=%f height=%f? %d\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left, game_state->character.width, game_state->character.height, collided_with_player);
             if (collided_with_player) {
                 // Check platform direction into player
-                if (new_entity_y > entity->y_inverted_bottom_left) {
+                if (movement_diff_y > 0) {
                     game_state->character.y_inverted_bottom_left = new_entity_y + entity->height;
                     printf("do_movement platform entity moves player up to y %f\n", game_state->character.y_inverted_bottom_left);
                     if (game_state->character.y_velocity_pixels_per_second < 0) {
                         game_state->character.y_velocity_pixels_per_second = 0;
                     }
+                    if (!input_state_now[SDL_SCANCODE_RIGHT] && !input_state_now[SDL_SCANCODE_LEFT]) {
+                        // stop x motion
+                        game_state->character.x_velocity_pixels_per_second = 0;
+                    }
                     game_state->character.motion = STOPPED;
                 }
-                else if (new_entity_y < entity->y_inverted_bottom_left) {
+                else if (movement_diff_y < 0) {
                     game_state->character.y_inverted_bottom_left = new_entity_y - game_state->character.height;
                     printf("do_movement platform entity moves player down to y %f\n", game_state->character.y_inverted_bottom_left);
                     if (game_state->character.y_velocity_pixels_per_second > 0) {
@@ -526,9 +546,6 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
                     }
                 }
             }
-
-            entity->x_bottom_left = new_entity_x;
-            entity->y_inverted_bottom_left = new_entity_y;
 
             printf("do_movement platform entity moves to x %f y %f\n", entity->x_bottom_left, entity->y_inverted_bottom_left);
         }
@@ -603,6 +620,10 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
         // If character was moving down then they got stopped
         if (game_state->character.y_velocity_pixels_per_second < 0) {
             game_state->character.y_velocity_pixels_per_second = 0;
+            if (!input_state_now[SDL_SCANCODE_RIGHT] && !input_state_now[SDL_SCANCODE_LEFT]) {
+                // stop x motion
+                game_state->character.x_velocity_pixels_per_second = 0;
+            }
             game_state->character.motion = STOPPED;
         }
     }
@@ -726,6 +747,7 @@ void do_movement(struct GameState* game_state, double microseconds_to_advance) {
 
     // Moved off climbing check
     if (game_state->character.motion == CLIMBING && !is_on_climable(game_state)) {
+        printf("character.motion is climbing but no is_on_climable\n");
         game_state->character.motion = JUMPING;
     }
 
@@ -922,11 +944,13 @@ void handle_input(  struct GameState* game_state,
     }
 
     if (state[SDL_SCANCODE_UP]) {
+        printf("up key is pressed\n");
         switch (game_state->character.motion)
         {
             case STOPPED:
             case WALKING:
             case JUMPING:
+                printf("up key is pressed check is_on_climable %d\n", is_on_climable(game_state));
                 if (is_on_climable(game_state)) {
                     game_state->character.motion = CLIMBING;
                     input_state->start_climb_pixel_x = game_state->character.x_bottom_left;
@@ -935,6 +959,7 @@ void handle_input(  struct GameState* game_state,
                 }
                 break;
             case CLIMBING:
+                printf("up key is pressed already climbing\n");
                 game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_climb_speed_pixels_per_second;
                 break;
             default:

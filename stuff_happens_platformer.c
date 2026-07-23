@@ -248,7 +248,7 @@ void process_frame_and_blit(uint64_t frame_count, uint64_t current_time_in_micro
     }
     printf("7 non_alpha_found is %d\n", non_alpha_found);
 
-    do_movement(&game_state, game_state.world_rules.microseconds_per_frame);
+    do_movement(&game_state, &input_state, game_state.world_rules.microseconds_per_frame);
 
     printf("5 base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", game_state.base_sprites[SPRITE_TYPE_EMPTY].pixels_start);
 

@@ -131,19 +131,22 @@ bool is_on_ground(struct GameState* game_state) {
 bool is_on_climable(struct GameState* game_state) {
     // printf("game_state.is_on_ground x_bottom_left=%f y_inverted_bottom_left=%f\n", game_state->character.x_bottom_left, game_state->character.y_inverted_bottom_left);
     int bottom_left_x_floor = floor(game_state->character.x_bottom_left);
-    int bottom_left_y_floor = floor(game_state->character.y_inverted_bottom_left);
+    int bottom_left_y_floor = floor(game_state->character.y_inverted_bottom_left) + 1;
     int right_pixel = bottom_left_x_floor + game_state->character.width;
 
     struct Block* bottom_left = get_world_block_for_world_pixel_xy(bottom_left_x_floor, bottom_left_y_floor, game_state);
-    if ((bottom_left->effects_flags & EFFECT_FLAG_CLIMABLE) == 0) {
+    if ((bottom_left->effects_flags & EFFECT_FLAG_CLIMABLE) > 0) {
+        printf("is_on_climable bottom-left block for %d, %d is %d not climable", bottom_left_x_floor, bottom_left_y_floor, bottom_left->effects_flags & EFFECT_FLAG_CLIMABLE);
         return false;
     }
     struct Block* bottom_right = get_world_block_for_world_pixel_xy(right_pixel, bottom_left_y_floor, game_state);
     // If character is straddling two different blocks then return false, even if both blocks are climable
     // Means that this method won't work for blocks that allow horizontal climbing, like lattice or web?
     if (bottom_left->block_x != bottom_right->block_x) {
+        printf("is_on_climable bottom-left block for %d, %d is %d not climable", bottom_left_x_floor, bottom_left_y_floor, bottom_left->effects_flags & EFFECT_FLAG_CLIMABLE);
         return false;
     }
+    printf("is_on_climable true\n");
     return true;
 }
 
