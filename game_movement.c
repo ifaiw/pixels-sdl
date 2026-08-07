@@ -322,10 +322,29 @@ static inline double is_blocked_above(double x_left, double x_right, double y, s
     return 1;
 }
 
+// PRIVATE
+void save_level_to_slot(struct GameState* game_state, struct EditorState* editor_state, int slot) {
+    printf("save level slot %d\n", slot);
+    fprintf(editor_state->editor_log, "Save level file %d\n", slot);
+    fflush(editor_state->editor_log);
+    save_level(game_state, slot);
+}
+
+// PRIVATE
+void load_level_from_slot(struct GameState* game_state, struct EditorState* editor_state, int slot) {
+    printf("load level from slot %d\n", slot);
+    fprintf(editor_state->editor_log, "Load level file %d\n", slot);
+    fflush(editor_state->editor_log);
+    load_level(game_state, slot);
+}
+
 // IMPLEMENTS
 void do_movement(struct GameState* game_state, struct InputState* input_state, double microseconds_to_advance) {
 
     const uint8_t* input_state_now = SDL_GetKeyboardState(NULL);
+
+    printf("do_movement top, is_on_ground from %d to false\n", game_state->character.is_on_ground);
+    game_state->character.is_on_ground = false;
 
     printf("Movement for entities\n");
     for (struct Entity* entity = game_state->entities; entity != game_state->entities + game_state->num_current_entites; ++entity) {
@@ -464,7 +483,7 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
                 //     bottom = bottom - 1;
                 // }
 
-                double check_below = is_blocked_below(new_entity_x, new_entity_x + entity->width, new_entity_y, game_state);
+                double check_below = is_blocked_below(new_entity_x, new_entity_x + entity->width - 1, new_entity_y, game_state);
                 if (check_below < 0) {
                     new_entity_y -= check_below;
                     entity->y_velocity_pixels_per_second = PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
@@ -490,8 +509,9 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
             else if (new_entity_y > entity->y_inverted_bottom_left) {
                 printf("platform1 trying to move up from %f to %f\n", entity->y_inverted_bottom_left, new_entity_y);
 
-                double check_above = is_blocked_above(new_entity_x, new_entity_x + entity->width, new_entity_y + entity->height - 1, game_state);
+                double check_above = is_blocked_above(new_entity_x, new_entity_x + entity->width - 1, new_entity_y + entity->height - 1, game_state);
                 if (check_above < 0) {
+                    printf("platform1 is blocked above by world\n");
                     new_entity_y += check_above;
                     entity->y_velocity_pixels_per_second = -PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
                 }
@@ -535,8 +555,14 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
                     if (!input_state_now[SDL_SCANCODE_RIGHT] && !input_state_now[SDL_SCANCODE_LEFT]) {
                         // stop x motion
                         game_state->character.x_velocity_pixels_per_second = 0;
+                        game_state->character.motion = STOPPED;
                     }
-                    game_state->character.motion = STOPPED;
+                    else {
+                        game_state->character.motion = WALKING;
+                    }
+
+                    printf("do_movement platform moved up into player, is_on_ground to true\n");
+                    game_state->character.is_on_ground = true;
                 }
                 else if (movement_diff_y < 0) {
                     game_state->character.y_inverted_bottom_left = new_entity_y - game_state->character.height;
@@ -623,8 +649,13 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
             if (!input_state_now[SDL_SCANCODE_RIGHT] && !input_state_now[SDL_SCANCODE_LEFT]) {
                 // stop x motion
                 game_state->character.x_velocity_pixels_per_second = 0;
+                game_state->character.motion = STOPPED;
             }
-            game_state->character.motion = STOPPED;
+            else {
+                game_state->character.motion = WALKING;
+            }
+            printf("do_movement player moved on top of entity, is_on_ground to true\n");
+            game_state->character.is_on_ground = true;
         }
     }
 
@@ -722,6 +753,10 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
             }
             y_motion_stopped_below = true;
         }
+        if (y_motion_stopped_below) {
+            printf("do_movement player landed on world block, is_on_ground to true\n");
+            game_state->character.is_on_ground = true;
+        }
     }
 
     // MOVING UP COLLISION CHECK
@@ -757,8 +792,13 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
         game_state->character.y_velocity_pixels_per_second = 0;
         // TODO how can motion get stopped above if character is not jumping?
         if (game_state->character.motion != JUMPING) {
-            printf("do_movement y_motion_stopped_above is true motion_change to STOPPED\n");
-            game_state->character.motion = STOPPED;
+            if (game_state->character.x_velocity_pixels_per_second == 0) {
+                printf("do_movement y_motion_stopped_above is true motion_change to STOPPED\n");
+                game_state->character.motion = STOPPED;
+            }
+            else {
+                game_state->character.motion = WALKING;
+            }
         }
     }
 
@@ -791,7 +831,7 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
     game_state->character.y_inverted_bottom_left = new_character_y;
 
     // printf("Check if is on ground before applying gravity\n");
-    if (!is_on_ground(game_state) && game_state->character.motion != CLIMBING) {
+    if (!game_state->character.is_on_ground && game_state->character.motion != CLIMBING) {
         printf("not on ground or climbing, apply gravity\n");
         game_state->character.y_velocity_pixels_per_second -= game_state->world_rules.gravity_pixels_per_second;
         if (game_state->character.y_velocity_pixels_per_second < -game_state->world_rules.y_max_fall_speed_pixels_per_second) {
@@ -810,9 +850,7 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
         game_state->character.y_velocity_pixels_per_second = 0;
     }
 
-    // TODO Move this to rules, or somewhere else that makes more sense
-
-
+    printf("do_movement bottom character.is_on_ground=%d\n", game_state->character.is_on_ground);
 }
 
 // IMPLEMENTS
@@ -825,6 +863,8 @@ void handle_input(  struct GameState* game_state,
     double seconds_to_advance = microseconds_to_advance / (double)1000000;
 // Handle specific key presses from scancodes
     const uint8_t* state = SDL_GetKeyboardState(NULL);
+
+    printf("handle_input top character.is_on_ground=%d\n", game_state->character.is_on_ground);
 
     bool any_key_pressed = false;
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
@@ -985,9 +1025,10 @@ void handle_input(  struct GameState* game_state,
                 break;
         }
 
-        printf("space bar pressed, y_velocity_pixels_per_second=%f is_jumping? %d is_double_jumping? %d motion=%d is_on_ground=%d\n", game_state->character.y_velocity_pixels_per_second, game_state->character.motion == JUMPING, game_state->character.motion == JUMPING_2, game_state->character.motion, game_state->character.is_on_ground);
+        printf("space bar pressed, y_velocity_pixels_per_second=%f is_jumping? %d is_double_jumping? %d motion=%d character.is_on_ground=%d\n", game_state->character.y_velocity_pixels_per_second, game_state->character.motion == JUMPING, game_state->character.motion == JUMPING_2, game_state->character.motion, game_state->character.is_on_ground);
 
-        if (game_state->character.y_velocity_pixels_per_second == 0 && game_state->character.is_on_ground && motion_allows_first_jump) {
+        // TODO don't need y velocity check? if (game_state->character.y_velocity_pixels_per_second == 0 && game_state->character.is_on_ground && motion_allows_first_jump) {
+        if (game_state->character.is_on_ground && motion_allows_first_jump) {
             printf("Start first jump\n");
             // Start jump
             game_state->character.y_velocity_pixels_per_second = game_state->world_rules.y_jump_acceleration_pixels_per_second;
@@ -1044,6 +1085,19 @@ void handle_input(  struct GameState* game_state,
             }
     }
 
+    if (state[SDL_SCANCODE_G]) {
+        if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_G])) {
+            input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_G];
+            editor_state->snap_to_grid = !editor_state->snap_to_grid;
+            fprintf(editor_state->editor_log, "Snap to grid set to %d\n", editor_state->snap_to_grid);
+            fflush(editor_state->editor_log);
+        }
+    } else {
+        if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_G]) {
+            input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_G];
+        }
+    }
+
     if (state[SDL_SCANCODE_L]) {
         if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_L])) {
             input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_L];
@@ -1052,6 +1106,8 @@ void handle_input(  struct GameState* game_state,
         if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_L]) {
             input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_L];
             editor_state->load_on_num = true;
+
+            fprintf(editor_state->editor_log, "Load state on next number pressed\n");
         } else {
             if (any_key_pressed) {
                 editor_state->load_on_num = false;
@@ -1063,6 +1119,8 @@ void handle_input(  struct GameState* game_state,
         if (!(input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_R])) {
             input_state->letter_keys_down_bitmask |= LETTER_SCANCODE_MASKS[SDL_SCANCODE_R];
             load_world_rules_from_file(&game_state->world_rules);
+
+            fprintf(editor_state->editor_log, "Load world rules from file\n");
         }
     } else {
         if (input_state->letter_keys_down_bitmask & LETTER_SCANCODE_MASKS[SDL_SCANCODE_R]) {
@@ -1081,6 +1139,8 @@ void handle_input(  struct GameState* game_state,
             printf("s released, save_on_num to true\n");
             input_state->letter_keys_down_bitmask &= LETTER_SCANCODE_MASKS_NEGATED[SDL_SCANCODE_S];
             editor_state->save_on_num = true;
+
+            fprintf(editor_state->editor_log, "Save state on next number pressed\n");
         } else {
             if (any_key_pressed) {
                 printf("some key is pressed, set save_on_num to false\n");
@@ -1094,12 +1154,10 @@ void handle_input(  struct GameState* game_state,
         printf("1 key pressed down. prev load_on_num %d prev save_on_num %d\n", previous_editor_state.load_on_num, previous_editor_state.save_on_num);
         input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_1 - SDL_SCANCODE_1];
         if (previous_editor_state.load_on_num) {
-            printf("load level slot 1\n");
-            load_level(game_state, 1);
+            load_level_from_slot(game_state, editor_state, 1);
         }
         else if (previous_editor_state.save_on_num) {
-            printf("save level slot 1\n");
-            save_level(game_state, 1);
+            save_level_to_slot(game_state, editor_state, 1);
         }
         else {
             editor_state->click_state = ADD_BLOCK;
@@ -1112,12 +1170,10 @@ void handle_input(  struct GameState* game_state,
             // printf("2 key pressed down\n");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_2 - SDL_SCANCODE_1];
             if (previous_editor_state.load_on_num) {
-                printf("load level slot 2\n");
-                load_level(game_state, 2);
+                load_level_from_slot(game_state, editor_state, 2);
             }
             else if (previous_editor_state.save_on_num) {
-                printf("save level slot 2\n");
-                save_level(game_state, 2);
+                save_level_to_slot(game_state, editor_state, 2);
             }
             else {
                 editor_state->click_state = ADD_BLOCK;
@@ -1133,12 +1189,10 @@ void handle_input(  struct GameState* game_state,
             // printf("3 key pressed down");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_3 - SDL_SCANCODE_1];
             if (previous_editor_state.load_on_num) {
-                printf("load level slot 3");
-                load_level(game_state, 3);
+                load_level_from_slot(game_state, editor_state, 3);
             }
             else if (previous_editor_state.save_on_num) {
-                printf("save level slot 3");
-                save_level(game_state, 3);
+                save_level_to_slot(game_state, editor_state, 3);
             }
             else {
                 editor_state->click_state = ADD_ENTITY;
@@ -1154,12 +1208,10 @@ void handle_input(  struct GameState* game_state,
             // printf("4 key pressed down");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_4 - SDL_SCANCODE_1];
             if (previous_editor_state.load_on_num) {
-                printf("load level slot 4");
-                load_level(game_state, 4);
+                load_level_from_slot(game_state, editor_state, 4);
             }
             else if (previous_editor_state.save_on_num) {
-                printf("save level slot 4");
-                save_level(game_state, 4);
+                save_level_to_slot(game_state, editor_state, 4);
             }
             else {
                 editor_state->click_state = ADD_ENTITY;
@@ -1175,12 +1227,10 @@ void handle_input(  struct GameState* game_state,
             // printf("5 key pressed down");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_5 - SDL_SCANCODE_1];
             if (previous_editor_state.load_on_num) {
-                printf("load level slot 5");
-                load_level(game_state, 5);
+                load_level_from_slot(game_state, editor_state, 5);
             }
             else if (previous_editor_state.save_on_num) {
-                printf("save level slot 5");
-                save_level(game_state, 5);
+                save_level_to_slot(game_state, editor_state, 5);
             }
             else {
                 // Switch current editor block to something
@@ -1195,12 +1245,10 @@ void handle_input(  struct GameState* game_state,
             // printf("6 key pressed down");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_6 - SDL_SCANCODE_1];
             if (previous_editor_state.load_on_num) {
-                printf("load level slot 6");
-                load_level(game_state, 6);
+                load_level_from_slot(game_state, editor_state, 6);
             }
             else if (previous_editor_state.save_on_num) {
-                printf("save level slot 6");
-                save_level(game_state, 6);
+                save_level_to_slot(game_state, editor_state, 6);
             }
             else {
                 // Switch current editor block to something
@@ -1214,12 +1262,10 @@ void handle_input(  struct GameState* game_state,
         // printf("7 key pressed down");
         input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_7 - SDL_SCANCODE_1];
         if (previous_editor_state.load_on_num) {
-            printf("load level slot 7");
-            load_level(game_state, 7);
+            load_level_from_slot(game_state, editor_state, 7);
         }
         else if (previous_editor_state.save_on_num) {
-            printf("save level slot 7");
-            save_level(game_state, 7);
+            save_level_to_slot(game_state, editor_state, 7);
         }
         else {
             // Switch current editor block to something
@@ -1231,12 +1277,10 @@ void handle_input(  struct GameState* game_state,
             // printf("8 key pressed down");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_8 - SDL_SCANCODE_1];
             if (previous_editor_state.load_on_num) {
-                printf("load level slot 8");
-                load_level(game_state, 8);
+                load_level_from_slot(game_state, editor_state, 8);
             }
             else if (previous_editor_state.save_on_num) {
-                printf("save level slot 8");
-                save_level(game_state, 8);
+                save_level_to_slot(game_state, editor_state, 8);
             }
             else {
                 // Switch current editor block to something
@@ -1251,12 +1295,10 @@ void handle_input(  struct GameState* game_state,
             // printf("9 key pressed down");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_9 - SDL_SCANCODE_1];
             if (previous_editor_state.load_on_num) {
-                printf("load level slot 9");
-                load_level(game_state, 9);
+                load_level_from_slot(game_state, editor_state, 9);
             }
             else if (previous_editor_state.save_on_num) {
-                printf("save level slot 9");
-                save_level(game_state, 9);
+                save_level_to_slot(game_state, editor_state, 9);
             }
             else {
                 // Switch current editor block to something
@@ -1271,12 +1313,10 @@ void handle_input(  struct GameState* game_state,
             // printf("0 key pressed down");
             input_state->number_keys_down_bitmask |= NUMBER_SCANCODE_MASKS[SDL_SCANCODE_0 - SDL_SCANCODE_1];
             if (previous_editor_state.load_on_num) {
-                printf("load level slot 0");
-                load_level(game_state, 0);
+                load_level_from_slot(game_state, editor_state, 0);
             }
             else if (previous_editor_state.save_on_num) {
-                printf("save level slot 0");
-                save_level(game_state, 0);
+                save_level_to_slot(game_state, editor_state, 0);
             }
             else {
                 // Switch current editor block to something

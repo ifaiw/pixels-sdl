@@ -1,5 +1,6 @@
 #include "game_editor.h"
 
+#include "file_stuff.h"
 #include "game_paths.h"
 #include "game_state.h"
 #include "text_stuff.h"
@@ -170,28 +171,34 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
             }
             if (!deleting_platform) {
                 struct Sprite* entity_sprite = &r_game_state->base_sprites[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN];
+                uint32_t entity_fits_in_blocks;
+                int new_entity_x;
+                int new_entity_y;
 
-                int left = in_game_x - entity_sprite->width / 2 - 1;
-                int right = in_game_x + entity_sprite->width/ 2 + 1;
-                int top = in_game_y_inverted + entity_sprite->height / 2 + 1;
-                int bottom = in_game_y_inverted - entity_sprite->height / 2 - 1;
+                if (!r_editor_state->snap_to_grid) {
+                    new_entity_x = in_game_x - entity_sprite->width / 2;
+                    new_entity_y = in_game_y_inverted - entity_sprite->height / 2;
 
-                //TODO just for debugging
-                // struct Block* block = get_world_block_for_world_pixel_xy(left, top, r_game_state);
-                // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
-                // block = get_world_block_for_world_pixel_xy(right, top, r_game_state);
-                // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
-                // block = get_world_block_for_world_pixel_xy(left, bottom, r_game_state);
-                // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
-                // block = get_world_block_for_world_pixel_xy(right, bottom, r_game_state);
-                // printf("block to check is %d,%d effect flags %d\n", block->block_x, block->block_y, block->effects_flags);
+                    int left = in_game_x - entity_sprite->width / 2 - 1;
+                    int right = in_game_x + entity_sprite->width/ 2 + 1;
+                    int top = in_game_y_inverted + entity_sprite->height / 2 + 1;
+                    int bottom = in_game_y_inverted - entity_sprite->height / 2 - 1;
 
-                uint32_t entity_fits_in_blocks = !(
-                        (get_world_block_for_world_pixel_xy(left, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-                    |   (get_world_block_for_world_pixel_xy(right, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-                    |   (get_world_block_for_world_pixel_xy(left, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-                    |   (get_world_block_for_world_pixel_xy(right, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
-                );
+                    entity_fits_in_blocks = !(
+                            (get_world_block_for_world_pixel_xy(left, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                        |   (get_world_block_for_world_pixel_xy(right, top, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                        |   (get_world_block_for_world_pixel_xy(left, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                        |   (get_world_block_for_world_pixel_xy(right, bottom, r_game_state)->effects_flags & EFFECT_FLAG_SOLID)
+                    );
+                }
+                else {
+                    struct Block* platform_spot = get_world_block_for_world_pixel_xy(in_game_x, in_game_y_inverted, r_game_state);
+                    entity_fits_in_blocks = !(platform_spot->effects_flags & EFFECT_FLAG_SOLID);
+                    printf("snap to grid on, entity_fits_in_blocks=%d\n", entity_fits_in_blocks);
+                    new_entity_x = platform_spot->world_pixel_x;
+                    new_entity_y = platform_spot->world_pixel_y;
+                }
+
                 if (!entity_fits_in_blocks) {
                     printf("Won't add entity because it doesn't fit\n");
                     return;
@@ -206,14 +213,14 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
                 new_entity->state = ENTITY_STATE_MOVING_UP; // Pretty sure we're not using this currently for platform
                 new_entity->x_velocity_pixels_per_second = 0;
                 new_entity->y_velocity_pixels_per_second = PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND;
-                // Direction doesn't matter for platform currently
+                // Direction doesn't matter for platform currently, can use velocity to determine
                 new_entity->direction = RIGHT;
 
                 new_entity->current_sprite = r_game_state->base_sprites[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN];
                 new_entity->height = entity_sprite->height;
                 new_entity->width = entity_sprite->width;
-                new_entity->x_bottom_left = in_game_x - new_entity->width / 2;
-                new_entity->y_inverted_bottom_left = in_game_y_inverted - new_entity->height / 2;
+                new_entity->x_bottom_left = new_entity_x;
+                new_entity->y_inverted_bottom_left = new_entity_y;
                 new_entity->z_index = 5;
                 new_entity->animation_time_start_in_micros = r_game_state->current_time_in_micros;
                 //TODO set is_on_ground? remove it as an entity field?
@@ -224,4 +231,13 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
     // autosave level
     save_level(r_game_state, 10);
 
+}
+
+int initialize_editor_log(struct EditorState* r_editor_state) {
+    int open_result = open_file_for_text_overwrite(EDITOR_LOG_FILE_FILENAME, false, &r_editor_state->editor_log);
+    if (open_result != 0) {
+        printf("Failed to open editor log file %s, error result %d\n", EDITOR_LOG_FILE_FILENAME, open_result);
+        return open_result;
+    }
+    return 0;
 }

@@ -11,4 +11,7 @@ int load_level(struct GameState* game_state, int slot);
 
 void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_editor_state, struct GameState* r_game_state);
 
+#define EDITOR_LOG_FILE_FILENAME "platformer_editor_log_file.out"
+int initialize_editor_log(struct EditorState* r_editor_state);
+
 #endif // _GAME_EDITOR__H

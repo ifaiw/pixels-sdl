@@ -1,8 +1,9 @@
 #ifndef _GAME_STRUCTS__H
 #define _GAME_STRUCTS__H
 
-#include <stdbool.h>
 #include <inttypes.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 #include "image_structs.h"
 
@@ -49,7 +50,7 @@ enum CharacterMotion {
 
 enum CharacterDirection {
     LEFT,
-    RIGHT,
+    RIGHT
 };
 
 struct CharacterSprite {
@@ -190,6 +191,8 @@ struct EditorState {
     enum EntityType entity_type;
     bool save_on_num;
     bool load_on_num;
+    FILE* editor_log;
+    bool snap_to_grid;
 };
 
 #endif  // _GAME_STRUCTS__H

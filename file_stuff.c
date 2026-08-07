@@ -45,7 +45,7 @@ int read_file(const char* file_path, struct FileBytes* r_file_bytes) {
 
 // IMPLEMENTS
 // fail_if_exists == "true" if not 0
-int write_file(const char* file_path, struct FileBytes* file_bytes, uint8_t fail_if_exists) {
+int write_file(const char* file_path, struct FileBytes* file_bytes, bool fail_if_exists) {
     FILE* file_ptr;
 
     if (fail_if_exists != 0) {
@@ -66,6 +66,32 @@ int write_file(const char* file_path, struct FileBytes* file_bytes, uint8_t fail
     fwrite(file_bytes->bytes, sizeof(uint8_t), file_bytes->num_bytes, file_ptr);
 
     fclose(file_ptr);
+    return 0;
+}
+
+int open_file_for_text_overwrite(const char* file_path, bool fail_if_not_exists, FILE** r_file_pointer) {
+    FILE* file_ptr;
+
+    if (fail_if_not_exists) {
+        file_ptr = fopen(file_path, "r");
+        if (file_ptr == NULL) {
+            printf("open_file_for_text_overwrite Tried to open %s but doesn't exist and fail_if_not_exists is true\n", file_path);
+            return -1;
+        }
+        int close_result = fclose(file_ptr);
+        if (close_result != 0) {
+            printf("ERROR: some sort of error trying to close file in open_file_for_text_overwrite after opening it to check if it exists, not sure what to do about this: %d\n", close_result);
+            exit(-1);
+        }
+    }
+
+    file_ptr = fopen(file_path, "w");
+    if (file_ptr == NULL) {
+       printf("open_file_for_text_overwrite Error opening file to overwrite\n");
+       return -1;
+    }
+
+    *r_file_pointer = file_ptr;
     return 0;
 }
 

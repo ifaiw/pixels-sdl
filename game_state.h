@@ -1,6 +1,8 @@
 #ifndef _GAME_STATE__H
 #define _GAME_STATE__H
 
+#include <stdbool.h>
+
 #include "game_blocks.h"
 #include "game_images.h"
 #include "game_sprites.h"

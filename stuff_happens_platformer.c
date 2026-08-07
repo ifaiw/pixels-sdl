@@ -168,6 +168,18 @@ void initialize_game_state() {
 void initialize_editor() {
     editor_state.block_type = BLOCK_TYPE_LADDER;
     editor_state.click_state = ADD_BLOCK;
+    editor_state.snap_to_grid = true;
+
+    int initalize_editor_log_result = initialize_editor_log(&editor_state);
+    if (initalize_editor_log_result != 0) {
+        exit(-1);
+    }
+
+    fprintf(editor_state.editor_log, "Editor log initialized\n");
+    fflush(editor_state.editor_log);
+
+    printf("editor log initialized\n");
+    fflush(stdout);
 }
 
 // IMPLEMENTS
@@ -232,8 +244,6 @@ void process_frame_and_blit(uint64_t frame_count, uint64_t current_time_in_micro
     printf("4 base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", game_state.base_sprites[SPRITE_TYPE_EMPTY].pixels_start);
     game_state.current_frame = frame_count;
     game_state.current_time_in_micros = current_time_in_micros;
-
-    game_state.character.is_on_ground = is_on_ground(&game_state);
 
     handle_input(&game_state, &view_state, &input_state, &editor_state, game_state.world_rules.microseconds_per_frame);
     // printf("character.x_velocity_pixels_per_second is now %f\n", game_state.character.x_velocity_pixels_per_second);

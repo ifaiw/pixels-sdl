@@ -2,6 +2,8 @@
 #define _FILE_STUFF__H
 
 #include <inttypes.h>
+#include <stdio.h>
+#include <stdbool.h>
 
 // __FREE_REQUIRED for FileBytes.bytes
 struct FileBytes {
@@ -21,8 +23,11 @@ struct TextKeyValueFileContents {
 // __FREE_REQUIRED for r_file_bytes.bytes
 int read_file(const char* file_path, struct FileBytes* r_file_bytes);
 
-// fail_if_exists == "true" if not 0
-int write_file(const char* file_path, struct FileBytes* file_bytes, uint8_t fail_if_exists);
+int write_file(const char* file_path, struct FileBytes* file_bytes, bool fail_if_exists);
+
+// Erases the current file and returns a file pointer to the start
+// __FREE_REQUIRED for r_file_pointer, caller is also responsible for flushing and closing
+int open_file_for_text_overwrite(const char* file_path, bool fail_if_not_exists, FILE** r_file_pointer);
 
 // __FREE_REQUIRED for r_file_contents.chars, r_file_contents.key_indices, r_file_contents.value_indices
 // Assumes that r_file_contents.chars and r_file_contents.num_bytes are already set
