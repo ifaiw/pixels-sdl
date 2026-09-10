@@ -48,15 +48,19 @@ struct GameState {
 
 struct Block* get_world_block_for_world_pixel_xy(int pixel_x, int pixel_y, struct GameState* game_state);
 
-struct XY get_bottom_left_world_pixel_for_block(struct Block* block);
+XY get_bottom_left_world_pixel_for_block(struct Block* block);
 
 bool is_on_ground(struct GameState* game_state);
 
 bool is_on_climable(struct GameState* game_state);
 
+XY get_next_platform_direction(struct GameState* game_state, int entity_index_of_platform);
+
 void load_world_rules_from_file(struct WorldRules* r_world_rules);
 
 void update_ground_images(struct GameState* game_state);
+
+void update_platform_path_sprites(struct GameState* game_state);
 
 void populate_character_for_save_from_character(struct Character* character, struct CharacterForSave* r_character_for_save);
 

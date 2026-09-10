@@ -6,6 +6,7 @@
 
 #include "game_blocks.h"
 #include "game_paths.h"
+#include "game_primitives.h"
 #include "game_sprites.h"
 #include "graphics_constants.h"
 #include "image_bmp_loader.h"
@@ -69,6 +70,69 @@ static inline void swap_pixel_colour(struct ImageInfo* r_current_image, uint32_t
         if ((r_current_image->pixels[i] & NOT_ALPHA) == old_pixel_colour) {
             r_current_image->pixels[i] = new_pixel_colour;
         }
+    }
+}
+
+#define NUM_PLATFORM_PATH_BLOCKS 16
+// PRIVATE
+// Allocates the memory for the image containing all 16 platform path blocks and then draws them
+static inline void create_platform_path_image(struct ImageInfo* r_image_array) {
+    // There are 16 different platform path blocks
+    uint32_t* pixels = (uint32_t*)malloc(NUM_PLATFORM_PATH_BLOCKS * BLOCK_WIDTH_IN_PIXELS * BLOCK_HEIGHT_IN_PIXELS * 4);
+    int width = NUM_PLATFORM_PATH_BLOCKS * BLOCK_WIDTH_IN_PIXELS;
+    r_image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels = pixels;
+    r_image_array[IMAGE_INDEX_PLATFORM_PATHS].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_image_array[IMAGE_INDEX_PLATFORM_PATHS].width = width;
+
+    // Assumes BLOCK_WIDTH_IN_PIXELS and BLOCK_HEIGHT_IN_PIXELS are even
+
+    int left = 0;
+    for (int block_index = 0; block_index < 16; ++block_index) {
+        if (block_index & LEFT_MASK) {
+            printf("_LEFT");
+            for (int x = 0; x < BLOCK_WIDTH_IN_PIXELS / 2; ++x) {
+                pixels[((BLOCK_HEIGHT_IN_PIXELS / 2) - 1) * width + left + x] = WHITE | ALPHA;
+                pixels[(BLOCK_HEIGHT_IN_PIXELS / 2) * width + left + x] = WHITE | ALPHA;
+            }
+        }
+        if (block_index & RIGHT_MASK) {
+            printf("_RIGHT");
+            for (int x = BLOCK_WIDTH_IN_PIXELS / 2; x < BLOCK_WIDTH_IN_PIXELS; ++x) {
+                pixels[((BLOCK_HEIGHT_IN_PIXELS / 2) - 1) * width + left + x] = WHITE | ALPHA;
+                pixels[(BLOCK_HEIGHT_IN_PIXELS / 2) * width + left + x] = WHITE | ALPHA;
+            }
+        }
+        if (block_index & UP_MASK) {
+            printf("_UP");
+            for (int y = 0; y <= BLOCK_HEIGHT_IN_PIXELS / 2; ++y) {
+                pixels[y * width + left + (BLOCK_WIDTH_IN_PIXELS / 2 ) - 1] = WHITE | ALPHA;
+                pixels[y * width + left + (BLOCK_WIDTH_IN_PIXELS / 2 )] = WHITE | ALPHA;
+            }
+        }
+        if (block_index & DOWN_MASK) {
+            printf("_DOWN");
+            for (int y = BLOCK_HEIGHT_IN_PIXELS / 2; y < BLOCK_HEIGHT_IN_PIXELS; ++y) {
+                pixels[y * width + left + (BLOCK_WIDTH_IN_PIXELS / 2 ) - 1] = WHITE | ALPHA;
+                pixels[y * width + left + (BLOCK_WIDTH_IN_PIXELS / 2 )] = WHITE | ALPHA;
+            }
+        }
+        // Special case
+        if (block_index == 0) {
+            printf("BLOCKED_ALL_SIDES");
+            for (int x = BLOCK_WIDTH_IN_PIXELS / 4; x < BLOCK_WIDTH_IN_PIXELS / 4 * 3; ++x) {
+                pixels[((BLOCK_HEIGHT_IN_PIXELS / 2) - 1) * width + left + x] = WHITE | ALPHA;
+                pixels[(BLOCK_HEIGHT_IN_PIXELS / 2) * width + left + x] = WHITE | ALPHA;
+            }
+            for (int y = BLOCK_HEIGHT_IN_PIXELS / 4; y < BLOCK_HEIGHT_IN_PIXELS /4 * 3; ++y) {
+                pixels[y * width + left + (BLOCK_WIDTH_IN_PIXELS / 2 ) - 1] = WHITE | ALPHA;
+                pixels[y * width + left + (BLOCK_WIDTH_IN_PIXELS / 2 )] = WHITE | ALPHA;
+            }
+        }
+
+        printf("\n");
+        fflush(stdout);
+
+        left += BLOCK_WIDTH_IN_PIXELS;
     }
 }
 
@@ -150,6 +214,8 @@ int load_images(struct ImageInfo* r_image_array) {
     flip_upside_down(worm_image_unscaled.pixels, worm_image_unscaled.width, worm_image_unscaled.height);
     scale_image_up(&worm_image_unscaled, SCALE_FACTOR_WORM, r_image_array + IMAGE_INDEX_WORM);
     free(worm_image_unscaled.pixels);
+
+    create_platform_path_image(r_image_array);
 
     return 0;
 }

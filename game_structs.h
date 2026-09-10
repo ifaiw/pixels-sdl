@@ -114,11 +114,6 @@ struct WorldRules {
     double worm_x_speed_pixels_per_second;
 };
 
-struct XY {
-    int x;
-    int y;
-};
-
 struct ViewState {
     int window_width;
     int window_height;
@@ -154,6 +149,8 @@ enum EntityState {
     ENTITY_STATE_MOVING,
     ENTITY_STATE_MOVING_UP,
     ENTITY_STATE_MOVING_DOWN,
+    ENTITY_STATE_MOVING_LEFT,
+    ENTITY_STATE_MOVING_RIGHT,
     ENTITY_STATE_FALLING,
     ENTITY_WORM_PUSHING_FORWARD,
     ENTITY_WORM_PULLING_FORWARD,
@@ -182,11 +179,12 @@ struct Entity {
 
 enum EditorClickState {
     ADD_BLOCK,
-    ADD_ENTITY,
+    ADD_ENTITY
 };
 
 struct EditorState {
     enum EditorClickState click_state;
+    // TODO should block_type become an enum?
     uint16_t block_type;
     enum EntityType entity_type;
     bool save_on_num;

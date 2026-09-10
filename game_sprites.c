@@ -285,5 +285,85 @@ void initialize_sprites(struct ImageInfo* image_array, struct Sprite* r_sprite_a
     r_sprite_array[SPRITE_TYPE_TOILET].pixels_start = image_array[IMAGE_INDEX_TOILET].pixels + 0 + 0 * image_array[IMAGE_INDEX_TOILET].width;
     r_sprite_array[SPRITE_TYPE_TOILET].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_TOILET].width;
 
-    printf("7 base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", r_sprite_array[SPRITE_TYPE_EMPTY].pixels_start);
+        r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 0 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 48 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 96 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 144 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_UP].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_UP].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_UP].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 192 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_UP].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 240 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 288 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 336 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_DOWN].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 384 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_DOWN].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 432 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_DOWN].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 480 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_DOWN].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 528 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_UP_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 576 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 624 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 672 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP_DOWN].height = BLOCK_HEIGHT_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP_DOWN].width = BLOCK_WIDTH_IN_PIXELS;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP_DOWN].pixels_start = image_array[IMAGE_INDEX_PLATFORM_PATHS].pixels + 720 + 0 * image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+    r_sprite_array[SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP_DOWN].image_source_pitch_in_pixels = image_array[IMAGE_INDEX_PLATFORM_PATHS].width;
+
+    // printf("7 base_sprites[SPRITE_TYPE_EMPTY].pixels_start is %p\n", r_sprite_array[SPRITE_TYPE_EMPTY].pixels_start);
 }

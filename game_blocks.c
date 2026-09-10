@@ -19,4 +19,8 @@ void initialize_blocks(struct Sprite* sprite_array, struct Block* r_block_array)
     r_block_array[BLOCK_TYPE_TOILET].type = BLOCK_TYPE_TOILET;
     r_block_array[BLOCK_TYPE_TOILET].effects_flags = 0;
     r_block_array[BLOCK_TYPE_TOILET].sprite_index = SPRITE_TYPE_TOILET;
+
+    r_block_array[BLOCK_TYPE_PLATFORM_PATH].type = BLOCK_TYPE_PLATFORM_PATH;
+    r_block_array[BLOCK_TYPE_TOILET].effects_flags = EFFECT_FLAG_PLATFORM_PATH;
+    r_block_array[BLOCK_TYPE_TOILET].sprite_index = SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES;
 }

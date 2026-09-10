@@ -50,45 +50,49 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
         struct Block* mouse_block = get_world_block_for_world_pixel_xy(in_game_x, in_game_y_inverted, r_game_state);
         if (mouse_block != NULL) {
             // printf("clicked block effects_flag is %d\n", mouse_block->effects_flags);
-            if (mouse_block->effects_flags & EFFECT_FLAG_SOLID || mouse_block->type == BLOCK_TYPE_LADDER) {
-                printf("remove ground or ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+            if (    mouse_block->effects_flags & EFFECT_FLAG_SOLID
+                ||  mouse_block->type == BLOCK_TYPE_LADDER
+                ||  mouse_block->type == BLOCK_TYPE_PLATFORM_PATH) {
+                fprintf(r_editor_state->editor_log, "Remove ground or ladder or platform path at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                fflush(r_editor_state->editor_log);
                 mouse_block->type = BLOCK_TYPE_EMPTY;
                 mouse_block->effects_flags = r_game_state->base_blocks[BLOCK_TYPE_EMPTY].effects_flags;
                 mouse_block->sprite_index = r_game_state->base_blocks[BLOCK_TYPE_EMPTY].sprite_index;
             } else if (mouse_block->type == BLOCK_TYPE_EMPTY) {
                 if (r_editor_state->block_type == BLOCK_TYPE_GROUND) {
-                    printf("add ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                    fprintf(r_editor_state->editor_log, "Add ground at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                     mouse_block->type = BLOCK_TYPE_GROUND;
                     mouse_block->effects_flags = r_game_state->base_blocks[BLOCK_TYPE_GROUND].effects_flags;
                     mouse_block->sprite_index = r_game_state->base_blocks[BLOCK_TYPE_GROUND].sprite_index;
                 }
                 else if (r_editor_state->block_type == BLOCK_TYPE_LADDER) {
-                    printf("add ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                    fprintf(r_editor_state->editor_log, "Add ladder at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                     mouse_block->type = BLOCK_TYPE_LADDER;
                     mouse_block->effects_flags = r_game_state->base_blocks[BLOCK_TYPE_LADDER].effects_flags;
                     mouse_block->sprite_index = r_game_state->base_blocks[BLOCK_TYPE_LADDER].sprite_index;
                 }
                 else if (r_editor_state->block_type == BLOCK_TYPE_TOILET) {
-                    printf("add toilet at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                    fprintf(r_editor_state->editor_log, "Add toilet at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
                     mouse_block->type = BLOCK_TYPE_TOILET;
                     mouse_block->effects_flags = r_game_state->base_blocks[BLOCK_TYPE_TOILET].effects_flags;
                     mouse_block->sprite_index = r_game_state->base_blocks[BLOCK_TYPE_TOILET].sprite_index;
                 }
-                else if (r_editor_state->block_type == BLOCK_TYPE_TOILET) {
-                    printf("add toilet at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
-                    mouse_block->type = BLOCK_TYPE_TOILET;
-                    mouse_block->effects_flags = r_game_state->base_blocks[BLOCK_TYPE_TOILET].effects_flags;
-                    mouse_block->sprite_index = r_game_state->base_blocks[BLOCK_TYPE_TOILET].sprite_index;
+                else if (r_editor_state->block_type == BLOCK_TYPE_PLATFORM_PATH) {
+                    fprintf(r_editor_state->editor_log, "Add platform path at %d,%d\n", mouse_block->block_x, mouse_block->block_y);
+                    mouse_block->type = BLOCK_TYPE_PLATFORM_PATH;
+                    mouse_block->effects_flags = r_game_state->base_blocks[BLOCK_TYPE_PLATFORM_PATH].effects_flags;
+                    mouse_block->sprite_index = r_game_state->base_blocks[BLOCK_TYPE_PLATFORM_PATH].sprite_index;
                 }
             }
             update_ground_images(r_game_state);
+            update_platform_path_sprites(r_game_state);
         } else {
         // printf("No block at click\n");
         }
     }
-    else {
+    else if (r_editor_state->click_state == ADD_ENTITY) {
         if (r_editor_state->entity_type == ENTITY_TYPE_WORM) {
-            printf("add worm entity at %d,%d\n", in_game_x, in_game_y_inverted);
+            fprintf(r_editor_state->editor_log, "Add worm entity at %d,%d\n", in_game_x, in_game_y_inverted);
             struct Sprite* entity_sprite = &r_game_state->base_sprites[SPRITE_TYPE_WORM_PUSH_FORWARD_1];
 
             int left = in_game_x - entity_sprite->width / 2 - 1;
@@ -172,6 +176,7 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
             if (!deleting_platform) {
                 struct Sprite* entity_sprite = &r_game_state->base_sprites[SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN];
                 uint32_t entity_fits_in_blocks;
+                struct Block* platform_spot;
                 int new_entity_x;
                 int new_entity_y;
 
@@ -192,7 +197,7 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
                     );
                 }
                 else {
-                    struct Block* platform_spot = get_world_block_for_world_pixel_xy(in_game_x, in_game_y_inverted, r_game_state);
+                    platform_spot = get_world_block_for_world_pixel_xy(in_game_x, in_game_y_inverted, r_game_state);
                     entity_fits_in_blocks = !(platform_spot->effects_flags & EFFECT_FLAG_SOLID);
                     printf("snap to grid on, entity_fits_in_blocks=%d\n", entity_fits_in_blocks);
                     new_entity_x = platform_spot->world_pixel_x;
@@ -200,7 +205,13 @@ void mouse_click(int in_game_x, int in_game_y_inverted, struct EditorState* r_ed
                 }
 
                 if (!entity_fits_in_blocks) {
-                    printf("Won't add entity because it doesn't fit\n");
+                    fprintf(r_editor_state->editor_log, "Won't add entity because it doesn't fit\n");
+                    fflush(r_editor_state->editor_log);
+                    return;
+                }
+                if (!(platform_spot->effects_flags & EFFECT_FLAG_PLATFORM_PATH)) {
+                    fprintf(r_editor_state->editor_log, "Snap to grid on, NOT adding platform because block %d,%d does not have platform path.\n", platform_spot->block_x, platform_spot->block_y);
+                    fflush(r_editor_state->editor_log);
                     return;
                 }
 

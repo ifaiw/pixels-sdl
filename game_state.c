@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "game_paths.h"
+#include "game_primitives.h"
 #include "file_stuff.h"
 #include "utils.h"
 
@@ -96,12 +97,12 @@ struct Block* get_world_block_for_world_pixel_xy(int pixel_x, int pixel_y, struc
 // Returns inverted y I think?
 // TODO Can delete this and change all calls to it to use world_pixel_ vars? I was just being lazy here
 // IMPLEMENTS
-struct XY get_bottom_left_world_pixel_for_block(struct Block* block) {
+XY get_bottom_left_world_pixel_for_block(struct Block* block) {
     // printf("block is %p\n", block);
     // fflush(stdout);
     // printf("get_bottom_left_world_pixel_for_block block->world_x=%d block->world_y=%d\n", block->world_x, block->world_y);
     // fflush(stdout);
-    struct XY xy;
+    XY xy;
     // xy.x = block->world_x * BLOCK_WIDTH_IN_PIXELS;
     // xy.y = block->world_y * BLOCK_HEIGHT_IN_PIXELS;
     xy.x = block->world_pixel_x;
@@ -150,6 +151,25 @@ bool is_on_climable(struct GameState* game_state) {
     return true;
 }
 
+
+// const XY testtt (XY){0,0;};
+// const XY atesttt[] (XY[]){{0,0;}};
+// (xy_t[]){{0,0;}};
+// (XY[]){(0, -1), (1, 0), (-1, 0), (0, 1)}; // moving down, check down, then right, then left, then up
+// const XY DIRECTIONS_TO_CHECK[4][4]) = {
+//     {}
+// };
+// IMPLEMENTS
+// XY get_next_platform_direction(struct GameState* game_state, int entity_index_of_platform) {
+//     struct Entity* entity = game_state->entities + entity_index_of_platform;
+//     struct Block* currrent_block = get_world_block_for_world_pixel_xy(entity->x_bottom_left + entity->width / 2, entity->y_inverted_bottom_left + entity->height / 2, game_state);
+
+//     if (entity->x_velocity_pixels_per_second > 0)
+
+//     // Check which direction platform is trying to move
+
+// }
+
 // IMPLEMENTS
 void update_ground_images(struct GameState* game_state) {
     for (int block_x = 0; block_x < WIDTH_OF_WORLD_IN_BLOCKS; ++block_x) {
@@ -185,7 +205,42 @@ void update_ground_images(struct GameState* game_state) {
     }
 }
 
-// Implements
+// IMPLEMENTS
+void update_platform_path_sprites(struct GameState* game_state) {
+    for (int block_x = 0; block_x < WIDTH_OF_WORLD_IN_BLOCKS; ++block_x) {
+        for (int block_y = 0; block_y < HEIGHT_OF_WORLD_IN_BLOCKS; ++block_y) {
+            struct Block* block = &(game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x]);
+            if (block->type == BLOCK_TYPE_PLATFORM_PATH) {
+                // printf("updating platform path sprite for %d,%d\n", block_x, block_y);
+                int surrounding_block_mask = 0;
+                if (block_x > 0 && game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x - 1].type == BLOCK_TYPE_PLATFORM_PATH) {
+                    surrounding_block_mask |= LEFT_MASK;
+                    // printf("platform path on left\n");
+                }
+                if (block_x < WIDTH_OF_WORLD_IN_BLOCKS - 1 && game_state->world_blocks[block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x + 1].type == BLOCK_TYPE_PLATFORM_PATH) {
+                    surrounding_block_mask |= RIGHT_MASK;
+                    // printf("platform path on right\n");
+                }
+                if (block_y > 0 && game_state->world_blocks[(block_y - 1) * WIDTH_OF_WORLD_IN_BLOCKS + block_x].type == BLOCK_TYPE_PLATFORM_PATH) {
+                    surrounding_block_mask |= DOWN_MASK;
+                    // printf("platform path below\n");
+                }
+                if (block_y < HEIGHT_OF_WORLD_IN_BLOCKS - 1 && game_state->world_blocks[(block_y + 1) * WIDTH_OF_WORLD_IN_BLOCKS + block_x].type == BLOCK_TYPE_PLATFORM_PATH) {
+                    surrounding_block_mask |= UP_MASK;
+                    // printf("platform path above\n");
+                }
+
+                int new_sprite_index = SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES + surrounding_block_mask;
+                // printf("Set Block %d,%d index=%d surrounding_block_mask=%d new_sprite_index=%d\n", block_x, block_y, (block_y * WIDTH_OF_WORLD_IN_BLOCKS + block_x),surrounding_block_mask, new_sprite_index);
+
+                block->sprite_index = new_sprite_index;
+                // printf("sprite_index of block->sprite is now %d\n", block->sprite_index);
+            }
+        }
+    }
+}
+
+// IMPLEMENTS
 void populate_character_for_save_from_character(struct Character* character, struct CharacterForSave* r_character_for_save) {
     r_character_for_save->x_bottom_left = character->x_bottom_left;
     r_character_for_save->y_inverted_bottom_left = character->y_inverted_bottom_left;

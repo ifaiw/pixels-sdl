@@ -1,13 +1,13 @@
 def gen_sprite(indent, sprite_name, image_index_name, x_offset, y_offset):
     l1 = f"{indent}r_sprite_array[{sprite_name}].height = BLOCK_HEIGHT_IN_PIXELS;"
     l2 = f"{indent}r_sprite_array[{sprite_name}].width = BLOCK_WIDTH_IN_PIXELS;"
-    l3 = f"{indent}r_sprite_array[{sprite_name}].flip_left_to_right = false;"
-    l4 = f"{indent}r_sprite_array[{sprite_name}].pixels_start = image_array[{image_index_name}].pixels + {x_offset} + {y_offset} * image_array[{image_index_name}].width;"
-    l5 = f"{indent}r_sprite_array[{sprite_name}].image_source_pitch_in_pixels = image_array[{image_index_name}].width;"
+    l3 = f"{indent}r_sprite_array[{sprite_name}].pixels_start = image_array[{image_index_name}].pixels + {x_offset} + {y_offset} * image_array[{image_index_name}].width;"
+    l4 = f"{indent}r_sprite_array[{sprite_name}].image_source_pitch_in_pixels = image_array[{image_index_name}].width;"
 
-    return [l1,l2,l3,l4,l5]
+    return [l1,l2,l3,l4]
 
 image_index_name = "IMAGE_INDEX_SOLIDS_2"
+image_index_name = "IMAGE_INDEX_PLATFORM_PATHS"
 
 sprite_names = [
     "SPRITE_TYPE_GROUND_OPEN_LEFT",
@@ -26,6 +26,26 @@ sprite_names = [
     "SPRITE_TYPE_GROUND_OPEN_RIGHT_UP_DOWN",
     "SPRITE_TYPE_GROUND_OPEN_LEFT_RIGHT_UP_DOWN",
 ]
+
+sprite_names = [
+    "SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_UP",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_DOWN",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_DOWN",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_DOWN",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_DOWN",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_UP_DOWN",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP_DOWN",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP_DOWN",
+    "SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP_DOWN",
+]
+
 x_offsets = [
     192,
     192,
@@ -63,7 +83,38 @@ y_offsets = [
 ]
 
 for i in range(0, len(sprite_names)):
-    lines = gen_sprite("    ", sprite_names[i], image_index_name, x_offsets[i], y_offsets[i])
+    # lines = gen_sprite("    ", sprite_names[i], image_index_name, x_offsets[i], y_offsets[i])
+    lines = gen_sprite("    ", sprite_names[i], image_index_name, i * 48, 0);
     for line in lines:
         print(line)
     print()
+
+# up 4, 5, 6, 7, 12, 13, 14, 15
+has_up = [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1]
+# down 8, 9, 10, 11, 12, 13, 14, 15
+has_down = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
+# left 1, 3, 5, 7, 9, 11, 13, 15
+has_left = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+# right 2, 3, 6, 7, 10, 11, 14, 15
+has_right = [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]
+
+sprite_names_platform_path = [
+
+]
+
+#define SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES 60
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT 1 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT 2 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT 3 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_UP 4 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP 5 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP 6 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP 7 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_DOWN 8 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_DOWN 9 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_DOWN 10 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_DOWN 11 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_UP_DOWN 12 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_UP_DOWN 13 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_RIGHT_UP_DOWN 14 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES
+#define SPRITE_TYPE_PLATFORM_PATH_OPEN_LEFT_RIGHT_UP_DOWN 15 + SPRITE_TYPE_PLATFORM_PATH_BLOCKED_ALL_SIDES

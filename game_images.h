@@ -4,7 +4,7 @@
 
 #include "image_structs.h"
 
-#define NUM_BMP_IMAGES 8
+#define NUM_BMP_IMAGES 9
 // "image" 0 is black pixels for empty space
 
 #define IMAGE_INDEX_BLANK 0
@@ -15,6 +15,7 @@
 #define IMAGE_INDEX_SOLIDS_2 5
 #define IMAGE_INDEX_TOILET 6
 #define IMAGE_INDEX_WORM 7
+#define IMAGE_INDEX_PLATFORM_PATHS 8
 
 #define SCALE_FACTOR_WORM 1.6
 #define DYNAMIC_UNSCALED_START_X_WORM 0

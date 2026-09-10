@@ -688,14 +688,14 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
         // Need to handle the case where player is falling and new_character_y is currently below the top of the solid block below,
         // but the block above that block is not solid. We don't want to use the solid block below to check for left/right collision
         if (new_block_feet->effects_flags & EFFECT_FLAG_SOLID) {
-            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
+            XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
             // TODO not needed? x_collision_distance = block_bottom_left.x - new_character_x + game_state->character.width;
 
             new_character_x = block_bottom_left.x - game_state->character.width - 0.000001;
             x_motion_stopped = true;
         }
         if (new_block_head->effects_flags & EFFECT_FLAG_SOLID) {
-            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_head);
+            XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_head);
             // TODO not needed?
             // double temp_x_collision_distance = block_bottom_left.x - new_character_x + game_state->character.width;
             // if (x_collision_distance >= 0 && temp_x_collision_distance < x_collision_distance) {
@@ -715,14 +715,14 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
         // printf("Feet and head blocks are %d,%d and %d,%d\n", new_block_feet->world_x, new_block_feet->world_y, new_block_head->world_x, new_block_head->world_y);
         if (new_block_feet->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("feet block is solid\n");
-            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
+            XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_feet);
             // printf("bottom-left of block is %d,%d\n", block_bottom_left.x, block_bottom_left.y);
             new_character_x = block_bottom_left.x + BLOCK_WIDTH_IN_PIXELS;
             x_motion_stopped = true;
         }
         else if (new_block_head->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("head block is solid\n");
-            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_head);
+            XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_head);
             // printf("bottom-left of block is %d,%d\n", block_bottom_left.x, block_bottom_left.y);
             new_character_x = block_bottom_left.x + BLOCK_WIDTH_IN_PIXELS;
             x_motion_stopped = true;
@@ -736,7 +736,7 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
         struct Block* new_block_right = get_world_block_for_world_pixel_xy(right_pixel_old, bottom_pixel_new, game_state);
         if (new_block_left->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("do_movement collision check moving-down TRUE left block is solid\n");
-            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
+            XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
             // TODO is this extra chek needed here and for the other block? Don't we already know at this point that the character is past the edge of the block?
             if (new_character_y < block_bottom_left.y + BLOCK_HEIGHT_IN_PIXELS) {
                 new_character_y = block_bottom_left.y + BLOCK_HEIGHT_IN_PIXELS;
@@ -746,7 +746,7 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
         }
         if (new_block_right->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("do_movement collision check moving-down TRUE right block is solid\n");
-            struct XY block_bottom_right = get_bottom_left_world_pixel_for_block(new_block_right);
+            XY block_bottom_right = get_bottom_left_world_pixel_for_block(new_block_right);
             if (new_character_y < block_bottom_right.y + BLOCK_HEIGHT_IN_PIXELS) {
                 new_character_y = block_bottom_right.y + BLOCK_HEIGHT_IN_PIXELS;
                 // printf("do_movement collision check moving-down right block is solid new_character_y to %f\n", new_character_y);
@@ -766,14 +766,14 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
         struct Block* new_block_right = get_world_block_for_world_pixel_xy(right_pixel_old, top_pixel_new, game_state);
         if (new_block_left->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("do_movement collision check moving-up TRUE left block is solid\n");
-            struct XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
+            XY block_bottom_left = get_bottom_left_world_pixel_for_block(new_block_left);
             new_character_y = block_bottom_left.y - game_state->character.height - 1;
             // printf("do_movement collision check moving-up left block is solid new_character_y to %f\n", new_character_y);
             y_motion_stopped_above = true;
         }
         if (new_block_right->effects_flags & EFFECT_FLAG_SOLID) {
             // printf("do_movement collision check moving-up TRUE right block is solid\n");
-            struct XY block_bottom_right = get_bottom_left_world_pixel_for_block(new_block_right);
+            XY block_bottom_right = get_bottom_left_world_pixel_for_block(new_block_right);
             new_character_y = block_bottom_right.y - game_state->character.height - 1;
             // printf("do_movement collision check moving-up right block is solid new_character_y to %f\n", new_character_y);
             y_motion_stopped_above = true;
@@ -1233,7 +1233,8 @@ void handle_input(  struct GameState* game_state,
                 save_level_to_slot(game_state, editor_state, 5);
             }
             else {
-                // Switch current editor block to something
+                editor_state->click_state = ADD_BLOCK;
+                editor_state->block_type = BLOCK_TYPE_PLATFORM_PATH;
             }
         }
     } else {
