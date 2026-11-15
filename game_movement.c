@@ -7,7 +7,6 @@
 #include <SDL2/SDL.h>
 
 #include "game_editor.h"
-#include "game_paths.h"
 #include "structs.h"
 
 
@@ -339,7 +338,7 @@ void load_level_from_slot(struct GameState* game_state, struct EditorState* edit
 }
 
 // IMPLEMENTS
-void do_movement(struct GameState* game_state, struct InputState* input_state, double microseconds_to_advance) {
+void do_movement(struct GameState* game_state, InputState* input_state, double microseconds_to_advance) {
 
     const uint8_t* input_state_now = SDL_GetKeyboardState(NULL);
 
@@ -856,7 +855,7 @@ void do_movement(struct GameState* game_state, struct InputState* input_state, d
 // IMPLEMENTS
 void handle_input(  struct GameState* game_state,
                     struct ViewState* view_state,
-                    struct InputState* input_state,
+                    InputState* input_state,
                     struct EditorState* editor_state,
                     double microseconds_to_advance)
 {

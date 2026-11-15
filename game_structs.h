@@ -11,7 +11,7 @@
 
 #define PLATFORM_1_SPEED_VERTICAL_PIXELS_PER_SECOND 45
 
-struct InputState {
+typedef struct InputState {
     long left_button_press_frame;
     long right_button_press_frame;
     long up_button_press_frame;
@@ -28,7 +28,7 @@ struct InputState {
     uint8_t* previous_key_state;
     uint32_t size_of_keyboard_state; // Should get initialized to SDL_NUM_SCANCODES * sizeof(uint8_t) then never change
     // The sizeof uint8_t should just be 1
-};
+} InputState;
 
 struct Block {
     int world_pixel_x; // Bottom-left

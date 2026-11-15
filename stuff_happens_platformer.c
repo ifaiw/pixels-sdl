@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdbool.h>
 #include <time.h>
 
@@ -8,7 +7,6 @@
 #include "game_editor.h"
 #include "game_images.h"
 #include "game_movement.h"
-#include "game_paths.h"
 #include "game_renderer.h"
 #include "game_sprites.h"
 #include "game_state.h"
@@ -29,7 +27,7 @@ int last_walking_frame;
 
 static struct GameState game_state;
 static struct ViewState view_state;
-static struct InputState input_state;
+static InputState input_state;
 static struct EditorState editor_state;
 
 static struct CharacterSprite character_sprite;

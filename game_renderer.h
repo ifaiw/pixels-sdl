@@ -2,7 +2,6 @@
 #define _GAME_RENDERER__H
 
 #include <stdint.h>
-#include <string.h>
 
 #include "game_state.h"
 #include "game_structs.h"
@@ -10,7 +9,7 @@
 
 // PRIVATE
 // TODO move this code into render/blit code?
-static inline void update_sprites(struct GameState* game_state_param, struct InputState* input_state_param) {
+static inline void update_sprites(struct GameState* game_state_param, InputState* input_state_param) {
     uint64_t microsecond_bucket;
     int walking_animation_frame_num;
     double pixel_distance_bucket;
